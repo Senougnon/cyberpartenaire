@@ -1,0 +1,240 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Wifi Zone - Accueil</title>
+    <link rel="stylesheet" href="styleA.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
+
+    <style>
+        /* Style pour le modal de paiement */
+        .payment-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .payment-modal h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .payment-modal p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .payment-modal button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0 10px;
+        }
+
+        .payment-modal button:hover {
+            background-color: #e6a727;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        /* Style pour l'overlay */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        #subscriptionSection {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        #subscriptionSection h2 {
+            font-size: 24px;
+            color: #fdbb2d;
+            margin-bottom: 20px;
+        }
+
+        #subscriptionStatus {
+            font-size: 18px;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .subscription-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .subscription-buttons button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .subscription-buttons button:hover {
+            background-color: #e6a727;
+        }
+
+        /* Style pour le message d'abonnement requis */
+        .subscription-required {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .subscription-required-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .subscription-required-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .subscription-required-content p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .subscription-required-content button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0 10px;
+        }
+
+        .subscription-required-content button:hover {
+            background-color: #e6a727;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>YSA WIFI ZONE</h1>
+            <div class="wave"></div> 
+        </header>
+
+        <main>
+            <div id="subscriptionSection">
+                <h2>Statut de l'Abonnement</h2>
+                <div id="subscriptionStatus"></div>
+                <div class="subscription-buttons">
+                    <button id="subscribeMonthly">S'abonner (Mensuel - 1000 FCFA)</button>
+                    <button id="subscribeYearly">S'abonner (Annuel - 10 000 FCFA)</button>
+                </div>
+            </div>
+            <div class="menu">
+                <a href="PageVenteTicket.html" class="menu-item" id="vente">
+                    <i data-lucide="ticket"></i>
+                    <h2>Vente de Tickets</h2>
+                    <p>Procédez à la vente de nouveaux tickets Wifi.</p>
+                </a>
+                <a href="AdminVentePartenaires.html" class="menu-item" id="inventaire">
+                    <i data-lucide="clipboard-list"></i>
+                    <h2>Inventaire des Tickets</h2>
+                    <p>Consultez l'état des ventes de vos partenaires.</p>
+                </a>
+                <a href="Stock.html" class="menu-item" id="stock">
+                    <i data-lucide="boxes"></i>
+                    <h2>Gestion des Stocks Partenaire</h2>
+                    <p>Suivez les stocks de tickets de vos partenaires.</p>
+                </a>
+                <a href="a3.html" class="menu-item" id="administration">
+                    <i data-lucide="settings"></i>
+                    <h2>Administration des Tickets</h2>
+                    <p>Gérez les tickets, activez ou désactivez-les.</p>
+                </a>
+                <button id="cancelSubscription" style="display: none;">Annuler l'abonnement</button>
+            </div>
+            
+        </main>
+
+    </div>
+
+    
+    <div id="paymentModal" class="payment-modal" style="display: none;">
+        <span class="close-modal" onclick="closePaymentModal()">×</span>
+        <h2>Paiement de l'Abonnement</h2>
+        <p>Choisissez votre plan d'abonnement et procédez au paiement via FedaPay.</p>
+        <!-- Les boutons de paiement seront ajoutés ici par le script -->
+    </div>
+
+    <div id="subscriptionRequiredModal" class="subscription-required" style="display: none;">
+        <div class="subscription-required-content">
+            <h2>Abonnement Requis</h2>
+            <p>Un abonnement actif est nécessaire pour accéder à cette fonctionnalité.</p>
+            <button onclick="redirectToSubscription()">S'abonner</button>
+            <button onclick="hideSubscriptionRequiredModal()">Fermer</button>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay" style="display: none;" onclick="closePaymentModal()"></div>
+
+    <script>
+const _0x50db54=_0x5600;(function(_0x440913,_0x26d626){const _0x1219d0=_0x5600,_0x35e31f=_0x440913();while(!![]){try{const _0x17c28f=-parseInt(_0x1219d0(0x15f))/0x1*(-parseInt(_0x1219d0(0x15b))/0x2)+parseInt(_0x1219d0(0x176))/0x3+-parseInt(_0x1219d0(0x152))/0x4*(parseInt(_0x1219d0(0x18e))/0x5)+parseInt(_0x1219d0(0x171))/0x6+-parseInt(_0x1219d0(0x159))/0x7*(-parseInt(_0x1219d0(0x181))/0x8)+-parseInt(_0x1219d0(0x188))/0x9*(-parseInt(_0x1219d0(0x17d))/0xa)+parseInt(_0x1219d0(0x16d))/0xb*(-parseInt(_0x1219d0(0x16a))/0xc);if(_0x17c28f===_0x26d626)break;else _0x35e31f['push'](_0x35e31f['shift']());}catch(_0x5d9f8f){_0x35e31f['push'](_0x35e31f['shift']());}}}(_0x3c26,0x33c64));const firebaseConfig={'apiKey':_0x50db54(0x198),'authDomain':_0x50db54(0x153),'databaseURL':'https://dlswifi-default-rtdb.firebaseio.com','projectId':_0x50db54(0x16b),'storageBucket':_0x50db54(0x15c),'messagingSenderId':_0x50db54(0x194),'appId':_0x50db54(0x167),'measurementId':_0x50db54(0x187)};firebase['initializeApp'](firebaseConfig);const database=firebase[_0x50db54(0x17c)](),adminRef=database[_0x50db54(0x149)](_0x50db54(0x173)),venteMenuItem=document[_0x50db54(0x16e)](_0x50db54(0x14e)),inventaireMenuItem=document['getElementById'](_0x50db54(0x17b)),stockMenuItem=document[_0x50db54(0x16e)](_0x50db54(0x191)),administrationMenuItem=document[_0x50db54(0x16e)](_0x50db54(0x16f)),subscriptionStatus=document[_0x50db54(0x16e)](_0x50db54(0x154)),subscribeMonthlyButton=document[_0x50db54(0x16e)]('subscribeMonthly'),subscribeYearlyButton=document[_0x50db54(0x16e)]('subscribeYearly'),cancelSubscriptionButton=document[_0x50db54(0x16e)](_0x50db54(0x18b)),paymentModal=document[_0x50db54(0x16e)](_0x50db54(0x189)),overlay=document['getElementById']('overlay'),subscriptionRequiredModal=document[_0x50db54(0x16e)](_0x50db54(0x14c));function _0x3c26(){const _0x2d5f84=['transaction','Abonnement\x20','914445912574','a3.html','CHECKOUT_COMPLETED','setFullYear','AIzaSyBwLgE4rF7RimBCr2cx8krF2c9FpXetQLc','Paiement\x20échoué.','getMonth','DOMContentLoaded','textContent','ref','Données\x20d\x27abonnement\x20tentées:','cancelled','subscriptionRequiredModal','none','vente','createIcons','reason','preventDefault','39772YhAPyP','dlswifi.firebaseapp.com','subscriptionStatus','Erreur\x20lors\x20de\x20la\x20mise\x20à\x20jour\x20de\x20l\x27abonnement.','error','location','Détails\x20de\x20la\x20réponse\x20de\x20FedaPay:','7DjFqpE','inline-block','62550GHDIkm','dlswifi.firebasestorage.app','monthly','green','5rKFOri','DIALOG_DISMISSED','addEventListener','value','Abonnement\x20annulé.','active','set','mensuel','1:914445912574:web:4448ebbc615241b63ad8af','status','style','5342220PQvtNx','dlswifi','Erreur\x20lors\x20de\x20l\x27annulation\x20de\x20l\x27abonnement.','11cRLUTw','getElementById','administration','\x20réussi!','2045190DznqMU','Statut\x20de\x20l\x27abonnement:\x20Expiré','admin/subscription','endDate','toISOString','46752JPnmeJ','red','init','href','val','inventaire','database','10vyUVRA','click','update','display','8136RpZybK','PageVenteTicket.html','Stock.html','color','Statut\x20de\x20l\x27abonnement:\x20Actif\x20jusqu\x27au\x20','toLocaleDateString','G-YDLNR7S0C6','1380195qPypYG','paymentModal','expired','cancelSubscription','annuel','Statut\x20de\x20l\x27abonnement:\x20Inactif','5UIIMdr','Abonnement\x20annuel','flex','stock'];_0x3c26=function(){return _0x2d5f84;};return _0x3c26();}function showSubscriptionRequiredModal(){const _0x4899c7=_0x50db54;subscriptionRequiredModal[_0x4899c7(0x169)]['display']=_0x4899c7(0x190);}function hideSubscriptionRequiredModal(){const _0x772a7d=_0x50db54;subscriptionRequiredModal[_0x772a7d(0x169)][_0x772a7d(0x180)]=_0x772a7d(0x14d);}function redirectToSubscription(){hideSubscriptionRequiredModal();}function checkSubscriptionStatus(){adminRef['on']('value',_0x196285=>{const _0x1f3c9d=_0x5600,_0x204f27=_0x196285[_0x1f3c9d(0x17a)](),_0x35c29b=new Date();if(_0x204f27&&_0x204f27[_0x1f3c9d(0x168)]===_0x1f3c9d(0x164)){const _0x5ccc3e=new Date(_0x204f27[_0x1f3c9d(0x174)]);_0x5ccc3e<_0x35c29b?(subscriptionStatus[_0x1f3c9d(0x19c)]=_0x1f3c9d(0x172),subscriptionStatus[_0x1f3c9d(0x169)][_0x1f3c9d(0x184)]=_0x1f3c9d(0x177),subscribeMonthlyButton[_0x1f3c9d(0x169)][_0x1f3c9d(0x180)]=_0x1f3c9d(0x15a),subscribeYearlyButton[_0x1f3c9d(0x169)][_0x1f3c9d(0x180)]=_0x1f3c9d(0x15a),cancelSubscriptionButton[_0x1f3c9d(0x169)]['display']=_0x1f3c9d(0x14d),adminRef[_0x1f3c9d(0x17f)]({'status':_0x1f3c9d(0x18a)})):(subscriptionStatus['textContent']=_0x1f3c9d(0x185)+_0x5ccc3e[_0x1f3c9d(0x186)](),subscriptionStatus[_0x1f3c9d(0x169)]['color']=_0x1f3c9d(0x15e),subscribeMonthlyButton['style']['display']=_0x1f3c9d(0x14d),subscribeYearlyButton[_0x1f3c9d(0x169)][_0x1f3c9d(0x180)]='none',cancelSubscriptionButton[_0x1f3c9d(0x169)][_0x1f3c9d(0x180)]=_0x1f3c9d(0x15a));}else subscriptionStatus[_0x1f3c9d(0x19c)]=_0x1f3c9d(0x18d),subscriptionStatus[_0x1f3c9d(0x169)][_0x1f3c9d(0x184)]='red',subscribeMonthlyButton[_0x1f3c9d(0x169)]['display']=_0x1f3c9d(0x15a),subscribeYearlyButton[_0x1f3c9d(0x169)][_0x1f3c9d(0x180)]=_0x1f3c9d(0x15a),cancelSubscriptionButton['style'][_0x1f3c9d(0x180)]=_0x1f3c9d(0x14d);});}function checkUserAccess(){const _0x1908df=_0x50db54;adminRef['once'](_0x1908df(0x162),_0x14f614=>{const _0xbc4acb=_0x1908df,_0x2ed9bf=_0x14f614[_0xbc4acb(0x17a)]();(!_0x2ed9bf||_0x2ed9bf[_0xbc4acb(0x168)]!==_0xbc4acb(0x164))&&showSubscriptionRequiredModal();});}function _0x5600(_0x271723,_0x487297){const _0x3c26dc=_0x3c26();return _0x5600=function(_0x5600fd,_0x3606ae){_0x5600fd=_0x5600fd-0x149;let _0x47276e=_0x3c26dc[_0x5600fd];return _0x47276e;},_0x5600(_0x271723,_0x487297);}venteMenuItem[_0x50db54(0x161)](_0x50db54(0x17e),_0x42352f=>{const _0x2ae206=_0x50db54;_0x42352f[_0x2ae206(0x151)](),checkUserAccess(),window[_0x2ae206(0x157)][_0x2ae206(0x179)]=_0x2ae206(0x182);}),inventaireMenuItem['addEventListener']('click',_0x1d27e2=>{const _0x50e381=_0x50db54;_0x1d27e2[_0x50e381(0x151)](),checkUserAccess(),window['location'][_0x50e381(0x179)]='AdminVentePartenaires.html';}),stockMenuItem[_0x50db54(0x161)](_0x50db54(0x17e),_0x930967=>{const _0x2d9321=_0x50db54;_0x930967[_0x2d9321(0x151)](),checkUserAccess(),window[_0x2d9321(0x157)][_0x2d9321(0x179)]=_0x2d9321(0x183);}),administrationMenuItem[_0x50db54(0x161)]('click',_0x1dd324=>{const _0x122293=_0x50db54;_0x1dd324[_0x122293(0x151)](),checkUserAccess(),window['location'][_0x122293(0x179)]=_0x122293(0x195);}),subscribeMonthlyButton[_0x50db54(0x161)]('click',()=>{const _0x226640=_0x50db54;initiatePayment(_0x226640(0x15d));}),subscribeYearlyButton[_0x50db54(0x161)](_0x50db54(0x17e),()=>{initiatePayment('yearly');}),cancelSubscriptionButton[_0x50db54(0x161)](_0x50db54(0x17e),()=>{cancelSubscription();});function initiatePayment(_0x3f630d){const _0x28f07b=_0x50db54,_0x23e9ab=_0x3f630d===_0x28f07b(0x15d)?0x3e8:0x2710,_0x3a47c2=_0x3f630d===_0x28f07b(0x15d)?'Abonnement\x20mensuel':_0x28f07b(0x18f);FedaPay[_0x28f07b(0x178)]({'public_key':'pk_live_-kvfVOmBrs8MB9CJ338_l9-7','transaction':{'amount':_0x23e9ab,'description':_0x3a47c2},'customer':{'email':'admin@example.com'},'onComplete':async function(_0x26482e){const _0x5bbeab=_0x28f07b;if(_0x26482e[_0x5bbeab(0x150)]===FedaPay[_0x5bbeab(0x160)])alert(_0x5bbeab(0x199));else _0x26482e[_0x5bbeab(0x150)]===FedaPay[_0x5bbeab(0x196)]&&handleSuccessfulPayment(_0x3f630d,_0x26482e);}})['open']();}async function handleSuccessfulPayment(_0x2a2910,_0x33df2d){const _0xf9661f=_0x50db54,_0xa5be01=new Date(),_0x2c5fe6=new Date(_0xa5be01);_0x2a2910===_0xf9661f(0x15d)?_0x2c5fe6['setMonth'](_0x2c5fe6[_0xf9661f(0x19a)]()+0x1):_0x2c5fe6[_0xf9661f(0x197)](_0x2c5fe6['getFullYear']()+0x1);const _0x391f1b={'status':'active','startDate':_0xa5be01['toISOString'](),'endDate':_0x2c5fe6[_0xf9661f(0x175)](),'transactionId':_0x33df2d[_0xf9661f(0x192)]['id'],'plan':_0x2a2910};try{await adminRef[_0xf9661f(0x165)](_0x391f1b),checkSubscriptionStatus(),alert(_0xf9661f(0x193)+(_0x2a2910===_0xf9661f(0x15d)?_0xf9661f(0x166):_0xf9661f(0x18c))+_0xf9661f(0x170));}catch(_0x2eaf4a){console[_0xf9661f(0x156)]('Erreur\x20lors\x20de\x20la\x20mise\x20à\x20jour\x20de\x20l\x27abonnement:',_0x2eaf4a),console[_0xf9661f(0x156)](_0xf9661f(0x158),_0x33df2d),console[_0xf9661f(0x156)](_0xf9661f(0x14a),_0x391f1b),alert(_0xf9661f(0x155));}}async function cancelSubscription(){const _0x4af80c=_0x50db54;try{await adminRef[_0x4af80c(0x17f)]({'status':_0x4af80c(0x14b)}),checkSubscriptionStatus(),alert(_0x4af80c(0x163));}catch(_0x54bb60){console['error']('Erreur\x20lors\x20de\x20l\x27annulation\x20de\x20l\x27abonnement:',_0x54bb60),alert(_0x4af80c(0x16c));}}document[_0x50db54(0x161)](_0x50db54(0x19b),()=>{const _0x372dcf=_0x50db54;checkSubscriptionStatus(),lucide[_0x372dcf(0x14f)]();}),lucide[_0x50db54(0x14f)]();
+    </script>
+</body>
+</html>
