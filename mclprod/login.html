@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion Administrateur</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --background-color: #ecf0f1;
+            --text-color: #34495e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Connexion Administrateur</h1>
+        <form id="loginForm" onsubmit="return login(event)">
+            <div class="input-group">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">Se connecter</button>
+        </form>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <script>
+const _0x2996ed=_0x3ca5;(function(_0xf6039e,_0x17bba2){const _0x4b4b54=_0x3ca5,_0x888760=_0xf6039e();while(!![]){try{const _0x535ae8=-parseInt(_0x4b4b54(0x1a4))/0x1+-parseInt(_0x4b4b54(0x1ac))/0x2*(-parseInt(_0x4b4b54(0x1b2))/0x3)+parseInt(_0x4b4b54(0x19d))/0x4+parseInt(_0x4b4b54(0x194))/0x5+parseInt(_0x4b4b54(0x1aa))/0x6*(parseInt(_0x4b4b54(0x1ab))/0x7)+parseInt(_0x4b4b54(0x195))/0x8*(parseInt(_0x4b4b54(0x1a1))/0x9)+-parseInt(_0x4b4b54(0x1b0))/0xa*(parseInt(_0x4b4b54(0x197))/0xb);if(_0x535ae8===_0x17bba2)break;else _0x888760['push'](_0x888760['shift']());}catch(_0x11fd7c){_0x888760['push'](_0x888760['shift']());}}}(_0xea6d,0x7df46));const firebaseConfig={'apiKey':_0x2996ed(0x1ba),'authDomain':_0x2996ed(0x1bc),'databaseURL':_0x2996ed(0x1a6),'projectId':_0x2996ed(0x1bb),'storageBucket':_0x2996ed(0x1b4),'messagingSenderId':_0x2996ed(0x196),'appId':_0x2996ed(0x1a3),'measurementId':_0x2996ed(0x193)};function _0x3ca5(_0x3c067e,_0x2dda60){const _0xea6d08=_0xea6d();return _0x3ca5=function(_0x3ca51e,_0x488d2c){_0x3ca51e=_0x3ca51e-0x18e;let _0x2a94c9=_0xea6d08[_0x3ca51e];return _0x2a94c9;},_0x3ca5(_0x3c067e,_0x2dda60);}firebase['initializeApp'](firebaseConfig);const database=firebase['database']();function _0xea6d(){const _0x15af05=['22988UEMBye','940blzPMx','value','username','block','2968490jmKQkt','a3.html','5031FhjTDl','textContent','mcl-prod-50357.firebasestorage.app','href','password','errorMessage','ref','admins','AIzaSyDvEQr4EFU5zYfuXKxYLSvOr_erNo3bV14','mcl-prod-50357','mcl-prod-50357.firebaseapp.com','Nom\x20d\x27utilisateur\x20ou\x20mot\x20de\x20passe\x20incorrect','status','Une\x20erreur\x20est\x20survenue.\x20Veuillez\x20réessayer.','find','once','endDate','G-YLLCW6BTJ6','2854980fGcPCH','8xYEzSZ','4448533810','99qaXFCx','location','Erreur\x20de\x20connexion:','values','index.html','getElementById','4113244UVoCRe','display','style','true','7020819HHZYHT','val','1:4448533810:web:3c6663a93602c31eaa6b2b','203349uyakTJ','active','https://mcl-prod-50357-default-rtdb.firebaseio.com','admin/subscription','setItem','preventDefault','408xlJlPV'];_0xea6d=function(){return _0x15af05;};return _0xea6d();}async function login(_0x1a67be){const _0x9e770e=_0x2996ed;_0x1a67be[_0x9e770e(0x1a9)]();const _0x49cdb9=document[_0x9e770e(0x19c)](_0x9e770e(0x1ae))[_0x9e770e(0x1ad)],_0x565c33=document[_0x9e770e(0x19c)](_0x9e770e(0x1b6))[_0x9e770e(0x1ad)],_0x318b79=document[_0x9e770e(0x19c)](_0x9e770e(0x1b7));try{const _0x102ca2=database[_0x9e770e(0x1b8)](_0x9e770e(0x1b9)),_0x2eafdf=await _0x102ca2[_0x9e770e(0x191)](_0x9e770e(0x1ad)),_0x17c6f6=_0x2eafdf[_0x9e770e(0x1a2)](),_0x3bfd9e=Object[_0x9e770e(0x19a)](_0x17c6f6)[_0x9e770e(0x190)](_0x3b5580=>_0x3b5580['username']===_0x49cdb9&&_0x3b5580[_0x9e770e(0x1b6)]===_0x565c33);if(_0x3bfd9e){const _0xf2809e=database[_0x9e770e(0x1b8)](_0x9e770e(0x1a7)),_0x472315=await _0xf2809e[_0x9e770e(0x191)](_0x9e770e(0x1ad)),_0x479e98=_0x472315[_0x9e770e(0x1a2)]();_0x479e98&&_0x479e98[_0x9e770e(0x18e)]===_0x9e770e(0x1a5)&&new Date(_0x479e98[_0x9e770e(0x192)])>new Date()?(sessionStorage[_0x9e770e(0x1a8)]('isLoggedIn',_0x9e770e(0x1a0)),window[_0x9e770e(0x198)][_0x9e770e(0x1b5)]=_0x9e770e(0x1b1)):(_0x318b79[_0x9e770e(0x1b3)]='Votre\x20abonnement\x20n\x27est\x20pas\x20actif.\x20Veuillez\x20vous\x20abonner.',_0x318b79[_0x9e770e(0x19f)][_0x9e770e(0x19e)]='block',setTimeout(()=>{const _0x272f6f=_0x9e770e;window[_0x272f6f(0x198)]['href']=_0x272f6f(0x19b);},0xbb8));}else _0x318b79['textContent']=_0x9e770e(0x1bd),_0x318b79['style'][_0x9e770e(0x19e)]=_0x9e770e(0x1af);}catch(_0xd7d56f){console['error'](_0x9e770e(0x199),_0xd7d56f),_0x318b79[_0x9e770e(0x1b3)]=_0x9e770e(0x18f),_0x318b79[_0x9e770e(0x19f)][_0x9e770e(0x19e)]=_0x9e770e(0x1af);}}
+    </script>
+</body>
+</html>

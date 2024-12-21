@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vente Tickets Cyber Campus</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* ... (Styles CSS - Pas de modifications ici) ... */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #970158, #00026e, #000000);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #fff;
+            overflow-x: hidden;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        section:hover{
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+            margin-top: 16px;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        td{
+            transition: background-color 0.3s ease;
+        }
+        tr:hover td{
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            touch-action: manipulation;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+            color: #1a2a6c;
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .notification h3 {
+            margin-bottom: 16px;
+            color: #1a2a6c;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .ticket-details {
+            margin: 16px 0;
+            font-size: 0.95rem;
+        }
+
+        .ticket-details p {
+            margin: 8px 0;
+            word-break: break-word;
+        }
+
+        .action-icons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .action-icon {
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+        }
+
+        .action-icon:active {
+            transform: scale(0.9);
+        }
+
+        .icon-share { color: #4CAF50; }
+        .icon-copy { color: #2196F3; }
+        .icon-pdf { color: #f44336; }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sell {
+            background-color: #4CAF50;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-cancel {
+            background-color: #f44336;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .close-icon {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            cursor: pointer;
+            font-size: 24px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            display: none;
+            z-index: 1001;
+            text-align: center;
+            max-width: 200px;
+            left: 50% !important;
+            transform: translateX(-50%);
+            bottom: 24px;
+        }
+        .history-section {
+            display: none;
+            background: rgba(26, 42, 108, 0.95); /* Fond plus opaque avec une teinte bleue foncée */
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .history-section:hover{
+            transform: translate(-50%, -50%) translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Amélioration du style de l'en-tête de l'historique pour plus de lisibilité */
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            background: inherit;
+            padding: 10px 0;
+            z-index: 1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Amélioration de la lisibilité des cartes de statistiques */
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover{
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card h4 {
+            color: #fdbb2d;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .toggle-history {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #fdbb2d;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .toggle-history i{
+            transition: transform 0.3s ease;
+        }
+        .toggle-history:hover{
+            transform: scale(1.1);
+        }
+        .toggle-history:hover i{
+            transform: rotate(180deg);
+        }
+
+        .toggle-history:active {
+            transform: scale(0.95);
+        }
+
+        .date-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .date-filter select {
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 16px;
+            background-color: rgba(0, 0, 0, 0.5);
+            font-size: 0.9rem;
+        }
+
+        /* Media Queries */
+        @media (max-width: 480px) {
+            body {
+                font-size: 14px;
+            }
+
+            .container {
+                padding: 12px;
+            }
+
+            section {
+                padding: 12px;
+                margin: 12px 0;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 8px 6px;
+            }
+
+            td:last-child {
+                text-align: right;
+            }
+
+            button {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .notification {
+                padding: 20px 16px;
+                width: 95%;
+            }
+
+            .action-icons {
+                gap: 16px;
+            }
+
+            .action-icon {
+                width: 40px;
+                height: 40px;
+                padding: 10px;
+            }
+
+            .buttons button {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .close-icon {
+                top: 8px;
+                right: 8px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .history-table {
+                font-size: 0.8rem;
+            }
+
+            .date-filter {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .buttons {
+                flex-direction: column;
+            }
+
+            .action-icons {
+                gap: 12px;
+            }
+
+            .action-icon {
+                width: 36px;
+                height: 36px;
+            }
+        }
+
+        .login-section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .login-section h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .login-section input[type="text"],
+        .login-section input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .login-section button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .login-section button:active {
+            transform: scale(0.95);
+        }
+
+        .error-message {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .messages-section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            max-height: 300px; /* Hauteur maximale pour la section des messages */
+            overflow-y: auto; /* Permettre le défilement vertical si le contenu dépasse la hauteur maximale */
+        }
+
+        .messages-section h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .message {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .message .timestamp {
+            font-size: 0.7rem;
+            color: #ccc;
+            margin-top: 5px;
+        }
+
+        /* Styles pour l'autocomplétion */
+        .autocomplete-container {
+            position: relative;
+        }
+
+        .autocomplete-suggestions {
+            position: absolute;
+            border: 1px solid #ccc;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            z-index: 100;
+            background-color: white;
+            width: 100%; /* Assurez-vous que la liste a la même largeur que le champ de saisie */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Ombre pour un effet visuel */
+        }
+
+        .autocomplete-suggestions li {
+            padding: 5px;
+            cursor: pointer;
+            color: #000;
+        }
+
+        .autocomplete-suggestions li:hover {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+        }
+        .loader-wrapper {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+        }
+
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .page-loader-wrapper {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1002;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .page-loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        .loader-message {
+            color: white;
+            margin-top: 16px;
+            font-size: 1rem;
+            text-align: center;
+            max-width: 80%;
+        }
+        .subscription-required {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .subscription-required-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .subscription-required-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .subscription-required-content p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .subscription-required-content button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0 10px;
+        }
+
+        .subscription-required-content button:hover {
+            background-color: #e6a727;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="page-loader-wrapper" id="pageLoaderWrapper">
+        <div class="page-loader"></div>
+        <div class="loader-message" id="pageLoaderMessage">Initialisation...</div>
+    </div>
+    <div class="loader-wrapper" id="loaderWrapper">
+        <div class="loader"></div>
+    </div>
+    <section class="login-section" id="loginSection">
+        <h2>Connexion Partenaire</h2>
+        <form id="loginForm">
+            <div class="autocomplete-container">
+                <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+                <ul class="autocomplete-suggestions" id="autocompleteSuggestions" style="display: none;"></ul>
+            </div>
+            <input type="password" id="password" placeholder="Mot de passe" required>
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <input type="checkbox" id="rememberMe">
+                <label for="rememberMe" style="color: white; margin-left: 5px;">Se souvenir de moi (24h)</label>
+            </div>
+            <button type="submit">Se connecter</button>
+        </form>
+        <div class="error-message" id="loginError" style="display: none; color: red;"></div>
+    </section>
+
+    <div class="container">
+        <section class="rates-section" style="display: none;">
+            <h2>Vente de tickets WiFi</h2>
+            <div class="loading-message">Chargement des tickets...</div>
+            <table style="display: none;"></table>
+        </section>
+    </div>
+
+    <div class="notification" id="notification">
+        <span class="close-icon" onclick="hideNotification()">×</span>
+        <h3 id="notification-title">Confirmation de vente</h3>
+        <div class="ticket-details" id="notification-message"></div>
+        <div class="buttons" id="confirmation-buttons">
+            <button class="btn-sell" onclick="window.proceedWithSale()">Confirmer</button>
+            <button class="btn-cancel" onclick="hideNotification()">Annuler</button>
+        </div>
+        <div class="action-icons" id="ticket-actions" style="display: none;">
+            <div class="action-icon icon-share" onclick="shareTicket()" title="Partager">
+                <i data-lucide="share-2"></i>
+            </div>
+            <div class="action-icon icon-pdf" onclick="exportToPDF()" title="Exporter en PDF">
+                <i data-lucide="file-text"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="toggle-history" onclick="toggleHistory()">
+        <i data-lucide="history"></i>
+    </div>
+
+    <div class="history-section" id="historySection" style="display: none;">
+        <div class="history-header">
+            <h2>Historique des ventes</h2>
+            <button onclick="closeHistory()">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+
+        <div class="date-filter">
+            <select id="periodFilter" onchange="filterHistory()">
+                <option value="today">Aujourd'hui</option>
+                <option value="week">Cette semaine</option>
+                <option value="month">Ce mois</option>
+                <option value="all">Tout l'historique</option>
+            </select>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4>Tickets vendus</h4>
+                <div id="totalTickets" class="value">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Chiffre d'affaires</h4>
+                <div id="totalRevenue" class="value">0 FCFA</div>
+            </div>
+            <div class="stat-card">
+                <h4>Ticket le plus vendu</h4>
+                <div id="topCategory" class="value">-</div>
+            </div>
+            <div class="stat-card">
+                <h4>Moyenne par jour</h4>
+                <div id="avgDaily" class="value">0</div>
+            </div>
+        </div>
+
+        <div class="history-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Catégorie</th>
+                        <th>Utilisateur</th>
+                        <th>Prix</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <section class="messages-section" id="messagesSection" style="display: none;">
+        <h2>Messages Reçus</h2>
+        <div id="messagesContainer">
+            <!-- Les messages seront ajoutés ici -->
+        </div>
+    </section>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <footer>
+        <div class="anitext">PROPULSE PAR EVISIONS</div>
+    </footer>
+
+    <div id="subscriptionRequiredModal" class="subscription-required" style="display: none;">
+        <div class="subscription-required-content">
+            <h2>Abonnement Requis</h2>
+            <p>Un abonnement actif est nécessaire pour accéder à cette fonctionnalité.</p>
+            <button onclick="redirectToSubscription()">S'abonner</button>
+            <button onclick="hideSubscriptionRequiredModal()">Fermer</button>
+        </div>
+    </div>
+
+    <script type="module">
+const _0x4d1003=_0x2324;(function(_0x102928,_0x263c2d){const _0x10187e=_0x2324,_0x182c94=_0x102928();while(!![]){try{const _0x49fbe6=-parseInt(_0x10187e(0xc6))/0x1+parseInt(_0x10187e(0x149))/0x2*(parseInt(_0x10187e(0xab))/0x3)+-parseInt(_0x10187e(0x15c))/0x4+-parseInt(_0x10187e(0x16e))/0x5+-parseInt(_0x10187e(0xfc))/0x6+parseInt(_0x10187e(0x11d))/0x7+-parseInt(_0x10187e(0x12a))/0x8*(-parseInt(_0x10187e(0x135))/0x9);if(_0x49fbe6===_0x263c2d)break;else _0x182c94['push'](_0x182c94['shift']());}catch(_0x32b819){_0x182c94['push'](_0x182c94['shift']());}}}(_0x2e74,0x21070));import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';import{getDatabase,ref,get,set,push,remove,onChildAdded}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';const firebaseConfig={'apiKey':_0x4d1003(0x144),'authDomain':_0x4d1003(0x114),'databaseURL':_0x4d1003(0xf2),'projectId':_0x4d1003(0x174),'storageBucket':_0x4d1003(0xcc),'messagingSenderId':_0x4d1003(0xe8),'appId':_0x4d1003(0xd6),'measurementId':_0x4d1003(0xf7)},app=initializeApp(firebaseConfig),db=getDatabase(app),adminRef=ref(db,_0x4d1003(0x101));let ticketToSell=null,localTickets={},currentReservedTicket=null,currentVendorId='',vendors={},availableUsernames=[];window[_0x4d1003(0x160)]=window[_0x4d1003(0x10a)][_0x4d1003(0x160)];async function fetchVendors(){const _0x1e960d=_0x4d1003;try{const _0x3fc9d4=ref(db,_0x1e960d(0xf5)),_0x13b3b3=await get(_0x3fc9d4);_0x13b3b3['exists']()?(vendors=_0x13b3b3[_0x1e960d(0xac)](),availableUsernames=Object['keys'](vendors)):console[_0x1e960d(0xf1)](_0x1e960d(0x16f));}catch(_0x39e14e){console[_0x1e960d(0xe3)](_0x1e960d(0x158),_0x39e14e);}}const usernameInput=document[_0x4d1003(0x12b)]('username'),passwordInput=document[_0x4d1003(0x12b)](_0x4d1003(0xbe)),suggestionsList=document['getElementById']('autocompleteSuggestions');usernameInput[_0x4d1003(0xc9)](_0x4d1003(0xdb),()=>{const _0x22d243=_0x4d1003,_0x559967=usernameInput['value'][_0x22d243(0xf4)](),_0x366acc=availableUsernames[_0x22d243(0x17b)](_0x46eb93=>_0x46eb93[_0x22d243(0xf4)]()[_0x22d243(0xd4)](_0x559967));suggestionsList[_0x22d243(0x175)]='';if(_0x559967[_0x22d243(0xb2)]===0x0||_0x366acc[_0x22d243(0xb2)]===0x0){suggestionsList[_0x22d243(0x11a)][_0x22d243(0x13f)]='none';return;}_0x366acc[_0x22d243(0x10f)](_0x3f518b=>{const _0x25fd97=_0x22d243,_0x52a3dc=document[_0x25fd97(0x121)]('li');_0x52a3dc[_0x25fd97(0xca)]=_0x3f518b,_0x52a3dc[_0x25fd97(0xc9)](_0x25fd97(0x172),()=>{const _0x52cdcb=_0x25fd97;usernameInput[_0x52cdcb(0xb8)]=_0x3f518b,suggestionsList[_0x52cdcb(0x175)]='',suggestionsList[_0x52cdcb(0x11a)][_0x52cdcb(0x13f)]=_0x52cdcb(0xe5);}),suggestionsList[_0x25fd97(0xd7)](_0x52a3dc);}),suggestionsList['style'][_0x22d243(0x13f)]=_0x22d243(0xc3);}),document[_0x4d1003(0xc9)](_0x4d1003(0x172),_0x31f7ce=>{const _0x160927=_0x4d1003;!usernameInput[_0x160927(0x112)](_0x31f7ce['target'])&&!suggestionsList[_0x160927(0x112)](_0x31f7ce[_0x160927(0x178)])&&(suggestionsList[_0x160927(0x11a)][_0x160927(0x13f)]=_0x160927(0xe5));});const rememberMeCheckbox=document[_0x4d1003(0x12b)](_0x4d1003(0xff)),storedUsername=localStorage[_0x4d1003(0x137)](_0x4d1003(0xcd)),storedPassword=localStorage[_0x4d1003(0x137)](_0x4d1003(0xbe)),storedTimestamp=localStorage['getItem'](_0x4d1003(0x119)),now=Date[_0x4d1003(0xc2)](),twentyFourHours=0x18*0x3c*0x3c*0x3e8;storedUsername&&storedPassword&&storedTimestamp&&now-storedTimestamp<twentyFourHours&&(usernameInput[_0x4d1003(0xb8)]=storedUsername,passwordInput[_0x4d1003(0xb8)]=storedPassword,rememberMeCheckbox[_0x4d1003(0xf6)]=!![]);function _0x2324(_0x47b1c1,_0x1bb5c6){const _0x2e748f=_0x2e74();return _0x2324=function(_0x232496,_0x599933){_0x232496=_0x232496-0xaa;let _0x43fbb9=_0x2e748f[_0x232496];return _0x43fbb9;},_0x2324(_0x47b1c1,_0x1bb5c6);}const loginForm=document[_0x4d1003(0x12b)]('loginForm'),loginError=document[_0x4d1003(0x12b)](_0x4d1003(0x162)),ratesSection=document[_0x4d1003(0xd9)](_0x4d1003(0x145)),historySection=document[_0x4d1003(0x12b)](_0x4d1003(0x14b)),loginSection=document[_0x4d1003(0x12b)](_0x4d1003(0xde)),messagesSection=document['getElementById']('messagesSection');function _0x2e74(){const _0x1c1b3b=['TicketsTransit','7973obRihn','sort','loaderWrapper','Partage\x20réussi','createElement','Vente\x20du\x20ticket\x20','Vendors/','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Prix:</strong>\x20','...','hideSubscriptionRequiredModal','TicketsTotal/','endDate','div','18976TNJpnE','getElementById','notification-buttons','PNG','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','updatedData','createIcons','Aucun\x20ticket\x20à\x20vendre','entries','Erreur\x20de\x20synchronisation:','setHours','1341LoFWiR','table','getItem','pageLoaderWrapper','exists','share','Erreur\x20lors\x20de\x20la\x20vente\x20automatique\x20du\x20ticket\x20:','slice','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','avgDaily','display','proceedWithSale','.loading-message','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement.','notification','AIzaSyDvEQr4EFU5zYfuXKxYLSvOr_erNo3bV14','.rates-section','message','Erreur\x20lors\x20de\x20la\x20vente\x20automatique\x20du\x20ticket.','\x20FCFA</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td><i\x20class=\x22fa-solid\x20fa-arrow-right\x22></i></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','9268dMkfkV','expired','historySection','\x20vendu\x20automatiquement.','Ticket\x20','Aucun\x20ticket\x20disponible.','max','classList','Succès','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-sell\x22\x20onclick=\x22window.confirmSale()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Confirmer\x20la\x20vente\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-cancel\x22\x20onclick=\x22window.cancelSale()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Annuler\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','clipboard','Impossible\x20de\x20récupérer\x20le\x20ticket','submit','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Nom\x20d\x27utilisateur:</strong>\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20onclick=\x22window.showTicketDetailsFromHistory(\x27','Erreur\x20lors\x20de\x20la\x20récupération\x20des\x20vendeurs:','catch','VendorsHistory/','status','332444yKroIP','Erreur\x20lors\x20de\x20la\x20récupération\x20du\x20ticket:','closeHistory','topCategory','jsPDF','save','loginError','motDePasse','showTicketDetailsFromHistory','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>','map','then','DOMContentLoaded','TicketsTotal','soldAt','confirmation-buttons','insertRow','href','363685SJYIgd','Aucun\x20vendeur\x20trouvé.','index.html','Erreur\x20lors\x20du\x20traitement\x20des\x20tickets\x20connectés\x20:','click','flex','mcl-prod-50357','innerHTML','user','confirmSale','target','Vendeur\x20automatique','keys','filter','totalTickets','69Tvoyol','val','filterHistory','copyTicket','notification-title','Erreur\x20de\x20confirmation:','utilisateur','length','active','innerText','/messages','Erreur\x20lors\x20de\x20la\x20confirmation\x20de\x20la\x20vente','TicketsVendus','value','getDay','Erreur\x20lors\x20du\x20traitement\x20du\x20ticket\x20:','Ticket\x20vendu\x20avec\x20succès','add','update','password','removeItem','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement\x20:','indexOf','now','block','Nettoyage\x20des\x20tickets\x20traités...','TicketConnecté/','59597nODmNj','getDate','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Mot\x20de\x20passe:</strong>\x20','addEventListener','textContent','messagesContainer','mcl-prod-50357.firebasestorage.app','username','Erreur\x20lors\x20de\x20la\x20vente:','Traitement\x20des\x20tickets\x20uniques...','prix','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Catégorie</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Prix\x20(FCFA)</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Restants</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Action</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','toFixed','Aucun\x20ticket\x20en\x20cours\x20de\x20vente','startsWith','Impossible\x20de\x20charger\x20l\x27historique','1:4448533810:web:3c6663a93602c31eaa6b2b','appendChild','.rates-section\x20table','querySelector','Vérification\x20du\x20ticket\x20pour\x20','input','pageLoaderMessage','join','loginSection','ceil','toggleHistory','Erreur\x20de\x20synchronisation\x20des\x20tickets.','Impossible\x20de\x20finaliser\x20la\x20vente','error','historyTableBody','none','\x20FCFA','periodFilter','4448533810','content','reduce','\x20FCFA</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Ticket\x20copié\x20dans\x20le\x20presse-papiers!','setItem','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement','totalRevenue','toLocaleString','log','https://mcl-prod-50357-default-rtdb.firebaseio.com','Erreur','toLowerCase','Vendors','checked','G-YLLCW6BTJ6','toDataURL','Ticket\x20introuvable\x20dans\x20l\x27historique','Abonnement\x20expiré','ticket-actions','662544Mmtpsr','TicketConnecté','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td><button\x20onclick=\x22window.initTicketSale(\x27','rememberMe','Ticket\x20vendu\x20avec\x20succès!','admin/subscription','Erreur\x20lors\x20de\x20la\x20copie:','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Catégorie:</strong>\x20','find','scrollTop','Impossible\x20de\x20récupérer\x20les\x20détails\x20du\x20ticket','writeText','Le\x20partage\x20n\x27est\x20pas\x20supporté\x20sur\x20votre\x20navigateur.\x20Veuillez\x20copier\x20manuellement\x20les\x20détails\x20du\x20ticket.','Détails\x20du\x20Ticket','jspdf','\x27)\x22\x20style=\x22cursor:\x20pointer;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','scrollHeight','notification-message','Pas\x20d\x27abonnement\x20actif','forEach','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22timestamp\x22>','ticket.pdf','contains','initTicketSale','mcl-prod-50357.firebaseapp.com','redirectToSubscription','price','Erreur\x20lors\x20du\x20traitement\x20des\x20tickets\x20:','category','usernameTimestamp','style','Erreur\x20lors\x20du\x20traitement\x20du\x20ticket\x20'];_0x2e74=function(){return _0x1c1b3b;};return _0x2e74();}loginForm[_0x4d1003(0xc9)](_0x4d1003(0x155),async _0x344e1e=>{const _0x51fd2a=_0x4d1003;_0x344e1e['preventDefault'](),showLoader();const _0x3945f8=usernameInput[_0x51fd2a(0xb8)],_0x39a07c=passwordInput[_0x51fd2a(0xb8)];vendors[_0x3945f8]&&vendors[_0x3945f8][_0x51fd2a(0xbe)]===_0x39a07c?(loginError[_0x51fd2a(0x11a)][_0x51fd2a(0x13f)]=_0x51fd2a(0xe5),ratesSection[_0x51fd2a(0x11a)][_0x51fd2a(0x13f)]=_0x51fd2a(0xc3),historySection['style']['display']=_0x51fd2a(0xe5),loginSection[_0x51fd2a(0x11a)]['display']='none',messagesSection[_0x51fd2a(0x11a)]['display']=_0x51fd2a(0xc3),currentVendorId=_0x3945f8,rememberMeCheckbox[_0x51fd2a(0xf6)]?(localStorage[_0x51fd2a(0xed)](_0x51fd2a(0xcd),_0x3945f8),localStorage[_0x51fd2a(0xed)](_0x51fd2a(0xbe),_0x39a07c),localStorage['setItem']('usernameTimestamp',Date['now']())):(localStorage[_0x51fd2a(0xbf)](_0x51fd2a(0xcd)),localStorage[_0x51fd2a(0xbf)]('password'),localStorage[_0x51fd2a(0xbf)](_0x51fd2a(0x119))),await syncTickets(),loadHistory(),listenForNewMessages(),lucide[_0x51fd2a(0x130)](),hideLoader()):(loginError[_0x51fd2a(0x11a)][_0x51fd2a(0x13f)]=_0x51fd2a(0xc3),loginError[_0x51fd2a(0xca)]='Nom\x20d\x27utilisateur\x20ou\x20mot\x20de\x20passe\x20incorrect.',hideLoader());});async function syncTickets(){const _0x59b404=_0x4d1003;try{const _0x2d5754=document[_0x59b404(0xd9)](_0x59b404(0x141)),_0x1d45bc=document[_0x59b404(0xd9)](_0x59b404(0xd8));_0x2d5754[_0x59b404(0x11a)][_0x59b404(0x13f)]=_0x59b404(0xc3),_0x1d45bc[_0x59b404(0x11a)][_0x59b404(0x13f)]=_0x59b404(0xe5);const _0x4f1c6c=ref(db,'TicketsTotal'),_0x141560=await get(_0x4f1c6c);_0x141560['exists']()?(localTickets=_0x141560[_0x59b404(0xac)](),createTicketTable(),_0x2d5754[_0x59b404(0x11a)][_0x59b404(0x13f)]=_0x59b404(0xe5),_0x1d45bc[_0x59b404(0x11a)][_0x59b404(0x13f)]=_0x59b404(0x136)):_0x2d5754['textContent']=_0x59b404(0x14e);}catch(_0x4cb90c){console[_0x59b404(0xe3)](_0x59b404(0x133),_0x4cb90c),loadingMessage[_0x59b404(0xca)]=_0x59b404(0xe1);}}async function createTicketTable(){const _0x2c23b1=_0x4d1003,_0xcbdc6=document['querySelector'](_0x2c23b1(0xd8));_0xcbdc6[_0x2c23b1(0x175)]=_0x2c23b1(0xd1);for(const [_0x4d0d14,_0xfc405b]of Object[_0x2c23b1(0x132)](localTickets)){const _0x557a1c=_0xfc405b[_0x2c23b1(0xb1)]?_0xfc405b[_0x2c23b1(0xb1)][_0x2c23b1(0xb2)]:0x0;if(_0x557a1c>0x0){const _0x3eafa9=_0xfc405b['prix'][0x0],_0x1c178d=_0xcbdc6[_0x2c23b1(0x16c)]();_0x1c178d[_0x2c23b1(0x175)]=_0x2c23b1(0x13d)+_0x4d0d14+_0x2c23b1(0x12e)+_0x3eafa9+_0x2c23b1(0x12e)+_0x557a1c+_0x2c23b1(0xfe)+_0x4d0d14+'\x27)\x22>Vendre</button></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20';}}document[_0x2c23b1(0xd9)]('.loading-message')[_0x2c23b1(0x11a)]['display']=_0x2c23b1(0xe5),_0xcbdc6[_0x2c23b1(0x11a)]['display']=_0x2c23b1(0x136);}window[_0x4d1003(0x113)]=async function(_0x59b2c1){const _0x511e57=_0x4d1003;showLoader();try{const _0x1ec5a7=ref(db,_0x511e57(0x127)+_0x59b2c1),_0x5986a6=await get(_0x1ec5a7);if(_0x5986a6[_0x511e57(0x139)]()){const _0x4f30b6=_0x5986a6[_0x511e57(0xac)]();if(!_0x4f30b6[_0x511e57(0xb1)]||_0x4f30b6[_0x511e57(0xb1)][_0x511e57(0xb2)]===0x0)throw new Error('Plus\x20de\x20tickets\x20disponibles');ticketToSell={'category':_0x59b2c1,'user':_0x4f30b6['utilisateur'][0x0],'password':_0x4f30b6[_0x511e57(0x163)][0x0],'price':_0x4f30b6[_0x511e57(0xd0)][0x0],'updatedData':{..._0x4f30b6,'utilisateur':_0x4f30b6[_0x511e57(0xb1)][_0x511e57(0x13c)](0x1),'motDePasse':_0x4f30b6[_0x511e57(0x163)][_0x511e57(0x13c)](0x1),'prix':_0x4f30b6[_0x511e57(0xd0)]['slice'](0x1)}},showConfirmation(ticketToSell),hideLoader();}}catch(_0x424583){console[_0x511e57(0xe3)]('Erreur:',_0x424583),showNotification(_0x511e57(0xf3),_0x511e57(0x154)),hideLoader();}};function showConfirmation(_0x54477b){const _0x139e43=_0x4d1003,_0x375bdb=document[_0x139e43(0x12b)](_0x139e43(0x143)),_0x1fe826=document[_0x139e43(0x12b)](_0x139e43(0x10d)),_0x4969d8=document['getElementById'](_0x139e43(0xfb)),_0x24874d=document[_0x139e43(0x12b)](_0x139e43(0x16b));document[_0x139e43(0x12b)](_0x139e43(0xaf))[_0x139e43(0xca)]='Confirmation\x20de\x20vente',_0x1fe826[_0x139e43(0x175)]='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Voulez-vous\x20vendre\x20ce\x20ticket\x20?</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Catégorie:</strong>\x20'+_0x54477b[_0x139e43(0x118)]+_0x139e43(0x124)+_0x54477b[_0x139e43(0x116)]+_0x139e43(0xeb),_0x24874d['style'][_0x139e43(0x13f)]=_0x139e43(0x173),_0x4969d8['style']['display']=_0x139e43(0xe5),_0x375bdb[_0x139e43(0x11a)]['display']='block';}window[_0x4d1003(0x140)]=async function(){const _0x458923=_0x4d1003;showLoader();if(!ticketToSell){showNotification(_0x458923(0xf3),_0x458923(0x131)),hideLoader();return;}try{const _0x2f6097=ref(db,'TicketsTotal/'+ticketToSell[_0x458923(0x118)]);await set(_0x2f6097,ticketToSell[_0x458923(0x12f)]);const _0x20fb6a=ref(db,_0x458923(0xb7));await push(_0x20fb6a,{'category':ticketToSell[_0x458923(0x118)],'user':ticketToSell[_0x458923(0x176)],'password':ticketToSell[_0x458923(0xbe)],'price':ticketToSell['price'],'soldAt':Date[_0x458923(0xc2)](),'vendorId':currentVendorId});const _0x2456cc=ref(db,_0x458923(0x15a)+currentVendorId);await push(_0x2456cc,{'category':ticketToSell[_0x458923(0x118)],'user':ticketToSell['user'],'password':ticketToSell['password'],'price':ticketToSell[_0x458923(0x116)],'soldAt':Date[_0x458923(0xc2)]()}),showTicketDetails(ticketToSell),await syncTickets(),hideLoader();}catch(_0x5dd0cb){console[_0x458923(0xe3)](_0x458923(0xce),_0x5dd0cb),showNotification(_0x458923(0xf3),_0x458923(0xe2)),hideLoader();}ticketToSell=null;};function showTicketDetails(_0x4ae969){const _0x495607=_0x4d1003,_0xddb6b8=document[_0x495607(0x12b)](_0x495607(0x143)),_0x4a10e6=document[_0x495607(0x12b)]('notification-message'),_0x450d42=document[_0x495607(0x12b)](_0x495607(0xfb)),_0x1d7b3a=document['getElementById'](_0x495607(0x16b));document[_0x495607(0x12b)](_0x495607(0xaf))[_0x495607(0xca)]=_0x495607(0xbb),_0x4a10e6['innerHTML']=_0x495607(0x103)+_0x4ae969['category']+'</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Nom\x20d\x27utilisateur:</strong>\x20'+_0x4ae969[_0x495607(0x176)]+'</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Mot\x20de\x20passe:</strong>\x20'+_0x4ae969['password']+'</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Prix:</strong>\x20'+_0x4ae969[_0x495607(0x116)]+_0x495607(0xeb),_0x1d7b3a['style'][_0x495607(0x13f)]=_0x495607(0xe5),_0x450d42[_0x495607(0x11a)][_0x495607(0x13f)]='flex',_0xddb6b8['style']['display']=_0x495607(0xc3),lucide[_0x495607(0x130)]();}function showSaleConfirmation(_0x417cc0){const _0x316368=_0x4d1003,_0x1f50fb=document[_0x316368(0x12b)](_0x316368(0x143)),_0x503356=document[_0x316368(0x12b)](_0x316368(0x10d)),_0x91cd64=document[_0x316368(0x12b)](_0x316368(0x12c));_0x503356[_0x316368(0x175)]=_0x316368(0x103)+_0x417cc0['category']+_0x316368(0x156)+_0x417cc0[_0x316368(0x176)]+_0x316368(0xc8)+_0x417cc0['password']+_0x316368(0x124)+_0x417cc0[_0x316368(0x116)]+_0x316368(0xeb),_0x91cd64[_0x316368(0x175)]=_0x316368(0x152),_0x1f50fb[_0x316368(0x11a)][_0x316368(0x13f)]=_0x316368(0xc3),lucide[_0x316368(0x130)]();}window[_0x4d1003(0x177)]=async function(){const _0x11f19a=_0x4d1003;showLoader();if(!currentReservedTicket){showNotification('Erreur',_0x11f19a(0xd3)),hideLoader();return;}try{const _0xb0c018=ref(db,_0x11f19a(0xb7));await push(_0xb0c018,{...currentReservedTicket,'soldAt':Date[_0x11f19a(0xc2)](),'vendorId':currentVendorId});const _0x5a227a=ref(db,_0x11f19a(0x15a)+currentVendorId);await push(_0x5a227a,{...currentReservedTicket,'soldAt':Date[_0x11f19a(0xc2)]()}),showNotification(_0x11f19a(0x151),_0x11f19a(0x100)),currentReservedTicket=null,hideNotification(),await syncTickets(),hideLoader();}catch(_0x53208c){console[_0x11f19a(0xe3)](_0x11f19a(0xb0),_0x53208c),showNotification(_0x11f19a(0xf3),_0x11f19a(0xb6)),hideLoader();}},window['cancelSale']=function(){currentReservedTicket=null,hideNotification();};function showNotification(_0x1b5014,_0x171220){const _0x264122=_0x4d1003,_0x2d019b=document[_0x264122(0x12b)]('notification'),_0x49c747=document[_0x264122(0x12b)](_0x264122(0xaf)),_0x20e913=document[_0x264122(0x12b)](_0x264122(0x10d)),_0x30ee5d=document['getElementById']('notification-buttons'),_0x2fb411=document[_0x264122(0x12b)]('ticket-actions');_0x49c747[_0x264122(0xca)]=_0x1b5014,_0x20e913['innerHTML']=_0x171220,_0x1b5014==='Succès'||_0x1b5014===_0x264122(0xf3)?(_0x30ee5d[_0x264122(0x11a)]['display']=_0x264122(0xe5),_0x2fb411['style']['display']=_0x264122(0xe5)):(_0x30ee5d[_0x264122(0x11a)][_0x264122(0x13f)]=_0x264122(0x173),_0x2fb411[_0x264122(0x11a)][_0x264122(0x13f)]='none'),_0x2d019b['style'][_0x264122(0x13f)]=_0x264122(0xc3);}window['hideNotification']=function(){const _0x488753=_0x4d1003;document[_0x488753(0x12b)](_0x488753(0x143))['style'][_0x488753(0x13f)]=_0x488753(0xe5);};async function loadHistory(){const _0x35961f=_0x4d1003;showLoader();try{const _0x2706b9=ref(db,_0x35961f(0x15a)+currentVendorId),_0x24615a=await get(_0x2706b9);let _0x1112aa=[];_0x24615a[_0x35961f(0x139)]()&&(_0x1112aa=Object[_0x35961f(0x132)](_0x24615a['val']())[_0x35961f(0x166)](([_0x4cdd61,_0x3badcd])=>({'id':_0x4cdd61,..._0x3badcd}))),filterHistory(_0x1112aa),hideLoader();}catch(_0x48605d){console['error']('Erreur\x20lors\x20du\x20chargement\x20de\x20l\x27historique:',_0x48605d),showNotification(_0x35961f(0xf3),_0x35961f(0xd5)),hideLoader();}}function filterHistory(_0x399d6c){const _0x35750a=_0x4d1003,_0x26d324=document['getElementById'](_0x35750a(0xe7))[_0x35750a(0xb8)],_0x17c1c2=new Date(),_0x4ba853={'today':new Date(_0x17c1c2[_0x35750a(0x134)](0x0,0x0,0x0,0x0)),'week':new Date(_0x17c1c2['setDate'](_0x17c1c2[_0x35750a(0xc7)]()-_0x17c1c2[_0x35750a(0xb9)]())),'month':new Date(_0x17c1c2['setDate'](0x1)),'all':new Date(0x0)},_0x2824b0=_0x399d6c[_0x35750a(0x17b)](_0x311e5b=>new Date(_0x311e5b[_0x35750a(0x16a)])>=_0x4ba853[_0x26d324]);updateStats(_0x2824b0),updateHistoryTable(_0x2824b0);}function updateStats(_0x369b4d){const _0x354a6d=_0x4d1003,_0x409cce=_0x369b4d['length'],_0x45a0eb=_0x369b4d[_0x354a6d(0xea)]((_0x54040c,_0x4e3613)=>_0x54040c+parseFloat(_0x4e3613['price']),0x0),_0x3ca8a0=_0x369b4d[_0x354a6d(0xea)]((_0x3f9aa2,_0x100f56)=>{const _0x59ffe1=_0x354a6d;return _0x3f9aa2[_0x100f56[_0x59ffe1(0x118)]]=(_0x3f9aa2[_0x100f56[_0x59ffe1(0x118)]]||0x0)+0x1,_0x3f9aa2;},{}),_0x44a739=Object['entries'](_0x3ca8a0)[_0x354a6d(0x11e)]((_0x382ff1,_0x1c1eed)=>_0x1c1eed[0x1]-_0x382ff1[0x1])[0x0]?.[0x0]||'-',_0x46ab43=_0x369b4d[_0x354a6d(0xb2)]>0x0?Math[_0x354a6d(0x14f)](0x1,Math[_0x354a6d(0xdf)]((Date['now']()-Math['min'](..._0x369b4d[_0x354a6d(0x166)](_0x4cf5d6=>_0x4cf5d6[_0x354a6d(0x16a)])))/(0x3e8*0x3c*0x3c*0x18))):0x1,_0x356bc6=(_0x409cce/_0x46ab43)[_0x354a6d(0xd2)](0x1);document[_0x354a6d(0x12b)](_0x354a6d(0xaa))['textContent']=_0x409cce,document[_0x354a6d(0x12b)](_0x354a6d(0xef))[_0x354a6d(0xca)]=_0x45a0eb[_0x354a6d(0xf0)]()+_0x354a6d(0xe6),document['getElementById'](_0x354a6d(0x15f))[_0x354a6d(0xca)]=_0x44a739,document[_0x354a6d(0x12b)](_0x354a6d(0x13e))[_0x354a6d(0xca)]=_0x356bc6;}function updateHistoryTable(_0x3cde8b){const _0x22f9ae=_0x4d1003,_0x1f1e92=document['getElementById'](_0x22f9ae(0xe4));_0x1f1e92[_0x22f9ae(0x175)]=_0x3cde8b[_0x22f9ae(0x11e)]((_0x5e2f50,_0x2a1bfa)=>_0x2a1bfa[_0x22f9ae(0x16a)]-_0x5e2f50[_0x22f9ae(0x16a)])[_0x22f9ae(0x166)](_0x2d9a90=>_0x22f9ae(0x157)+_0x2d9a90['id']+_0x22f9ae(0x10b)+new Date(_0x2d9a90[_0x22f9ae(0x16a)])[_0x22f9ae(0xf0)]()+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>'+_0x2d9a90[_0x22f9ae(0x118)]+_0x22f9ae(0x12e)+_0x2d9a90[_0x22f9ae(0x176)]+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>'+_0x2d9a90['price']+_0x22f9ae(0x148))[_0x22f9ae(0xdd)]('');}window[_0x4d1003(0x164)]=async function(_0x161317){const _0x219da2=_0x4d1003;showLoader();try{const _0x36e653=ref(db,_0x219da2(0x15a)+currentVendorId+'/'+_0x161317),_0x3f44a6=await get(_0x36e653);if(_0x3f44a6[_0x219da2(0x139)]()){const _0x17647d=_0x3f44a6[_0x219da2(0xac)]();window[_0x219da2(0x15e)](),showTicketDetails(_0x17647d),hideLoader();}else showNotification('Erreur',_0x219da2(0xf9)),hideLoader();}catch(_0xc994f4){console[_0x219da2(0xe3)](_0x219da2(0x15d),_0xc994f4),showNotification(_0x219da2(0xf3),_0x219da2(0x106)),hideLoader();}},window[_0x4d1003(0xe0)]=function(){const _0x41af13=_0x4d1003,_0x5062f5=document[_0x41af13(0x12b)](_0x41af13(0x14b)),_0x476be1=_0x5062f5[_0x41af13(0x11a)][_0x41af13(0x13f)]==='block';_0x5062f5[_0x41af13(0x11a)][_0x41af13(0x13f)]=_0x476be1?_0x41af13(0xe5):_0x41af13(0xc3),!_0x476be1&&loadHistory();},window['closeHistory']=function(){const _0x307d2f=_0x4d1003;document[_0x307d2f(0x12b)](_0x307d2f(0x14b))[_0x307d2f(0x11a)][_0x307d2f(0x13f)]='none';},window[_0x4d1003(0xad)]=function(){loadHistory();};function listenForNewMessages(){const _0x40dc9d=_0x4d1003,_0x35eb02=ref(db,_0x40dc9d(0x123)+currentVendorId+_0x40dc9d(0xb5));onChildAdded(_0x35eb02,_0x364569=>{const _0x360aaf=_0x364569['val']();displayNewMessage(_0x360aaf);});}function displayNewMessage(_0x18161c){const _0x3267bb=_0x4d1003,_0x4493be=document[_0x3267bb(0x12b)](_0x3267bb(0xcb)),_0x1173e7=document['createElement'](_0x3267bb(0x129));_0x1173e7[_0x3267bb(0x150)][_0x3267bb(0xbc)](_0x3267bb(0x146)),_0x1173e7[_0x3267bb(0x175)]=_0x3267bb(0x165)+_0x18161c[_0x3267bb(0xe9)]+_0x3267bb(0x110)+new Date(_0x18161c['timestamp'])['toLocaleString']()+'</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',_0x4493be[_0x3267bb(0xd7)](_0x1173e7),_0x4493be[_0x3267bb(0x105)]=_0x4493be[_0x3267bb(0x10c)];}window['shareTicket']=function(){const _0x417370=_0x4d1003,_0x9e7b66=document[_0x417370(0x12b)]('notification-message')[_0x417370(0xb4)];navigator[_0x417370(0x13a)]?navigator[_0x417370(0x13a)]({'title':_0x417370(0x109),'text':_0x9e7b66})[_0x417370(0x167)](()=>console[_0x417370(0xf1)](_0x417370(0x120)))[_0x417370(0x159)](_0x28a964=>console['error']('Erreur\x20lors\x20du\x20partage:',_0x28a964)):alert(_0x417370(0x108));},window[_0x4d1003(0xae)]=function(){const _0x2dca77=_0x4d1003,_0x4deca9=document[_0x2dca77(0x12b)](_0x2dca77(0x10d))[_0x2dca77(0xb4)];navigator[_0x2dca77(0x153)][_0x2dca77(0x107)](_0x4deca9)[_0x2dca77(0x167)](()=>{const _0x31311e=_0x2dca77;showNotification(_0x31311e(0x151),_0x31311e(0xec));})[_0x2dca77(0x159)](_0x493a7b=>{const _0x284db6=_0x2dca77;console['error'](_0x284db6(0x102),_0x493a7b),showNotification(_0x284db6(0xf3),'Impossible\x20de\x20copier\x20le\x20ticket');});},window['exportToPDF']=async function(){const _0x46aedf=_0x4d1003;showLoader();const _0x2af605=document['getElementById'](_0x46aedf(0x10d)),_0x54d7bb=new jsPDF(),_0x2f5a74=await html2canvas(_0x2af605),_0x2b2b75=_0x2f5a74[_0x46aedf(0xf8)]('image/png');_0x54d7bb['addImage'](_0x2b2b75,_0x46aedf(0x12d),0xa,0xa,0xbe,0x0),_0x54d7bb[_0x46aedf(0x161)](_0x46aedf(0x111)),hideLoader();};function showLoader(){const _0x4c207f=_0x4d1003;document[_0x4c207f(0x12b)](_0x4c207f(0x11f))[_0x4c207f(0x11a)][_0x4c207f(0x13f)]=_0x4c207f(0xc3);}function hideLoader(){const _0x50f959=_0x4d1003;document['getElementById']('loaderWrapper')[_0x50f959(0x11a)][_0x50f959(0x13f)]=_0x50f959(0xe5);}function showPageLoader(){const _0x4e6f9c=_0x4d1003;document[_0x4e6f9c(0x12b)]('pageLoaderWrapper')['style']['display']='flex';}function hidePageLoader(){const _0x4abddd=_0x4d1003;document[_0x4abddd(0x12b)](_0x4abddd(0x138))[_0x4abddd(0x11a)][_0x4abddd(0x13f)]='none';}async function processConnectedTickets(){const _0x13f8bb=_0x4d1003,_0xcd8ea6=document[_0x13f8bb(0x12b)](_0x13f8bb(0xdc));try{_0xcd8ea6[_0x13f8bb(0xca)]='Vérification\x20des\x20tickets\x20connectés...';const _0x6d70d=ref(db,_0x13f8bb(0xfd)),_0x741f3d=await get(_0x6d70d);let _0x3aafe0=_0x741f3d[_0x13f8bb(0xac)]()||{};const _0x36a130={};for(const _0x71e9fe in _0x3aafe0){const _0x20ca9e=_0x3aafe0[_0x71e9fe][_0x13f8bb(0xcd)];!_0x36a130[_0x20ca9e]&&(_0x36a130[_0x20ca9e]=_0x3aafe0[_0x71e9fe]);}_0xcd8ea6[_0x13f8bb(0xca)]=_0x13f8bb(0xcf);for(const _0x2dcc62 in _0x36a130){await processTicket(_0x36a130[_0x2dcc62]);}_0xcd8ea6['textContent']=_0x13f8bb(0xc4);for(const _0x1c2ec5 in _0x36a130){const _0x503530=Object[_0x13f8bb(0x17a)](_0x3aafe0)[_0x13f8bb(0x104)](_0x433145=>_0x3aafe0[_0x433145][_0x13f8bb(0xcd)]===_0x1c2ec5);_0x503530&&await remove(ref(db,_0x13f8bb(0xc5)+_0x503530));}}catch(_0x31d4a8){console['error'](_0x13f8bb(0x171),_0x31d4a8),showNotification(_0x13f8bb(0xf3),'Une\x20erreur\x20est\x20survenue\x20lors\x20du\x20traitement\x20des\x20tickets.');}}async function processTicket(_0x269265){const _0x295bc2=_0x4d1003,_0xc4160e=document[_0x295bc2(0x12b)](_0x295bc2(0xdc));try{_0xc4160e[_0x295bc2(0xca)]=_0x295bc2(0xda)+_0x269265[_0x295bc2(0xcd)]+'...';const _0x4b5bd9=ref(db,'VendorsHistory'),_0x292ae2=await get(_0x4b5bd9),_0x2af326=_0x292ae2[_0x295bc2(0xac)]()||{};let _0x2a763f=![];for(const _0x4b74d0 in _0x2af326){const _0x2e2d15=_0x2af326[_0x4b74d0];for(const _0x25bf37 in _0x2e2d15){if(_0x2e2d15[_0x25bf37][_0x295bc2(0x176)]===_0x269265[_0x295bc2(0xcd)]){_0x2a763f=!![];break;}}if(_0x2a763f)break;}if(!_0x2a763f){_0xc4160e['textContent']='Traitement\x20du\x20ticket\x20'+_0x269265[_0x295bc2(0xcd)]+_0x295bc2(0x125);const _0x11d737=ref(db,_0x295bc2(0x169)),_0x3e488e=ref(db,_0x295bc2(0x11c)),_0xdec0f8=await get(_0x11d737),_0x79bc61=await get(_0x3e488e),_0x30188e=_0xdec0f8[_0x295bc2(0xac)]()||{},_0x31af06=_0x79bc61[_0x295bc2(0xac)]()||{};let _0xb4129e=null,_0x34cef4=null,_0x1ee844=null;for(const _0x1b2556 in _0x30188e){const _0x29408c=(_0x30188e[_0x1b2556][_0x295bc2(0xb1)]||[])[_0x295bc2(0xc1)](_0x269265[_0x295bc2(0xcd)]);if(_0x29408c>-0x1){_0xb4129e={'category':_0x1b2556,'user':_0x30188e[_0x1b2556]['utilisateur'][_0x29408c],'password':_0x30188e[_0x1b2556][_0x295bc2(0x163)][_0x29408c],'price':_0x30188e[_0x1b2556][_0x295bc2(0xd0)][_0x29408c],'updatedData':{..._0x30188e[_0x1b2556],'utilisateur':_0x30188e[_0x1b2556]['utilisateur']['filter']((_0x105398,_0x14f1c8)=>_0x14f1c8!==_0x29408c),'motDePasse':_0x30188e[_0x1b2556][_0x295bc2(0x163)][_0x295bc2(0x17b)]((_0x44d07b,_0x46dfe2)=>_0x46dfe2!==_0x29408c),'prix':_0x30188e[_0x1b2556][_0x295bc2(0xd0)]['filter']((_0x2e8b01,_0x98d40d)=>_0x98d40d!==_0x29408c)}},_0x34cef4=ref(db,_0x295bc2(0x127)+_0x1b2556),_0x1ee844='TicketsTotal';break;}}if(!_0xb4129e)for(const _0x3dc116 in _0x31af06){if(_0x31af06[_0x3dc116]['user']===_0x269265['username']){_0xb4129e={'category':_0x31af06[_0x3dc116][_0x295bc2(0x118)],'user':_0x31af06[_0x3dc116][_0x295bc2(0x176)],'password':_0x31af06[_0x3dc116][_0x295bc2(0xbe)],'price':_0x31af06[_0x3dc116][_0x295bc2(0x116)]},_0x34cef4=ref(db,'TicketsTransit/'+_0x3dc116),_0x1ee844=_0x295bc2(0x11c);break;}}_0xb4129e&&(_0xc4160e[_0x295bc2(0xca)]=_0x295bc2(0x122)+_0x269265[_0x295bc2(0xcd)]+_0x295bc2(0x125),await sellTicketAutomatically(_0xb4129e,_0x34cef4,_0x1ee844));}}catch(_0x55b576){console['error'](_0x295bc2(0xba),_0x55b576),showNotification(_0x295bc2(0xf3),_0x295bc2(0x11b)+_0x269265[_0x295bc2(0xcd)]+'.');}}async function sellTicketAutomatically(_0x18bff6,_0x31406c,_0x3d8405){const _0x356d1d=_0x4d1003;try{const _0x7df342=_0x356d1d(0x179),_0xd9410a=ref(db,_0x356d1d(0x15a)+_0x7df342);await push(_0xd9410a,{'category':_0x18bff6[_0x356d1d(0x118)],'user':_0x18bff6[_0x356d1d(0x176)],'password':_0x18bff6['password'],'price':_0x18bff6[_0x356d1d(0x116)],'soldAt':Date[_0x356d1d(0xc2)]()});const _0x13edb0=ref(db,_0x356d1d(0xb7));await push(_0x13edb0,{'category':_0x18bff6['category'],'user':_0x18bff6[_0x356d1d(0x176)],'password':_0x18bff6[_0x356d1d(0xbe)],'price':_0x18bff6[_0x356d1d(0x116)],'soldAt':Date[_0x356d1d(0xc2)](),'vendorId':_0x7df342}),_0x3d8405==='TicketsTotal'?await set(_0x31406c,_0x18bff6['updatedData']):await remove(_0x31406c),console[_0x356d1d(0xf1)](_0x356d1d(0x14d)+_0x18bff6[_0x356d1d(0x176)]+_0x356d1d(0x14c));}catch(_0x4816fe){console[_0x356d1d(0xe3)](_0x356d1d(0x13b),_0x4816fe),showNotification(_0x356d1d(0xf3),_0x356d1d(0x147));}}function showSubscriptionRequiredModal(){const _0x1b3137=_0x4d1003;subscriptionRequiredModal[_0x1b3137(0x11a)][_0x1b3137(0x13f)]=_0x1b3137(0x173);}function hideSubscriptionRequiredModal(){const _0x1fedf4=_0x4d1003;subscriptionRequiredModal[_0x1fedf4(0x11a)][_0x1fedf4(0x13f)]=_0x1fedf4(0xe5);}function redirectToSubscription(){const _0x271d8c=_0x4d1003;window['location'][_0x271d8c(0x16d)]=_0x271d8c(0x170);}async function checkSubscriptionStatus(){const _0x5de3a9=_0x4d1003,_0x24cb59=document[_0x5de3a9(0x12b)](_0x5de3a9(0xdc));_0x24cb59[_0x5de3a9(0xca)]='Vérification\x20de\x20l\x27abonnement...';try{const _0x10ac24=await get(adminRef),_0x488a11=_0x10ac24[_0x5de3a9(0xac)](),_0x16170a=new Date();if(_0x488a11&&_0x488a11[_0x5de3a9(0x15b)]===_0x5de3a9(0xb3)){const _0x22e051=new Date(_0x488a11[_0x5de3a9(0x128)]);_0x22e051<_0x16170a?(_0x24cb59['textContent']=_0x5de3a9(0xfa),showSubscriptionRequiredModal(),await adminRef[_0x5de3a9(0xbd)]({'status':_0x5de3a9(0x14a)})):_0x24cb59[_0x5de3a9(0xca)]='Abonnement\x20actif';}else _0x24cb59['textContent']=_0x5de3a9(0x10e),showSubscriptionRequiredModal();}catch(_0x208293){console[_0x5de3a9(0xe3)](_0x5de3a9(0xc0),_0x208293),_0x24cb59['textContent']=_0x5de3a9(0xee),showNotification(_0x5de3a9(0xf3),_0x5de3a9(0x142));}}document[_0x4d1003(0xc9)](_0x4d1003(0x168),()=>{const _0x3e6f06=_0x4d1003;showPageLoader(),processConnectedTickets()['then'](()=>checkSubscriptionStatus())[_0x3e6f06(0x167)](()=>{fetchVendors(),lucide['createIcons'](),hidePageLoader();})[_0x3e6f06(0x159)](_0x1d62dc=>{const _0x4e573f=_0x3e6f06;console['error'](_0x4e573f(0x117),_0x1d62dc),hidePageLoader(),showNotification(_0x4e573f(0xf3),'Une\x20erreur\x20est\x20survenue\x20lors\x20de\x20l\x27initialisation.');});}),window[_0x4d1003(0x115)]=redirectToSubscription,window[_0x4d1003(0x126)]=redirectToSubscription;
+    </script>
+</body>
+</html>
