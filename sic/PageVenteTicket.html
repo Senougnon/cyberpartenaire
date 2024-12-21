@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vente Tickets Cyber Campus</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* ... (Styles CSS - Pas de modifications ici) ... */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #970158, #00026e, #000000);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #fff;
+            overflow-x: hidden;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        section:hover{
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+            margin-top: 16px;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        td{
+            transition: background-color 0.3s ease;
+        }
+        tr:hover td{
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            touch-action: manipulation;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+            color: #1a2a6c;
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .notification h3 {
+            margin-bottom: 16px;
+            color: #1a2a6c;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .ticket-details {
+            margin: 16px 0;
+            font-size: 0.95rem;
+        }
+
+        .ticket-details p {
+            margin: 8px 0;
+            word-break: break-word;
+        }
+
+        .action-icons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .action-icon {
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+        }
+
+        .action-icon:active {
+            transform: scale(0.9);
+        }
+
+        .icon-share { color: #4CAF50; }
+        .icon-copy { color: #2196F3; }
+        .icon-pdf { color: #f44336; }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sell {
+            background-color: #4CAF50;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-cancel {
+            background-color: #f44336;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .close-icon {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            cursor: pointer;
+            font-size: 24px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            display: none;
+            z-index: 1001;
+            text-align: center;
+            max-width: 200px;
+            left: 50% !important;
+            transform: translateX(-50%);
+            bottom: 24px;
+        }
+        .history-section {
+            display: none;
+            background: rgba(26, 42, 108, 0.95); /* Fond plus opaque avec une teinte bleue foncée */
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .history-section:hover{
+            transform: translate(-50%, -50%) translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Amélioration du style de l'en-tête de l'historique pour plus de lisibilité */
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            background: inherit;
+            padding: 10px 0;
+            z-index: 1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Amélioration de la lisibilité des cartes de statistiques */
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover{
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card h4 {
+            color: #fdbb2d;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .toggle-history {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #fdbb2d;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .toggle-history i{
+            transition: transform 0.3s ease;
+        }
+        .toggle-history:hover{
+            transform: scale(1.1);
+        }
+        .toggle-history:hover i{
+            transform: rotate(180deg);
+        }
+
+        .toggle-history:active {
+            transform: scale(0.95);
+        }
+
+        .date-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .date-filter select {
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 16px;
+            background-color: rgba(0, 0, 0, 0.5);
+            font-size: 0.9rem;
+        }
+
+        /* Media Queries */
+        @media (max-width: 480px) {
+            body {
+                font-size: 14px;
+            }
+
+            .container {
+                padding: 12px;
+            }
+
+            section {
+                padding: 12px;
+                margin: 12px 0;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 8px 6px;
+            }
+
+            td:last-child {
+                text-align: right;
+            }
+
+            button {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .notification {
+                padding: 20px 16px;
+                width: 95%;
+            }
+
+            .action-icons {
+                gap: 16px;
+            }
+
+            .action-icon {
+                width: 40px;
+                height: 40px;
+                padding: 10px;
+            }
+
+            .buttons button {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .close-icon {
+                top: 8px;
+                right: 8px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .history-table {
+                font-size: 0.8rem;
+            }
+
+            .date-filter {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .buttons {
+                flex-direction: column;
+            }
+
+            .action-icons {
+                gap: 12px;
+            }
+
+            .action-icon {
+                width: 36px;
+                height: 36px;
+            }
+        }
+
+        .login-section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .login-section h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .login-section input[type="text"],
+        .login-section input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .login-section button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .login-section button:active {
+            transform: scale(0.95);
+        }
+
+        .error-message {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .messages-section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            max-height: 300px; /* Hauteur maximale pour la section des messages */
+            overflow-y: auto; /* Permettre le défilement vertical si le contenu dépasse la hauteur maximale */
+        }
+
+        .messages-section h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .message {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .message .timestamp {
+            font-size: 0.7rem;
+            color: #ccc;
+            margin-top: 5px;
+        }
+
+        /* Styles pour l'autocomplétion */
+        .autocomplete-container {
+            position: relative;
+        }
+
+        .autocomplete-suggestions {
+            position: absolute;
+            border: 1px solid #ccc;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            z-index: 100;
+            background-color: white;
+            width: 100%; /* Assurez-vous que la liste a la même largeur que le champ de saisie */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Ombre pour un effet visuel */
+        }
+
+        .autocomplete-suggestions li {
+            padding: 5px;
+            cursor: pointer;
+            color: #000;
+        }
+
+        .autocomplete-suggestions li:hover {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+        }
+        .loader-wrapper {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+        }
+
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .page-loader-wrapper {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1002;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .page-loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        .loader-message {
+            color: white;
+            margin-top: 16px;
+            font-size: 1rem;
+            text-align: center;
+            max-width: 80%;
+        }
+        .subscription-required {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .subscription-required-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .subscription-required-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .subscription-required-content p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .subscription-required-content button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0 10px;
+        }
+
+        .subscription-required-content button:hover {
+            background-color: #e6a727;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="page-loader-wrapper" id="pageLoaderWrapper">
+        <div class="page-loader"></div>
+        <div class="loader-message" id="pageLoaderMessage">Initialisation...</div>
+    </div>
+    <div class="loader-wrapper" id="loaderWrapper">
+        <div class="loader"></div>
+    </div>
+    <section class="login-section" id="loginSection">
+        <h2>Connexion Partenaire</h2>
+        <form id="loginForm">
+            <div class="autocomplete-container">
+                <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+                <ul class="autocomplete-suggestions" id="autocompleteSuggestions" style="display: none;"></ul>
+            </div>
+            <input type="password" id="password" placeholder="Mot de passe" required>
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <input type="checkbox" id="rememberMe">
+                <label for="rememberMe" style="color: white; margin-left: 5px;">Se souvenir de moi (24h)</label>
+            </div>
+            <button type="submit">Se connecter</button>
+        </form>
+        <div class="error-message" id="loginError" style="display: none; color: red;"></div>
+    </section>
+
+    <div class="container">
+        <section class="rates-section" style="display: none;">
+            <h2>Vente de tickets WiFi</h2>
+            <div class="loading-message">Chargement des tickets...</div>
+            <table style="display: none;"></table>
+        </section>
+    </div>
+
+    <div class="notification" id="notification">
+        <span class="close-icon" onclick="hideNotification()">×</span>
+        <h3 id="notification-title">Confirmation de vente</h3>
+        <div class="ticket-details" id="notification-message"></div>
+        <div class="buttons" id="confirmation-buttons">
+            <button class="btn-sell" onclick="window.proceedWithSale()">Confirmer</button>
+            <button class="btn-cancel" onclick="hideNotification()">Annuler</button>
+        </div>
+        <div class="action-icons" id="ticket-actions" style="display: none;">
+            <div class="action-icon icon-share" onclick="shareTicket()" title="Partager">
+                <i data-lucide="share-2"></i>
+            </div>
+            <div class="action-icon icon-pdf" onclick="exportToPDF()" title="Exporter en PDF">
+                <i data-lucide="file-text"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="toggle-history" onclick="toggleHistory()">
+        <i data-lucide="history"></i>
+    </div>
+
+    <div class="history-section" id="historySection" style="display: none;">
+        <div class="history-header">
+            <h2>Historique des ventes</h2>
+            <button onclick="closeHistory()">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+
+        <div class="date-filter">
+            <select id="periodFilter" onchange="filterHistory()">
+                <option value="today">Aujourd'hui</option>
+                <option value="week">Cette semaine</option>
+                <option value="month">Ce mois</option>
+                <option value="all">Tout l'historique</option>
+            </select>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4>Tickets vendus</h4>
+                <div id="totalTickets" class="value">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Chiffre d'affaires</h4>
+                <div id="totalRevenue" class="value">0 FCFA</div>
+            </div>
+            <div class="stat-card">
+                <h4>Ticket le plus vendu</h4>
+                <div id="topCategory" class="value">-</div>
+            </div>
+            <div class="stat-card">
+                <h4>Moyenne par jour</h4>
+                <div id="avgDaily" class="value">0</div>
+            </div>
+        </div>
+
+        <div class="history-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Catégorie</th>
+                        <th>Utilisateur</th>
+                        <th>Prix</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <section class="messages-section" id="messagesSection" style="display: none;">
+        <h2>Messages Reçus</h2>
+        <div id="messagesContainer">
+            <!-- Les messages seront ajoutés ici -->
+        </div>
+    </section>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <footer>
+        <div class="anitext">PROPULSE PAR EVISIONS</div>
+    </footer>
+
+    <div id="subscriptionRequiredModal" class="subscription-required" style="display: none;">
+        <div class="subscription-required-content">
+            <h2>Abonnement Requis</h2>
+            <p>Un abonnement actif est nécessaire pour accéder à cette fonctionnalité.</p>
+            <button onclick="redirectToSubscription()">S'abonner</button>
+            <button onclick="hideSubscriptionRequiredModal()">Fermer</button>
+        </div>
+    </div>
+
+    <script type="module">
+const _0x43964a=_0x2a4f;(function(_0x465d49,_0x3bacee){const _0x4f61c2=_0x2a4f,_0x350812=_0x465d49();while(!![]){try{const _0x2dc887=-parseInt(_0x4f61c2(0x143))/0x1*(-parseInt(_0x4f61c2(0xc3))/0x2)+parseInt(_0x4f61c2(0x135))/0x3+-parseInt(_0x4f61c2(0xfb))/0x4*(-parseInt(_0x4f61c2(0x100))/0x5)+parseInt(_0x4f61c2(0x149))/0x6*(parseInt(_0x4f61c2(0x102))/0x7)+-parseInt(_0x4f61c2(0x13d))/0x8+parseInt(_0x4f61c2(0xcb))/0x9*(parseInt(_0x4f61c2(0x124))/0xa)+-parseInt(_0x4f61c2(0x175))/0xb*(parseInt(_0x4f61c2(0xbf))/0xc);if(_0x2dc887===_0x3bacee)break;else _0x350812['push'](_0x350812['shift']());}catch(_0x29692e){_0x350812['push'](_0x350812['shift']());}}}(_0x4e25,0xb3864));import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';import{getDatabase,ref,get,set,push,remove,onChildAdded}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';const firebaseConfig={'apiKey':_0x43964a(0x156),'authDomain':_0x43964a(0x163),'databaseURL':'https://sic-wifi-zone-default-rtdb.firebaseio.com','projectId':_0x43964a(0xe7),'storageBucket':'sic-wifi-zone.firebasestorage.app','messagingSenderId':_0x43964a(0x16f),'appId':_0x43964a(0xc4),'measurementId':_0x43964a(0x107)},app=initializeApp(firebaseConfig),db=getDatabase(app),adminRef=ref(db,_0x43964a(0xef));let ticketToSell=null,localTickets={},currentReservedTicket=null,currentVendorId='',vendors={},availableUsernames=[];window[_0x43964a(0x12a)]=window[_0x43964a(0xc9)][_0x43964a(0x12a)];async function fetchVendors(){const _0x39a895=_0x43964a;try{const _0x521c48=ref(db,'Vendors'),_0x16d1e3=await get(_0x521c48);_0x16d1e3[_0x39a895(0xbb)]()?(vendors=_0x16d1e3[_0x39a895(0x174)](),availableUsernames=Object[_0x39a895(0x17f)](vendors)):console[_0x39a895(0x10e)](_0x39a895(0x13c));}catch(_0xd9166b){console[_0x39a895(0xff)](_0x39a895(0x176),_0xd9166b);}}const usernameInput=document[_0x43964a(0xf3)](_0x43964a(0x17e)),passwordInput=document[_0x43964a(0xf3)](_0x43964a(0xc2)),suggestionsList=document[_0x43964a(0xf3)](_0x43964a(0x14b));usernameInput['addEventListener'](_0x43964a(0xda),()=>{const _0x526be1=_0x43964a,_0x465030=usernameInput[_0x526be1(0xe3)][_0x526be1(0xb9)](),_0x9d4292=availableUsernames[_0x526be1(0xdd)](_0x2b655d=>_0x2b655d['toLowerCase']()[_0x526be1(0xd1)](_0x465030));suggestionsList['innerHTML']='';if(_0x465030['length']===0x0||_0x9d4292['length']===0x0){suggestionsList[_0x526be1(0xb7)][_0x526be1(0x15c)]=_0x526be1(0xd5);return;}_0x9d4292[_0x526be1(0x110)](_0x5d6aa6=>{const _0x513c6f=_0x526be1,_0x263725=document[_0x513c6f(0xdc)]('li');_0x263725[_0x513c6f(0x125)]=_0x5d6aa6,_0x263725[_0x513c6f(0x16b)](_0x513c6f(0x128),()=>{const _0xdbcf2e=_0x513c6f;usernameInput[_0xdbcf2e(0xe3)]=_0x5d6aa6,suggestionsList[_0xdbcf2e(0x157)]='',suggestionsList['style'][_0xdbcf2e(0x15c)]=_0xdbcf2e(0xd5);}),suggestionsList[_0x513c6f(0x11a)](_0x263725);}),suggestionsList[_0x526be1(0xb7)][_0x526be1(0x15c)]=_0x526be1(0xe6);}),document['addEventListener'](_0x43964a(0x128),_0x336993=>{const _0x1e9d55=_0x43964a;!usernameInput['contains'](_0x336993['target'])&&!suggestionsList[_0x1e9d55(0x119)](_0x336993[_0x1e9d55(0xba)])&&(suggestionsList[_0x1e9d55(0xb7)][_0x1e9d55(0x15c)]=_0x1e9d55(0xd5));});const rememberMeCheckbox=document[_0x43964a(0xf3)](_0x43964a(0x111)),storedUsername=localStorage[_0x43964a(0x167)](_0x43964a(0x17e)),storedPassword=localStorage[_0x43964a(0x167)](_0x43964a(0xc2)),storedTimestamp=localStorage[_0x43964a(0x167)](_0x43964a(0xce)),now=Date[_0x43964a(0x141)](),twentyFourHours=0x18*0x3c*0x3c*0x3e8;storedUsername&&storedPassword&&storedTimestamp&&now-storedTimestamp<twentyFourHours&&(usernameInput[_0x43964a(0xe3)]=storedUsername,passwordInput['value']=storedPassword,rememberMeCheckbox['checked']=!![]);const loginForm=document['getElementById'](_0x43964a(0x150)),loginError=document[_0x43964a(0xf3)](_0x43964a(0x161)),ratesSection=document[_0x43964a(0xbd)](_0x43964a(0xd6)),historySection=document[_0x43964a(0xf3)]('historySection'),loginSection=document['getElementById']('loginSection'),messagesSection=document[_0x43964a(0xf3)]('messagesSection');loginForm[_0x43964a(0x16b)](_0x43964a(0xf7),async _0x402d05=>{const _0x13cc0f=_0x43964a;_0x402d05[_0x13cc0f(0x15f)](),showLoader();const _0x494758=usernameInput['value'],_0x1de0ca=passwordInput[_0x13cc0f(0xe3)];vendors[_0x494758]&&vendors[_0x494758]['password']===_0x1de0ca?(loginError['style'][_0x13cc0f(0x15c)]=_0x13cc0f(0xd5),ratesSection['style'][_0x13cc0f(0x15c)]=_0x13cc0f(0xe6),historySection['style']['display']=_0x13cc0f(0xd5),loginSection[_0x13cc0f(0xb7)][_0x13cc0f(0x15c)]=_0x13cc0f(0xd5),messagesSection['style'][_0x13cc0f(0x15c)]=_0x13cc0f(0xe6),currentVendorId=_0x494758,rememberMeCheckbox[_0x13cc0f(0xbc)]?(localStorage['setItem'](_0x13cc0f(0x17e),_0x494758),localStorage[_0x13cc0f(0x138)](_0x13cc0f(0xc2),_0x1de0ca),localStorage[_0x13cc0f(0x138)](_0x13cc0f(0xce),Date['now']())):(localStorage[_0x13cc0f(0x178)](_0x13cc0f(0x17e)),localStorage[_0x13cc0f(0x178)](_0x13cc0f(0xc2)),localStorage[_0x13cc0f(0x178)]('usernameTimestamp')),await syncTickets(),loadHistory(),listenForNewMessages(),lucide[_0x13cc0f(0x159)](),hideLoader()):(loginError['style']['display']=_0x13cc0f(0xe6),loginError[_0x13cc0f(0x125)]=_0x13cc0f(0xcf),hideLoader());});function _0x2a4f(_0x3617df,_0x46e8d2){const _0x4e2540=_0x4e25();return _0x2a4f=function(_0x2a4fac,_0x44bd07){_0x2a4fac=_0x2a4fac-0xb6;let _0x52616b=_0x4e2540[_0x2a4fac];return _0x52616b;},_0x2a4f(_0x3617df,_0x46e8d2);}async function syncTickets(){const _0x3716b7=_0x43964a;try{const _0xb5f765=document[_0x3716b7(0xbd)]('.loading-message'),_0x2c6e36=document[_0x3716b7(0xbd)](_0x3716b7(0x11b));_0xb5f765[_0x3716b7(0xb7)]['display']='block',_0x2c6e36['style']['display']='none';const _0x4d6bf3=ref(db,_0x3716b7(0x109)),_0x5a6b3e=await get(_0x4d6bf3);_0x5a6b3e[_0x3716b7(0xbb)]()?(localTickets=_0x5a6b3e[_0x3716b7(0x174)](),createTicketTable(),_0xb5f765[_0x3716b7(0xb7)]['display']=_0x3716b7(0xd5),_0x2c6e36[_0x3716b7(0xb7)][_0x3716b7(0x15c)]=_0x3716b7(0xcc)):_0xb5f765[_0x3716b7(0x125)]=_0x3716b7(0x15e);}catch(_0x471844){console[_0x3716b7(0xff)](_0x3716b7(0xc5),_0x471844),loadingMessage[_0x3716b7(0x125)]='Erreur\x20de\x20synchronisation\x20des\x20tickets.';}}async function createTicketTable(){const _0xf56568=_0x43964a,_0x11648a=document[_0xf56568(0xbd)](_0xf56568(0x11b));_0x11648a[_0xf56568(0x157)]=_0xf56568(0xde);for(const [_0x1eb169,_0x3ddce1]of Object[_0xf56568(0x12e)](localTickets)){const _0x35e533=_0x3ddce1[_0xf56568(0xe2)]?_0x3ddce1[_0xf56568(0xe2)][_0xf56568(0xf9)]:0x0;if(_0x35e533>0x0){const _0x2e2a40=_0x3ddce1[_0xf56568(0x179)][0x0],_0x44b631=_0x11648a[_0xf56568(0x16a)]();_0x44b631[_0xf56568(0x157)]=_0xf56568(0x169)+_0x1eb169+_0xf56568(0x139)+_0x2e2a40+_0xf56568(0x139)+_0x35e533+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td><button\x20onclick=\x22window.initTicketSale(\x27'+_0x1eb169+_0xf56568(0x165);}}document[_0xf56568(0xbd)](_0xf56568(0x17c))[_0xf56568(0xb7)][_0xf56568(0x15c)]=_0xf56568(0xd5),_0x11648a[_0xf56568(0xb7)][_0xf56568(0x15c)]='table';}window[_0x43964a(0xf2)]=async function(_0x2c0dc5){const _0x2ebc0c=_0x43964a;showLoader();try{const _0x3cecf3=ref(db,_0x2ebc0c(0x12f)+_0x2c0dc5),_0x31cd9d=await get(_0x3cecf3);if(_0x31cd9d[_0x2ebc0c(0xbb)]()){const _0xf4ebac=_0x31cd9d['val']();if(!_0xf4ebac[_0x2ebc0c(0xe2)]||_0xf4ebac[_0x2ebc0c(0xe2)][_0x2ebc0c(0xf9)]===0x0)throw new Error('Plus\x20de\x20tickets\x20disponibles');ticketToSell={'category':_0x2c0dc5,'user':_0xf4ebac[_0x2ebc0c(0xe2)][0x0],'password':_0xf4ebac[_0x2ebc0c(0x114)][0x0],'price':_0xf4ebac['prix'][0x0],'updatedData':{..._0xf4ebac,'utilisateur':_0xf4ebac[_0x2ebc0c(0xe2)]['slice'](0x1),'motDePasse':_0xf4ebac[_0x2ebc0c(0x114)][_0x2ebc0c(0xd4)](0x1),'prix':_0xf4ebac[_0x2ebc0c(0x179)][_0x2ebc0c(0xd4)](0x1)}},showConfirmation(ticketToSell),hideLoader();}}catch(_0x388cdb){console[_0x2ebc0c(0xff)](_0x2ebc0c(0xc0),_0x388cdb),showNotification(_0x2ebc0c(0xe4),_0x2ebc0c(0x14c)),hideLoader();}};function showConfirmation(_0x14c700){const _0x25cf34=_0x43964a,_0x148904=document[_0x25cf34(0xf3)](_0x25cf34(0xbe)),_0x5449ea=document['getElementById']('notification-message'),_0x4478c2=document['getElementById'](_0x25cf34(0x181)),_0x315abe=document['getElementById'](_0x25cf34(0x172));document[_0x25cf34(0xf3)]('notification-title')[_0x25cf34(0x125)]=_0x25cf34(0xe5),_0x5449ea[_0x25cf34(0x157)]='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Voulez-vous\x20vendre\x20ce\x20ticket\x20?</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Catégorie:</strong>\x20'+_0x14c700[_0x25cf34(0xeb)]+_0x25cf34(0x13e)+_0x14c700[_0x25cf34(0xd7)]+_0x25cf34(0x101),_0x315abe['style'][_0x25cf34(0x15c)]=_0x25cf34(0x115),_0x4478c2[_0x25cf34(0xb7)]['display']=_0x25cf34(0xd5),_0x148904['style']['display']='block';}window[_0x43964a(0xea)]=async function(){const _0x1da31c=_0x43964a;showLoader();if(!ticketToSell){showNotification(_0x1da31c(0xe4),'Aucun\x20ticket\x20à\x20vendre'),hideLoader();return;}try{const _0x4c1906=ref(db,'TicketsTotal/'+ticketToSell['category']);await set(_0x4c1906,ticketToSell[_0x1da31c(0x108)]);const _0x2225cf=ref(db,_0x1da31c(0x147));await push(_0x2225cf,{'category':ticketToSell[_0x1da31c(0xeb)],'user':ticketToSell[_0x1da31c(0x136)],'password':ticketToSell[_0x1da31c(0xc2)],'price':ticketToSell[_0x1da31c(0xd7)],'soldAt':Date[_0x1da31c(0x141)](),'vendorId':currentVendorId});const _0x17d6ed=ref(db,_0x1da31c(0xee)+currentVendorId);await push(_0x17d6ed,{'category':ticketToSell[_0x1da31c(0xeb)],'user':ticketToSell['user'],'password':ticketToSell['password'],'price':ticketToSell['price'],'soldAt':Date[_0x1da31c(0x141)]()}),showTicketDetails(ticketToSell),await syncTickets(),hideLoader();}catch(_0x595a30){console['error'](_0x1da31c(0x11c),_0x595a30),showNotification('Erreur','Impossible\x20de\x20finaliser\x20la\x20vente'),hideLoader();}ticketToSell=null;};function showTicketDetails(_0x57654a){const _0x3df156=_0x43964a,_0x4501d0=document[_0x3df156(0xf3)](_0x3df156(0xbe)),_0x18a711=document[_0x3df156(0xf3)](_0x3df156(0xf6)),_0x483b36=document['getElementById'](_0x3df156(0x181)),_0x3bf0b5=document[_0x3df156(0xf3)](_0x3df156(0x172));document['getElementById']('notification-title')['textContent']='Ticket\x20vendu\x20avec\x20succès',_0x18a711[_0x3df156(0x157)]='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Catégorie:</strong>\x20'+_0x57654a[_0x3df156(0xeb)]+_0x3df156(0xf0)+_0x57654a[_0x3df156(0x136)]+_0x3df156(0x13f)+_0x57654a[_0x3df156(0xc2)]+_0x3df156(0x13e)+_0x57654a[_0x3df156(0xd7)]+_0x3df156(0x101),_0x3bf0b5['style']['display']='none',_0x483b36[_0x3df156(0xb7)][_0x3df156(0x15c)]=_0x3df156(0x115),_0x4501d0[_0x3df156(0xb7)]['display']=_0x3df156(0xe6),lucide[_0x3df156(0x159)]();}function showSaleConfirmation(_0x249d6d){const _0xe182dd=_0x43964a,_0x5920b9=document[_0xe182dd(0xf3)](_0xe182dd(0xbe)),_0x2a0bc7=document[_0xe182dd(0xf3)](_0xe182dd(0xf6)),_0x3c97d6=document[_0xe182dd(0xf3)]('notification-buttons');_0x2a0bc7['innerHTML']=_0xe182dd(0x173)+_0x249d6d['category']+_0xe182dd(0xf0)+_0x249d6d[_0xe182dd(0x136)]+_0xe182dd(0x13f)+_0x249d6d[_0xe182dd(0xc2)]+_0xe182dd(0x13e)+_0x249d6d[_0xe182dd(0xd7)]+_0xe182dd(0x101),_0x3c97d6[_0xe182dd(0x157)]=_0xe182dd(0xc6),_0x5920b9['style'][_0xe182dd(0x15c)]=_0xe182dd(0xe6),lucide['createIcons']();}window[_0x43964a(0x148)]=async function(){const _0x596594=_0x43964a;showLoader();if(!currentReservedTicket){showNotification('Erreur','Aucun\x20ticket\x20en\x20cours\x20de\x20vente'),hideLoader();return;}try{const _0x51b30a=ref(db,_0x596594(0x147));await push(_0x51b30a,{...currentReservedTicket,'soldAt':Date['now'](),'vendorId':currentVendorId});const _0x407507=ref(db,'VendorsHistory/'+currentVendorId);await push(_0x407507,{...currentReservedTicket,'soldAt':Date['now']()}),showNotification(_0x596594(0x14e),_0x596594(0xe0)),currentReservedTicket=null,hideNotification(),await syncTickets(),hideLoader();}catch(_0x13f9a4){console[_0x596594(0xff)]('Erreur\x20de\x20confirmation:',_0x13f9a4),showNotification(_0x596594(0xe4),_0x596594(0x126)),hideLoader();}},window[_0x43964a(0x154)]=function(){currentReservedTicket=null,hideNotification();};function showNotification(_0x44c141,_0x2de52d){const _0x2061dc=_0x43964a,_0x437908=document[_0x2061dc(0xf3)](_0x2061dc(0xbe)),_0x483f81=document[_0x2061dc(0xf3)](_0x2061dc(0x130)),_0x588416=document[_0x2061dc(0xf3)](_0x2061dc(0xf6)),_0x5640ff=document[_0x2061dc(0xf3)](_0x2061dc(0x152)),_0x5e21c2=document[_0x2061dc(0xf3)](_0x2061dc(0x181));_0x483f81['textContent']=_0x44c141,_0x588416[_0x2061dc(0x157)]=_0x2de52d,_0x44c141===_0x2061dc(0x14e)||_0x44c141===_0x2061dc(0xe4)?(_0x5640ff['style'][_0x2061dc(0x15c)]=_0x2061dc(0xd5),_0x5e21c2['style']['display']=_0x2061dc(0xd5)):(_0x5640ff[_0x2061dc(0xb7)]['display']=_0x2061dc(0x115),_0x5e21c2[_0x2061dc(0xb7)][_0x2061dc(0x15c)]='none'),_0x437908[_0x2061dc(0xb7)][_0x2061dc(0x15c)]=_0x2061dc(0xe6);}window[_0x43964a(0x13b)]=function(){const _0x5aff07=_0x43964a;document[_0x5aff07(0xf3)](_0x5aff07(0xbe))[_0x5aff07(0xb7)][_0x5aff07(0x15c)]='none';};function _0x4e25(){const _0x597322=['target','exists','checked','querySelector','notification','116796xqTVcY','Erreur:','writeText','password','1983964TtQqpD','1:538299261046:web:45ba9618a8cd3cb225ff57','Erreur\x20de\x20synchronisation:','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-sell\x22\x20onclick=\x22window.confirmSale()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Confirmer\x20la\x20vente\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-cancel\x22\x20onclick=\x22window.cancelSale()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Annuler\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','toLocaleString','Erreur\x20lors\x20du\x20chargement\x20de\x20l\x27historique:','jspdf','Partage\x20réussi','63ENqnLD','table','historySection','usernameTimestamp','Nom\x20d\x27utilisateur\x20ou\x20mot\x20de\x20passe\x20incorrect.','message','startsWith','\x20vendu\x20automatiquement.','max','slice','none','.rates-section','price','</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','innerText','input','expired','createElement','filter','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Catégorie</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Prix\x20(FCFA)</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Restants</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Action</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Erreur\x20lors\x20de\x20la\x20vente\x20automatique\x20du\x20ticket.','Ticket\x20vendu\x20avec\x20succès!','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement\x20:','utilisateur','value','Erreur','Confirmation\x20de\x20vente','block','sic-wifi-zone','indexOf','Erreur\x20lors\x20du\x20partage:','proceedWithSale','category','Nettoyage\x20des\x20tickets\x20traités...','min','VendorsHistory/','admin/subscription','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Nom\x20d\x27utilisateur:</strong>\x20','Vendeur\x20automatique','initTicketSale','getElementById','historyTableBody','Ticket\x20introuvable\x20dans\x20l\x27historique','notification-message','submit','active','length','setHours','4jeySuo','reduce','Vérification\x20des\x20tickets\x20connectés...','Une\x20erreur\x20est\x20survenue\x20lors\x20de\x20l\x27initialisation.','error','962010TGNdrm','\x20FCFA</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','12929IGcvIq','Vendors/','join','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement.','Vente\x20du\x20ticket\x20','G-SPJ3LG1FY5','updatedData','TicketsTotal','/messages','\x27)\x22\x20style=\x22cursor:\x20pointer;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','index.html','pageLoaderWrapper','log','Erreur\x20lors\x20du\x20traitement\x20des\x20tickets\x20:','forEach','rememberMe','image/png','content','motDePasse','flex','Traitement\x20des\x20tickets\x20uniques...','addImage','topCategory','contains','appendChild','.rates-section\x20table','Erreur\x20lors\x20de\x20la\x20vente:','Impossible\x20de\x20récupérer\x20les\x20détails\x20du\x20ticket','totalTickets','\x20FCFA','Une\x20erreur\x20est\x20survenue\x20lors\x20du\x20traitement\x20des\x20tickets.','div','exportToPDF','sort','1687690lopcdb','textContent','Erreur\x20lors\x20de\x20la\x20confirmation\x20de\x20la\x20vente','Détails\x20du\x20Ticket','click','map','jsPDF','Erreur\x20lors\x20du\x20traitement\x20des\x20tickets\x20connectés\x20:','periodFilter','showTicketDetailsFromHistory','entries','TicketsTotal/','notification-title','DOMContentLoaded','scrollHeight','redirectToSubscription','pageLoaderMessage','2756733iQKEXA','user','location','setItem','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','Impossible\x20de\x20copier\x20le\x20ticket','hideNotification','Aucun\x20vendeur\x20trouvé.','11331832PvzJVg','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Prix:</strong>\x20','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Mot\x20de\x20passe:</strong>\x20','\x20FCFA</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td><i\x20class=\x22fa-solid\x20fa-arrow-right\x22></i></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','now','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement','1phgmdr','TicketsTransit','getDate','save','TicketsVendus','confirmSale','114QMhLfH','soldAt','autocompleteSuggestions','Impossible\x20de\x20récupérer\x20le\x20ticket','setDate','Succès','PNG','loginForm','Ticket\x20','notification-buttons','href','cancelSale','Ticket\x20copié\x20dans\x20le\x20presse-papiers!','AIzaSyDlpP8jqtmVqNAES51e18nXzY1a_f2YaFs','innerHTML','shareTicket','createIcons','ceil','filterHistory','display','Vérification\x20de\x20l\x27abonnement...','Aucun\x20ticket\x20disponible.','preventDefault','...','loginError','Erreur\x20lors\x20de\x20la\x20copie:','sic-wifi-zone.firebaseapp.com','Erreur\x20lors\x20du\x20traitement\x20du\x20ticket\x20','\x27)\x22>Vendre</button></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','catch','getItem','hideSubscriptionRequiredModal','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','insertRow','addEventListener','loaderWrapper','then','update','538299261046','toggleHistory','add','confirmation-buttons','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Catégorie:</strong>\x20','val','1320qCgDJm','Erreur\x20lors\x20de\x20la\x20récupération\x20des\x20vendeurs:','Erreur\x20lors\x20de\x20la\x20récupération\x20du\x20ticket:','removeItem','prix','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20onclick=\x22window.showTicketDetailsFromHistory(\x27','Pas\x20d\x27abonnement\x20actif','.loading-message','status','username','keys','Erreur\x20lors\x20de\x20la\x20vente\x20automatique\x20du\x20ticket\x20:','ticket-actions','TicketConnecté/','closeHistory','Le\x20partage\x20n\x27est\x20pas\x20supporté\x20sur\x20votre\x20navigateur.\x20Veuillez\x20copier\x20manuellement\x20les\x20détails\x20du\x20ticket.','TicketConnecté','style','Erreur\x20lors\x20du\x20traitement\x20du\x20ticket\x20:','toLowerCase'];_0x4e25=function(){return _0x597322;};return _0x4e25();}async function loadHistory(){const _0x3ac2d3=_0x43964a;showLoader();try{const _0x4f4413=ref(db,_0x3ac2d3(0xee)+currentVendorId),_0x4bbc25=await get(_0x4f4413);let _0x3e8a00=[];_0x4bbc25[_0x3ac2d3(0xbb)]()&&(_0x3e8a00=Object[_0x3ac2d3(0x12e)](_0x4bbc25[_0x3ac2d3(0x174)]())[_0x3ac2d3(0x129)](([_0x265a9f,_0xd94728])=>({'id':_0x265a9f,..._0xd94728}))),filterHistory(_0x3e8a00),hideLoader();}catch(_0x97a804){console[_0x3ac2d3(0xff)](_0x3ac2d3(0xc8),_0x97a804),showNotification(_0x3ac2d3(0xe4),'Impossible\x20de\x20charger\x20l\x27historique'),hideLoader();}}function filterHistory(_0x281ffc){const _0x56aa6e=_0x43964a,_0x4890df=document[_0x56aa6e(0xf3)](_0x56aa6e(0x12c))[_0x56aa6e(0xe3)],_0x47a277=new Date(),_0xd974c0={'today':new Date(_0x47a277[_0x56aa6e(0xfa)](0x0,0x0,0x0,0x0)),'week':new Date(_0x47a277[_0x56aa6e(0x14d)](_0x47a277[_0x56aa6e(0x145)]()-_0x47a277['getDay']())),'month':new Date(_0x47a277['setDate'](0x1)),'all':new Date(0x0)},_0x171142=_0x281ffc[_0x56aa6e(0xdd)](_0x19ffa5=>new Date(_0x19ffa5[_0x56aa6e(0x14a)])>=_0xd974c0[_0x4890df]);updateStats(_0x171142),updateHistoryTable(_0x171142);}function updateStats(_0x3a003f){const _0x2299b6=_0x43964a,_0x36f81e=_0x3a003f['length'],_0x418384=_0x3a003f[_0x2299b6(0xfc)]((_0x1d3b6b,_0x17f6f3)=>_0x1d3b6b+parseFloat(_0x17f6f3[_0x2299b6(0xd7)]),0x0),_0x533da8=_0x3a003f[_0x2299b6(0xfc)]((_0x28e8c8,_0x28e8df)=>{const _0x11f240=_0x2299b6;return _0x28e8c8[_0x28e8df[_0x11f240(0xeb)]]=(_0x28e8c8[_0x28e8df[_0x11f240(0xeb)]]||0x0)+0x1,_0x28e8c8;},{}),_0x19a25c=Object[_0x2299b6(0x12e)](_0x533da8)[_0x2299b6(0x123)]((_0x77798,_0x5af0ed)=>_0x5af0ed[0x1]-_0x77798[0x1])[0x0]?.[0x0]||'-',_0x764d8d=_0x3a003f[_0x2299b6(0xf9)]>0x0?Math[_0x2299b6(0xd3)](0x1,Math[_0x2299b6(0x15a)]((Date[_0x2299b6(0x141)]()-Math[_0x2299b6(0xed)](..._0x3a003f[_0x2299b6(0x129)](_0x463cfb=>_0x463cfb[_0x2299b6(0x14a)])))/(0x3e8*0x3c*0x3c*0x18))):0x1,_0x54c113=(_0x36f81e/_0x764d8d)['toFixed'](0x1);document['getElementById'](_0x2299b6(0x11e))[_0x2299b6(0x125)]=_0x36f81e,document[_0x2299b6(0xf3)]('totalRevenue')['textContent']=_0x418384['toLocaleString']()+_0x2299b6(0x11f),document[_0x2299b6(0xf3)](_0x2299b6(0x118))[_0x2299b6(0x125)]=_0x19a25c,document[_0x2299b6(0xf3)]('avgDaily')[_0x2299b6(0x125)]=_0x54c113;}function updateHistoryTable(_0x4c44f5){const _0x591248=_0x43964a,_0x4eff14=document['getElementById'](_0x591248(0xf4));_0x4eff14['innerHTML']=_0x4c44f5[_0x591248(0x123)]((_0x57e8da,_0x2204cc)=>_0x2204cc['soldAt']-_0x57e8da['soldAt'])[_0x591248(0x129)](_0x369dec=>_0x591248(0x17a)+_0x369dec['id']+_0x591248(0x10b)+new Date(_0x369dec[_0x591248(0x14a)])[_0x591248(0xc7)]()+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>'+_0x369dec[_0x591248(0xeb)]+_0x591248(0x139)+_0x369dec['user']+_0x591248(0x139)+_0x369dec[_0x591248(0xd7)]+_0x591248(0x140))[_0x591248(0x104)]('');}window[_0x43964a(0x12d)]=async function(_0x245fe5){const _0x8c3e11=_0x43964a;showLoader();try{const _0x22b208=ref(db,_0x8c3e11(0xee)+currentVendorId+'/'+_0x245fe5),_0x1f9d79=await get(_0x22b208);if(_0x1f9d79[_0x8c3e11(0xbb)]()){const _0x2ed892=_0x1f9d79['val']();window['closeHistory'](),showTicketDetails(_0x2ed892),hideLoader();}else showNotification(_0x8c3e11(0xe4),_0x8c3e11(0xf5)),hideLoader();}catch(_0x43c4a7){console[_0x8c3e11(0xff)](_0x8c3e11(0x177),_0x43c4a7),showNotification(_0x8c3e11(0xe4),_0x8c3e11(0x11d)),hideLoader();}},window[_0x43964a(0x170)]=function(){const _0x3eb066=_0x43964a,_0x588bd3=document[_0x3eb066(0xf3)](_0x3eb066(0xcd)),_0x2287e5=_0x588bd3['style'][_0x3eb066(0x15c)]===_0x3eb066(0xe6);_0x588bd3[_0x3eb066(0xb7)][_0x3eb066(0x15c)]=_0x2287e5?_0x3eb066(0xd5):_0x3eb066(0xe6),!_0x2287e5&&loadHistory();},window[_0x43964a(0x183)]=function(){const _0x5771bf=_0x43964a;document[_0x5771bf(0xf3)](_0x5771bf(0xcd))[_0x5771bf(0xb7)][_0x5771bf(0x15c)]=_0x5771bf(0xd5);},window[_0x43964a(0x15b)]=function(){loadHistory();};function listenForNewMessages(){const _0x267a24=_0x43964a,_0x74da3=ref(db,_0x267a24(0x103)+currentVendorId+_0x267a24(0x10a));onChildAdded(_0x74da3,_0x5d7a3a=>{const _0x20808c=_0x267a24,_0xf96665=_0x5d7a3a[_0x20808c(0x174)]();displayNewMessage(_0xf96665);});}function displayNewMessage(_0x43244a){const _0x5e74f8=_0x43964a,_0x1cbab8=document[_0x5e74f8(0xf3)]('messagesContainer'),_0x1a258=document['createElement'](_0x5e74f8(0x121));_0x1a258['classList'][_0x5e74f8(0x171)](_0x5e74f8(0xd0)),_0x1a258[_0x5e74f8(0x157)]='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>'+_0x43244a[_0x5e74f8(0x113)]+'</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22timestamp\x22>'+new Date(_0x43244a['timestamp'])[_0x5e74f8(0xc7)]()+_0x5e74f8(0xd8),_0x1cbab8[_0x5e74f8(0x11a)](_0x1a258),_0x1cbab8['scrollTop']=_0x1cbab8[_0x5e74f8(0x132)];}window[_0x43964a(0x158)]=function(){const _0x4c221f=_0x43964a,_0x12ed41=document[_0x4c221f(0xf3)]('notification-message')[_0x4c221f(0xd9)];navigator['share']?navigator['share']({'title':_0x4c221f(0x127),'text':_0x12ed41})[_0x4c221f(0x16d)](()=>console[_0x4c221f(0x10e)](_0x4c221f(0xca)))[_0x4c221f(0x166)](_0x316dbd=>console[_0x4c221f(0xff)](_0x4c221f(0xe9),_0x316dbd)):alert(_0x4c221f(0x184));},window['copyTicket']=function(){const _0x33bf7d=_0x43964a,_0x1a44c1=document[_0x33bf7d(0xf3)](_0x33bf7d(0xf6))[_0x33bf7d(0xd9)];navigator['clipboard'][_0x33bf7d(0xc1)](_0x1a44c1)[_0x33bf7d(0x16d)](()=>{const _0xac50f=_0x33bf7d;showNotification('Succès',_0xac50f(0x155));})['catch'](_0x19fe21=>{const _0x2e9af5=_0x33bf7d;console[_0x2e9af5(0xff)](_0x2e9af5(0x162),_0x19fe21),showNotification(_0x2e9af5(0xe4),_0x2e9af5(0x13a));});},window[_0x43964a(0x122)]=async function(){const _0xd85c5b=_0x43964a;showLoader();const _0x16ff6f=document['getElementById']('notification-message'),_0x38cde0=new jsPDF(),_0x33da3e=await html2canvas(_0x16ff6f),_0x3ca206=_0x33da3e['toDataURL'](_0xd85c5b(0x112));_0x38cde0[_0xd85c5b(0x117)](_0x3ca206,_0xd85c5b(0x14f),0xa,0xa,0xbe,0x0),_0x38cde0[_0xd85c5b(0x146)]('ticket.pdf'),hideLoader();};function showLoader(){const _0x44a717=_0x43964a;document[_0x44a717(0xf3)]('loaderWrapper')[_0x44a717(0xb7)][_0x44a717(0x15c)]=_0x44a717(0xe6);}function hideLoader(){const _0x510f39=_0x43964a;document[_0x510f39(0xf3)](_0x510f39(0x16c))['style']['display']='none';}function showPageLoader(){const _0xd692c1=_0x43964a;document['getElementById'](_0xd692c1(0x10d))['style'][_0xd692c1(0x15c)]='flex';}function hidePageLoader(){const _0x232fa1=_0x43964a;document[_0x232fa1(0xf3)](_0x232fa1(0x10d))['style'][_0x232fa1(0x15c)]=_0x232fa1(0xd5);}async function processConnectedTickets(){const _0x100ec0=_0x43964a,_0xad522e=document[_0x100ec0(0xf3)](_0x100ec0(0x134));try{_0xad522e[_0x100ec0(0x125)]=_0x100ec0(0xfd);const _0x98d48a=ref(db,_0x100ec0(0xb6)),_0x5af565=await get(_0x98d48a);let _0x3f04b4=_0x5af565[_0x100ec0(0x174)]()||{};const _0xdb9001={};for(const _0x5658eb in _0x3f04b4){const _0x4b00be=_0x3f04b4[_0x5658eb][_0x100ec0(0x17e)];!_0xdb9001[_0x4b00be]&&(_0xdb9001[_0x4b00be]=_0x3f04b4[_0x5658eb]);}_0xad522e['textContent']=_0x100ec0(0x116);for(const _0x3e9171 in _0xdb9001){await processTicket(_0xdb9001[_0x3e9171]);}_0xad522e['textContent']=_0x100ec0(0xec);for(const _0x1b68f6 in _0xdb9001){const _0x5c60a0=Object[_0x100ec0(0x17f)](_0x3f04b4)['find'](_0x251ad0=>_0x3f04b4[_0x251ad0][_0x100ec0(0x17e)]===_0x1b68f6);_0x5c60a0&&await remove(ref(db,_0x100ec0(0x182)+_0x5c60a0));}}catch(_0x38e31c){console[_0x100ec0(0xff)](_0x100ec0(0x12b),_0x38e31c),showNotification('Erreur',_0x100ec0(0x120));}}async function processTicket(_0x4053bc){const _0x215065=_0x43964a,_0xba11e9=document[_0x215065(0xf3)](_0x215065(0x134));try{_0xba11e9[_0x215065(0x125)]='Vérification\x20du\x20ticket\x20pour\x20'+_0x4053bc[_0x215065(0x17e)]+_0x215065(0x160);const _0x213c5d=ref(db,'VendorsHistory'),_0x513448=await get(_0x213c5d),_0x5b0ffb=_0x513448[_0x215065(0x174)]()||{};let _0xe0a23=![];for(const _0x4faf76 in _0x5b0ffb){const _0x27c4b3=_0x5b0ffb[_0x4faf76];for(const _0x2c8b2d in _0x27c4b3){if(_0x27c4b3[_0x2c8b2d]['user']===_0x4053bc['username']){_0xe0a23=!![];break;}}if(_0xe0a23)break;}if(!_0xe0a23){_0xba11e9[_0x215065(0x125)]='Traitement\x20du\x20ticket\x20'+_0x4053bc['username']+_0x215065(0x160);const _0x3fb2a2=ref(db,_0x215065(0x109)),_0x3d8ee8=ref(db,_0x215065(0x144)),_0x17bef1=await get(_0x3fb2a2),_0x2148bf=await get(_0x3d8ee8),_0x8fe7f9=_0x17bef1[_0x215065(0x174)]()||{},_0x460655=_0x2148bf[_0x215065(0x174)]()||{};let _0x53452d=null,_0x4f6ae3=null,_0x4dc407=null;for(const _0x487ffa in _0x8fe7f9){const _0x4a3abe=(_0x8fe7f9[_0x487ffa][_0x215065(0xe2)]||[])[_0x215065(0xe8)](_0x4053bc[_0x215065(0x17e)]);if(_0x4a3abe>-0x1){_0x53452d={'category':_0x487ffa,'user':_0x8fe7f9[_0x487ffa][_0x215065(0xe2)][_0x4a3abe],'password':_0x8fe7f9[_0x487ffa][_0x215065(0x114)][_0x4a3abe],'price':_0x8fe7f9[_0x487ffa][_0x215065(0x179)][_0x4a3abe],'updatedData':{..._0x8fe7f9[_0x487ffa],'utilisateur':_0x8fe7f9[_0x487ffa][_0x215065(0xe2)]['filter']((_0x1ea5c7,_0x588dc8)=>_0x588dc8!==_0x4a3abe),'motDePasse':_0x8fe7f9[_0x487ffa][_0x215065(0x114)][_0x215065(0xdd)]((_0x2550af,_0x3916ce)=>_0x3916ce!==_0x4a3abe),'prix':_0x8fe7f9[_0x487ffa]['prix'][_0x215065(0xdd)]((_0x7fc598,_0x1ae628)=>_0x1ae628!==_0x4a3abe)}},_0x4f6ae3=ref(db,_0x215065(0x12f)+_0x487ffa),_0x4dc407='TicketsTotal';break;}}if(!_0x53452d)for(const _0xb8444e in _0x460655){if(_0x460655[_0xb8444e][_0x215065(0x136)]===_0x4053bc[_0x215065(0x17e)]){_0x53452d={'category':_0x460655[_0xb8444e][_0x215065(0xeb)],'user':_0x460655[_0xb8444e][_0x215065(0x136)],'password':_0x460655[_0xb8444e]['password'],'price':_0x460655[_0xb8444e]['price']},_0x4f6ae3=ref(db,'TicketsTransit/'+_0xb8444e),_0x4dc407=_0x215065(0x144);break;}}_0x53452d&&(_0xba11e9['textContent']=_0x215065(0x106)+_0x4053bc['username']+_0x215065(0x160),await sellTicketAutomatically(_0x53452d,_0x4f6ae3,_0x4dc407));}}catch(_0x4c46fe){console[_0x215065(0xff)](_0x215065(0xb8),_0x4c46fe),showNotification(_0x215065(0xe4),_0x215065(0x164)+_0x4053bc[_0x215065(0x17e)]+'.');}}async function sellTicketAutomatically(_0x4bc282,_0x2793b2,_0x1552bd){const _0xcd5193=_0x43964a;try{const _0x525e26=_0xcd5193(0xf1),_0x18dc69=ref(db,_0xcd5193(0xee)+_0x525e26);await push(_0x18dc69,{'category':_0x4bc282[_0xcd5193(0xeb)],'user':_0x4bc282[_0xcd5193(0x136)],'password':_0x4bc282[_0xcd5193(0xc2)],'price':_0x4bc282[_0xcd5193(0xd7)],'soldAt':Date[_0xcd5193(0x141)]()});const _0x547fba=ref(db,_0xcd5193(0x147));await push(_0x547fba,{'category':_0x4bc282[_0xcd5193(0xeb)],'user':_0x4bc282[_0xcd5193(0x136)],'password':_0x4bc282['password'],'price':_0x4bc282[_0xcd5193(0xd7)],'soldAt':Date[_0xcd5193(0x141)](),'vendorId':_0x525e26}),_0x1552bd===_0xcd5193(0x109)?await set(_0x2793b2,_0x4bc282['updatedData']):await remove(_0x2793b2),console[_0xcd5193(0x10e)](_0xcd5193(0x151)+_0x4bc282['user']+_0xcd5193(0xd2));}catch(_0x3514d0){console[_0xcd5193(0xff)](_0xcd5193(0x180),_0x3514d0),showNotification(_0xcd5193(0xe4),_0xcd5193(0xdf));}}function showSubscriptionRequiredModal(){const _0x2d7774=_0x43964a;subscriptionRequiredModal['style'][_0x2d7774(0x15c)]=_0x2d7774(0x115);}function hideSubscriptionRequiredModal(){const _0x35181e=_0x43964a;subscriptionRequiredModal[_0x35181e(0xb7)][_0x35181e(0x15c)]=_0x35181e(0xd5);}function redirectToSubscription(){const _0x51ff95=_0x43964a;window[_0x51ff95(0x137)][_0x51ff95(0x153)]=_0x51ff95(0x10c);}async function checkSubscriptionStatus(){const _0x1f7880=_0x43964a,_0x272f31=document[_0x1f7880(0xf3)](_0x1f7880(0x134));_0x272f31[_0x1f7880(0x125)]=_0x1f7880(0x15d);try{const _0x317189=await get(adminRef),_0x20f578=_0x317189['val'](),_0x22d8d4=new Date();if(_0x20f578&&_0x20f578[_0x1f7880(0x17d)]===_0x1f7880(0xf8)){const _0x31be44=new Date(_0x20f578['endDate']);_0x31be44<_0x22d8d4?(_0x272f31[_0x1f7880(0x125)]='Abonnement\x20expiré',showSubscriptionRequiredModal(),await adminRef[_0x1f7880(0x16e)]({'status':_0x1f7880(0xdb)})):_0x272f31[_0x1f7880(0x125)]='Abonnement\x20actif';}else _0x272f31[_0x1f7880(0x125)]=_0x1f7880(0x17b),showSubscriptionRequiredModal();}catch(_0x230b18){console[_0x1f7880(0xff)](_0x1f7880(0xe1),_0x230b18),_0x272f31[_0x1f7880(0x125)]=_0x1f7880(0x142),showNotification('Erreur',_0x1f7880(0x105));}}document[_0x43964a(0x16b)](_0x43964a(0x131),()=>{const _0x25afbd=_0x43964a;showPageLoader(),processConnectedTickets()['then'](()=>checkSubscriptionStatus())['then'](()=>{const _0x2debf9=_0x2a4f;fetchVendors(),lucide[_0x2debf9(0x159)](),hidePageLoader();})[_0x25afbd(0x166)](_0x26b90d=>{const _0x1581b3=_0x25afbd;console[_0x1581b3(0xff)](_0x1581b3(0x10f),_0x26b90d),hidePageLoader(),showNotification(_0x1581b3(0xe4),_0x1581b3(0xfe));});}),window[_0x43964a(0x133)]=redirectToSubscription,window[_0x43964a(0x168)]=redirectToSubscription;
+    </script>
+</body>
+</html>
