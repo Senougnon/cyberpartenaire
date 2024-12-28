@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion Utilisateur</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styleA.css">
+    <style>
+         /* Style pour le formulaire de connexion */
+         body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #fff;
+            background: linear-gradient(135deg, #1a2a6c, #fdbb2d);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+             margin: 0; /* Reset margin for the body */
+            padding: 0; /* Reset padding for the body */
+        }
+        .login-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a2a6c;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            text-align: left;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #1a2a6c;
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background-color: #1a2a6c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0e1639;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 1rem;
+            display: none;
+        }
+      /* Media query pour les écrans plus petits (smartphones) */
+        @media (max-width: 600px) {
+            .login-container {
+                padding: 1.5rem;
+                 max-width: 90%;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+                margin-bottom: 1.5rem;
+            }
+
+            input {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+            }
+          button {
+               padding: 0.8rem;
+              font-size: 0.9rem;
+          }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Connexion Administrateur</h1>
+        <form id="loginForm" onsubmit="return login(event)">
+            <div class="input-group">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">Se connecter</button>
+        </form>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <script>
+const _0x4e64da=_0x4417;(function(_0x541365,_0x16969f){const _0x139cda=_0x4417,_0x4c2b82=_0x541365();while(!![]){try{const _0x43cfe5=parseInt(_0x139cda(0xc2))/0x1+-parseInt(_0x139cda(0xb2))/0x2*(-parseInt(_0x139cda(0xb9))/0x3)+-parseInt(_0x139cda(0xb8))/0x4*(parseInt(_0x139cda(0xae))/0x5)+parseInt(_0x139cda(0xa8))/0x6*(parseInt(_0x139cda(0xba))/0x7)+-parseInt(_0x139cda(0xb0))/0x8*(parseInt(_0x139cda(0xc5))/0x9)+-parseInt(_0x139cda(0xbb))/0xa+parseInt(_0x139cda(0xb5))/0xb;if(_0x43cfe5===_0x16969f)break;else _0x4c2b82['push'](_0x4c2b82['shift']());}catch(_0x37dc50){_0x4c2b82['push'](_0x4c2b82['shift']());}}}(_0x2354,0x7b347));const firebaseConfig={'apiKey':_0x4e64da(0xa3),'authDomain':_0x4e64da(0xad),'databaseURL':'https://fnmcwifi-default-rtdb.firebaseio.com','projectId':_0x4e64da(0xbd),'storageBucket':'fnmcwifi.firebasestorage.app','messagingSenderId':'544746759759','appId':_0x4e64da(0xc4),'measurementId':_0x4e64da(0xbf)};function _0x2354(){const _0xedddce=['password','598048RhJIMx','username','1:544746759759:web:f28f7e0ba691e007122c3a','9pUvoSP','preventDefault','errorMessage','style','display','values','AIzaSyA3RqnjgqrZE8M3DYRE-LvX2DDDOLfVEsI','database','initializeApp','isLoggedIn','Une\x20erreur\x20est\x20survenue.\x20Veuillez\x20réessayer.','7596xzLzfM','setItem','value','once','index.html','fnmcwifi.firebaseapp.com','5KfKLEQ','error','3953848MiTHgr','block','1997374KAOhEc','Erreur\x20de\x20connexion:','getElementById','7992611gAsoeW','true','val','3477748xaYiYy','3dehXto','2723MTaUEb','9474950WwlRCY','find','fnmcwifi','textContent','G-GC6MV1MJKR','ref'];_0x2354=function(){return _0xedddce;};return _0x2354();}function _0x4417(_0x44cf25,_0x5be159){const _0x235458=_0x2354();return _0x4417=function(_0x4417a9,_0x528172){_0x4417a9=_0x4417a9-0xa1;let _0x1449b9=_0x235458[_0x4417a9];return _0x1449b9;},_0x4417(_0x44cf25,_0x5be159);}firebase[_0x4e64da(0xa5)](firebaseConfig);const database=firebase[_0x4e64da(0xa4)]();async function login(_0xe067b8){const _0x23259e=_0x4e64da;_0xe067b8[_0x23259e(0xc6)]();const _0x48aec8=document['getElementById'](_0x23259e(0xc3))[_0x23259e(0xaa)],_0x1f89a9=document[_0x23259e(0xb4)]('password')['value'],_0x1780d6=document[_0x23259e(0xb4)](_0x23259e(0xc7));try{const _0x187df3=database[_0x23259e(0xc0)]('admins'),_0x3c69bc=await _0x187df3[_0x23259e(0xab)](_0x23259e(0xaa)),_0x7d5b67=_0x3c69bc[_0x23259e(0xb7)]();if(!_0x7d5b67){_0x1780d6[_0x23259e(0xbe)]='Nom\x20d\x27utilisateur\x20ou\x20mot\x20de\x20passe\x20incorrect',_0x1780d6[_0x23259e(0xc8)][_0x23259e(0xa1)]='block';return;}const _0x4f2e4f=Object[_0x23259e(0xa2)](_0x7d5b67)[_0x23259e(0xbc)](_0x9ceec0=>_0x9ceec0[_0x23259e(0xc3)]===_0x48aec8&&_0x9ceec0[_0x23259e(0xc1)]===_0x1f89a9);_0x4f2e4f?(sessionStorage[_0x23259e(0xa9)](_0x23259e(0xa6),_0x23259e(0xb6)),window['location']['href']=_0x23259e(0xac)):(_0x1780d6[_0x23259e(0xbe)]='Nom\x20d\x27utilisateur\x20ou\x20mot\x20de\x20passe\x20incorrect',_0x1780d6['style'][_0x23259e(0xa1)]=_0x23259e(0xb1));}catch(_0xd26c84){console[_0x23259e(0xaf)](_0x23259e(0xb3),_0xd26c84),_0x1780d6['textContent']=_0x23259e(0xa7),_0x1780d6[_0x23259e(0xc8)]['display']=_0x23259e(0xb1);}}
+    </script>
+</body>
+</html>
