@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vente Tickets Sika Connect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        /* ... (Styles CSS - Pas de modifications ici) ... */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg,  #424242, #073018, #553a01);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #fff;
+            overflow-x: hidden;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        section:hover{
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+            margin-top: 16px;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        td{
+            transition: background-color 0.3s ease;
+        }
+        tr:hover td{
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            touch-action: manipulation;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+            color: #1a2a6c;
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .notification h3 {
+            margin-bottom: 16px;
+            color: #1a2a6c;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .ticket-details {
+            margin: 16px 0;
+            font-size: 0.95rem;
+        }
+
+        .ticket-details p {
+            margin: 8px 0;
+            word-break: break-word;
+        }
+
+        .action-icons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .action-icon {
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+        }
+
+        .action-icon:active {
+            transform: scale(0.9);
+        }
+
+        .icon-share { color: #4CAF50; }
+        .icon-copy { color: #2196F3; }
+        .icon-pdf { color: #f44336; }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sell {
+            background-color: #4CAF50;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-cancel {
+            background-color: #f44336;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .close-icon {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            cursor: pointer;
+            font-size: 24px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            display: none;
+            z-index: 1001;
+            text-align: center;
+            max-width: 200px;
+            left: 50% !important;
+            transform: translateX(-50%);
+            bottom: 24px;
+        }
+        .history-section {
+            display: none;
+            background: rgba(26, 42, 108, 0.95); /* Fond plus opaque avec une teinte bleue foncée */
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .history-section:hover{
+            transform: translate(-50%, -50%) translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Amélioration du style de l'en-tête de l'historique pour plus de lisibilité */
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            background: inherit;
+            padding: 10px 0;
+            z-index: 1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Amélioration de la lisibilité des cartes de statistiques */
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover{
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card h4 {
+            color: #fdbb2d;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .toggle-history {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #fdbb2d;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .toggle-history i{
+            transition: transform 0.3s ease;
+        }
+        .toggle-history:hover{
+            transform: scale(1.1);
+        }
+        .toggle-history:hover i{
+            transform: rotate(180deg);
+        }
+
+        .toggle-history:active {
+            transform: scale(0.95);
+        }
+        .export-buttons {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .export-buttons button {
+            margin: 0 10px;
+        }
+
+        .date-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .date-filter input[type="date"] {
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+        .date-filter button{
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+        .date-filter select {
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 16px;
+            background-color: rgba(0, 0, 0, 0.5);
+            font-size: 0.9rem;
+        }
+
+        /* Media Queries */
+        @media (max-width: 480px) {
+            body {
+                font-size: 14px;
+            }
+
+            .container {
+                padding: 12px;
+            }
+
+            section {
+                padding: 12px;
+                margin: 12px 0;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 8px 6px;
+            }
+
+            td:last-child {
+                text-align: right;
+            }
+
+            button {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .notification {
+                padding: 20px 16px;
+                width: 95%;
+            }
+
+            .action-icons {
+                gap: 16px;
+            }
+
+            .action-icon {
+                width: 40px;
+                height: 40px;
+                padding: 10px;
+            }
+
+            .buttons button {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .close-icon {
+                top: 8px;
+                right: 8px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .history-table {
+                font-size: 0.8rem;
+            }
+
+            .date-filter {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .buttons {
+                flex-direction: column;
+            }
+
+            .action-icons {
+                gap: 12px;
+            }
+
+            .action-icon {
+                width: 36px;
+                height: 36px;
+            }
+        }
+
+        .login-section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .login-section h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .login-section input[type="text"],
+        .login-section input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .login-section button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .login-section button:active {
+            transform: scale(0.95);
+        }
+
+        .error-message {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .messages-section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            max-height: 300px; /* Hauteur maximale pour la section des messages */
+            overflow-y: auto; /* Permettre le défilement vertical si le contenu dépasse la hauteur maximale */
+        }
+
+        .messages-section h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .message {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .message .timestamp {
+            font-size: 0.7rem;
+            color: #ccc;
+            margin-top: 5px;
+        }
+
+        /* Styles pour l'autocomplétion */
+        .autocomplete-container {
+            position: relative;
+        }
+
+        .autocomplete-suggestions {
+            position: absolute;
+            border: 1px solid #ccc;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            z-index: 100;
+            background-color: white;
+            width: 100%; /* Assurez-vous que la liste a la même largeur que le champ de saisie */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Ombre pour un effet visuel */
+        }
+
+        .autocomplete-suggestions li {
+            padding: 5px;
+            cursor: pointer;
+            color: #000;
+        }
+
+        .autocomplete-suggestions li:hover {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+        }
+        .loader-wrapper {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+        }
+
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .page-loader-wrapper {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1002;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .page-loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        .loader-message {
+            color: white;
+            margin-top: 16px;
+            font-size: 1rem;
+            text-align: center;
+            max-width: 80%;
+        }
+        .subscription-required {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .subscription-required-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .subscription-required-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .subscription-required-content p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .subscription-required-content button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0 10px;
+        }
+
+        .subscription-required-content button:hover {
+            background-color: #e6a727;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="page-loader-wrapper" id="pageLoaderWrapper">
+        <div class="page-loader"></div>
+        <div class="loader-message" id="pageLoaderMessage">Initialisation...</div>
+    </div>
+    <div class="loader-wrapper" id="loaderWrapper">
+        <div class="loader"></div>
+    </div>
+    <section class="login-section" id="loginSection">
+        <h2>Connexion Partenaire</h2>
+        <form id="loginForm">
+            <div class="autocomplete-container">
+                <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+                <ul class="autocomplete-suggestions" id="autocompleteSuggestions" style="display: none;"></ul>
+            </div>
+            <input type="password" id="password" placeholder="Mot de passe" required>
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <input type="checkbox" id="rememberMe">
+                <label for="rememberMe" style="color: white; margin-left: 5px;">Se souvenir de moi (24h)</label>
+            </div>
+            <button type="submit">Se connecter</button>
+        </form>
+        <div class="error-message" id="loginError" style="display: none; color: red;"></div>
+    </section>
+
+    <div class="container">
+        <section class="rates-section" style="display: none;">
+            <h2>Vente de tickets WiFi</h2>
+            <div class="loading-message">Chargement des tickets...</div>
+            <table style="display: none;"></table>
+        </section>
+    </div>
+
+    <div class="notification" id="notification">
+        <span class="close-icon" onclick="hideNotification()">×</span>
+        <h3 id="notification-title">Confirmation de vente</h3>
+        <div class="ticket-details" id="notification-message"></div>
+        <div class="buttons" id="confirmation-buttons">
+            <button class="btn-sell" onclick="window.proceedWithSale()">Confirmer</button>
+            <button class="btn-cancel" onclick="hideNotification()">Annuler</button>
+        </div>
+        <div class="action-icons" id="ticket-actions" style="display: none;">
+            <div class="action-icon icon-share" onclick="shareTicket()" title="Partager">
+                <i data-lucide="share-2"></i>
+            </div>
+            <div class="action-icon icon-pdf" onclick="exportToPDF()" title="Exporter en PDF">
+                <i data-lucide="file-text"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="toggle-history" onclick="toggleHistory()">
+        <i data-lucide="history"></i>
+    </div>
+
+    <div class="history-section" id="historySection" style="display: none;">
+        <div class="history-header">
+            <h2>Historique des ventes</h2>
+            <button onclick="closeHistory()">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+
+        <div class="date-filter">
+            <select id="periodFilter" onchange="filterHistory()">
+                <option value="today">Aujourd'hui</option>
+                <option value="week">Cette semaine</option>
+                <option value="month">Ce mois</option>
+                <option value="all">Tout l'historique</option>
+            </select>
+            <input type="date" id="startDate">
+            <input type="date" id="endDate">
+            <button onclick="filterHistoryByDateRange()">Filtrer par date</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4>Tickets vendus</h4>
+                <div id="totalTickets" class="value">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Chiffre d'affaires</h4>
+                <div id="totalRevenue" class="value">0 FCFA</div>
+            </div>
+            <div class="stat-card">
+                <h4>Ticket le plus vendu</h4>
+                <div id="topCategory" class="value">-</div>
+            </div>
+            <div class="stat-card">
+                <h4>Moyenne par jour</h4>
+                <div id="avgDaily" class="value">0</div>
+            </div>
+        </div>
+        <div class="export-buttons">
+            <button onclick="printHistory()"><i data-lucide="printer"></i> Imprimer</button>
+            <button onclick="exportToPDFHistory()"><i data-lucide="file-down"></i> Exporter en PDF</button>
+        </div>
+
+        <div class="history-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Catégorie</th>
+                        <th>Utilisateur</th>
+                        <th>Prix</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <section class="messages-section" id="messagesSection" style="display: none;">
+        <h2>Messages Reçus</h2>
+        <div id="messagesContainer">
+            <!-- Les messages seront ajoutés ici -->
+        </div>
+    </section>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <footer>
+        <div class="anitext">PROPULSE PAR EVISIONS</div>
+    </footer>
+
+    <div id="subscriptionRequiredModal" class="subscription-required" style="display: none;">
+        <div class="subscription-required-content">
+            <h2>Abonnement Requis</h2>
+            <p>Un abonnement actif est nécessaire pour accéder à cette fonctionnalité.</p>
+            <button onclick="redirectToSubscription()">S'abonner</button>
+            <button onclick="hideSubscriptionRequiredModal()">Fermer</button>
+        </div>
+    </div>
+
+    <script type="module">
+const _0x323018=_0xeabf;(function(_0x4066c2,_0x4f353b){const _0x3f0f07=_0xeabf,_0x5cc850=_0x4066c2();while(!![]){try{const _0x57e415=parseInt(_0x3f0f07(0x1c9))/0x1*(-parseInt(_0x3f0f07(0x20b))/0x2)+-parseInt(_0x3f0f07(0x19b))/0x3+parseInt(_0x3f0f07(0x189))/0x4+-parseInt(_0x3f0f07(0x1de))/0x5*(parseInt(_0x3f0f07(0x1d6))/0x6)+-parseInt(_0x3f0f07(0x1ec))/0x7*(parseInt(_0x3f0f07(0x1d0))/0x8)+-parseInt(_0x3f0f07(0x21e))/0x9+parseInt(_0x3f0f07(0x171))/0xa;if(_0x57e415===_0x4f353b)break;else _0x5cc850['push'](_0x5cc850['shift']());}catch(_0x1f7937){_0x5cc850['push'](_0x5cc850['shift']());}}}(_0x2774,0x50409));import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';import{getDatabase,ref,get,set,push,remove,onChildAdded}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';const firebaseConfig={'apiKey':'AIzaSyAyrniQKyBc9zTwUCbHlryyR411HLzbDkk','authDomain':'sikaconnect-2f279.firebaseapp.com','databaseURL':_0x323018(0x1e3),'projectId':_0x323018(0x1cf),'storageBucket':_0x323018(0x204),'messagingSenderId':_0x323018(0x240),'appId':_0x323018(0x17d),'measurementId':_0x323018(0x1fd)},app=initializeApp(firebaseConfig),db=getDatabase(app),adminRef=ref(db,_0x323018(0x199));let ticketToSell=null,localTickets={},currentReservedTicket=null,currentVendorId='',vendors={},availableUsernames=[];window['jsPDF']=window[_0x323018(0x1b8)][_0x323018(0x185)];async function fetchVendors(){const _0x349438=_0x323018;try{const _0x467e51=ref(db,_0x349438(0x1d7)),_0x2fe944=await get(_0x467e51);_0x2fe944[_0x349438(0x21a)]()?(vendors=_0x2fe944[_0x349438(0x228)](),availableUsernames=Object[_0x349438(0x218)](vendors)):console[_0x349438(0x211)](_0x349438(0x174));}catch(_0x2d10f8){console[_0x349438(0x19d)]('Erreur\x20lors\x20de\x20la\x20récupération\x20des\x20vendeurs:',_0x2d10f8);}}const usernameInput=document[_0x323018(0x239)]('username'),passwordInput=document[_0x323018(0x239)](_0x323018(0x182)),suggestionsList=document[_0x323018(0x239)](_0x323018(0x196));function _0x2774(){const _0x10e1f8=['display','exportToPDF','avgDaily','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement','filterHistory','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','innerHTML','contains','catch','location','autoTable','840AltszP','price','Erreur\x20lors\x20de\x20la\x20copie:','filterHistoryByDateRange','prix','margin','sikaconnect-2f279','16hmDssz','printHistory','entries','.rates-section\x20table','.loading-message','toDataURL','6ffgIrv','Vendors','notification-title','historyTableBody','Aucun\x20ticket\x20en\x20cours\x20de\x20vente','hideNotification','href','/messages','1315735wbVxim','#historyTableBody','write','innerText','historySection','https://sikaconnect-2f279-default-rtdb.firebaseio.com','height','pageLoaderMessage','Erreur\x20lors\x20du\x20chargement\x20de\x20l\x27historique:','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22timestamp\x22>','setHours','getHeight','writeText','xlsx','327334fMZLuX','clipboard','appendChild','width','notification-message','div','checked','block','input','Erreur:','classList','Confirmation\x20de\x20vente','messagesSection','slice','reduce','pageLoaderWrapper','Plus\x20de\x20tickets\x20disponibles','G-579KVT1Y97','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td><button\x20onclick=\x22window.initTicketSale(\x27','application/octet-stream','Aucun\x20ticket\x20disponible.','totalRevenue','center','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement\x20:','sikaconnect-2f279.firebasestorage.app','message','closeHistory','map','toLowerCase','periodFilter','share','916SzAupS','rememberMe','left','Historique\x20des\x20ventes','style','querySelector','log','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>','Impossible\x20de\x20finaliser\x20la\x20vente','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Mot\x20de\x20passe:</strong>\x20','toLocaleString','Erreur','showTicketDetailsFromHistory','keys','length','exists','TicketsTotal/','createIcons','filter','3253545kfzedc','addImage','index.html','internal','then','addEventListener','toggleHistory','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20onclick=\x22window.showTicketDetailsFromHistory(\x27','username','Une\x20erreur\x20est\x20survenue\x20lors\x20de\x20l\x27initialisation.','val','motDePasse','\x20FCFA</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td><i\x20class=\x22fa-solid\x20fa-arrow-right\x22></i></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','usernameTimestamp','value','settings','submit','historique_ventes.xlsx','Impossible\x20de\x20copier\x20le\x20ticket','scrollHeight','image/png','utilisateur','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-sell\x22\x20onclick=\x22window.confirmSale()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Confirmer\x20la\x20vente\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-cancel\x22\x20onclick=\x22window.cancelSale()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Annuler\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','text','Ticket\x20vendu\x20avec\x20succès','update','Abonnement\x20expiré','getElementById','setItem','all','Abonnement\x20actif','textContent','Erreur\x20lors\x20de\x20la\x20vente:','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Prix:</strong>\x20','980825684625','ticket-actions','\x20FCFA</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','VendorsHistory/','none','12426070gJbKnV','.rates-section','Aucun\x20ticket\x20à\x20vendre','Aucun\x20vendeur\x20trouvé.','table_to_book','Ticket\x20copié\x20dans\x20le\x20presse-papiers!','Erreur\x20lors\x20de\x20l\x27initialisation\x20:','Vendors/','Succès','max','\x27)\x22>Vendre</button></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','target','1:980825684625:web:dbf5a31b93db0d13261d30','proceedWithSale','cancelSale','Impossible\x20de\x20charger\x20l\x27historique','TicketsTotal','password','forEach','scrollTop','jsPDF','utils','Impossible\x20de\x20récupérer\x20le\x20ticket','initTicketSale','2598336eZDYGS','soldAt','confirmation-buttons','now','Erreur\x20lors\x20de\x20la\x20confirmation\x20de\x20la\x20vente','notification-buttons','createElement','insertRow','loginError','Erreur\x20de\x20confirmation:','topCategory','getItem','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Nom\x20d\x27utilisateur:</strong>\x20','autocompleteSuggestions','sort','getNumberOfPages','admin/subscription','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Catégorie</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Prix\x20(FCFA)</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Restants</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Action</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','1381746FTDJJK','getTime','error','loaderWrapper','endDate','table','exportToExcelHistory','setFontSize','Partage\x20réussi','removeItem','timestamp','Le\x20partage\x20n\x27est\x20pas\x20supporté\x20sur\x20votre\x20navigateur.\x20Veuillez\x20copier\x20manuellement\x20les\x20détails\x20du\x20ticket.','save','toFixed','print','getDay','notification','historique_ventes.pdf','TicketsVendus','DOMContentLoaded','join','Détails\x20du\x20Ticket','Erreur\x20de\x20synchronisation:','PNG','startDate','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Catégorie:</strong>\x20','Erreur\x20lors\x20du\x20partage:','user','confirmSale','jspdf','flex','category','setDate','redirectToSubscription'];_0x2774=function(){return _0x10e1f8;};return _0x2774();}usernameInput['addEventListener'](_0x323018(0x1f4),()=>{const _0xe89e54=_0x323018,_0x4e21d8=usernameInput[_0xe89e54(0x22c)][_0xe89e54(0x208)](),_0x3430e3=availableUsernames[_0xe89e54(0x21d)](_0x4e7c72=>_0x4e7c72[_0xe89e54(0x208)]()['startsWith'](_0x4e21d8));suggestionsList['innerHTML']='';if(_0x4e21d8[_0xe89e54(0x219)]===0x0||_0x3430e3[_0xe89e54(0x219)]===0x0){suggestionsList['style'][_0xe89e54(0x1bd)]=_0xe89e54(0x170);return;}_0x3430e3[_0xe89e54(0x183)](_0x3604c4=>{const _0x59ad03=_0xe89e54,_0x28e725=document[_0x59ad03(0x18f)]('li');_0x28e725['textContent']=_0x3604c4,_0x28e725[_0x59ad03(0x223)]('click',()=>{const _0x4d39f0=_0x59ad03;usernameInput['value']=_0x3604c4,suggestionsList[_0x4d39f0(0x1c4)]='',suggestionsList[_0x4d39f0(0x20f)][_0x4d39f0(0x1bd)]='none';}),suggestionsList[_0x59ad03(0x1ee)](_0x28e725);}),suggestionsList[_0xe89e54(0x20f)][_0xe89e54(0x1bd)]=_0xe89e54(0x1f3);}),document[_0x323018(0x223)]('click',_0x2b744f=>{const _0x1a8154=_0x323018;!usernameInput['contains'](_0x2b744f[_0x1a8154(0x17c)])&&!suggestionsList[_0x1a8154(0x1c5)](_0x2b744f['target'])&&(suggestionsList[_0x1a8154(0x20f)][_0x1a8154(0x1bd)]=_0x1a8154(0x170));});const rememberMeCheckbox=document[_0x323018(0x239)](_0x323018(0x20c)),storedUsername=localStorage[_0x323018(0x194)]('username'),storedPassword=localStorage[_0x323018(0x194)](_0x323018(0x182)),storedTimestamp=localStorage[_0x323018(0x194)](_0x323018(0x22b)),now=Date[_0x323018(0x18c)](),twentyFourHours=0x18*0x3c*0x3c*0x3e8;storedUsername&&storedPassword&&storedTimestamp&&now-storedTimestamp<twentyFourHours&&(usernameInput[_0x323018(0x22c)]=storedUsername,passwordInput[_0x323018(0x22c)]=storedPassword,rememberMeCheckbox[_0x323018(0x1f2)]=!![]);const loginForm=document[_0x323018(0x239)]('loginForm'),loginError=document[_0x323018(0x239)](_0x323018(0x191)),ratesSection=document[_0x323018(0x210)](_0x323018(0x172)),historySection=document[_0x323018(0x239)](_0x323018(0x1e2)),loginSection=document['getElementById']('loginSection'),messagesSection=document['getElementById'](_0x323018(0x1f8));loginForm['addEventListener'](_0x323018(0x22e),async _0x1b565b=>{const _0x41bbc1=_0x323018;_0x1b565b['preventDefault'](),showLoader();const _0x24216a=usernameInput[_0x41bbc1(0x22c)],_0x30bb8d=passwordInput[_0x41bbc1(0x22c)];vendors[_0x24216a]&&vendors[_0x24216a][_0x41bbc1(0x182)]===_0x30bb8d?(loginError['style'][_0x41bbc1(0x1bd)]=_0x41bbc1(0x170),ratesSection[_0x41bbc1(0x20f)][_0x41bbc1(0x1bd)]=_0x41bbc1(0x1f3),historySection['style'][_0x41bbc1(0x1bd)]=_0x41bbc1(0x170),loginSection[_0x41bbc1(0x20f)][_0x41bbc1(0x1bd)]=_0x41bbc1(0x170),messagesSection['style'][_0x41bbc1(0x1bd)]=_0x41bbc1(0x1f3),currentVendorId=_0x24216a,rememberMeCheckbox['checked']?(localStorage[_0x41bbc1(0x23a)](_0x41bbc1(0x226),_0x24216a),localStorage[_0x41bbc1(0x23a)](_0x41bbc1(0x182),_0x30bb8d),localStorage[_0x41bbc1(0x23a)]('usernameTimestamp',Date[_0x41bbc1(0x18c)]())):(localStorage[_0x41bbc1(0x1a4)]('username'),localStorage['removeItem'](_0x41bbc1(0x182)),localStorage[_0x41bbc1(0x1a4)](_0x41bbc1(0x22b))),await syncTickets(),loadHistory(),listenForNewMessages(),lucide[_0x41bbc1(0x21c)](),hideLoader()):(loginError[_0x41bbc1(0x20f)]['display']=_0x41bbc1(0x1f3),loginError['textContent']='Nom\x20d\x27utilisateur\x20ou\x20mot\x20de\x20passe\x20incorrect.',hideLoader());});async function syncTickets(){const _0x15d2ee=_0x323018;try{const _0x36990b=document['querySelector'](_0x15d2ee(0x1d4)),_0x35c445=document['querySelector'](_0x15d2ee(0x1d3));_0x36990b[_0x15d2ee(0x20f)][_0x15d2ee(0x1bd)]=_0x15d2ee(0x1f3),_0x35c445[_0x15d2ee(0x20f)]['display']='none';const _0x5c439f=ref(db,_0x15d2ee(0x181)),_0x133fd9=await get(_0x5c439f);_0x133fd9['exists']()?(localTickets=_0x133fd9[_0x15d2ee(0x228)](),createTicketTable(),_0x36990b[_0x15d2ee(0x20f)][_0x15d2ee(0x1bd)]=_0x15d2ee(0x170),_0x35c445['style']['display']='table'):_0x36990b[_0x15d2ee(0x23d)]=_0x15d2ee(0x200);}catch(_0xadafa){console[_0x15d2ee(0x19d)](_0x15d2ee(0x1b1),_0xadafa),loadingMessage[_0x15d2ee(0x23d)]='Erreur\x20de\x20synchronisation\x20des\x20tickets.';}}async function createTicketTable(){const _0x1ccd87=_0x323018,_0x46f05e=document['querySelector'](_0x1ccd87(0x1d3));_0x46f05e[_0x1ccd87(0x1c4)]=_0x1ccd87(0x19a);for(const [_0xebee41,_0x2e1929]of Object[_0x1ccd87(0x1d2)](localTickets)){const _0x3e26a6=_0x2e1929[_0x1ccd87(0x233)]?_0x2e1929[_0x1ccd87(0x233)]['length']:0x0;if(_0x3e26a6>0x0){const _0x4eb31f=_0x2e1929[_0x1ccd87(0x1cd)][0x0],_0x116d75=_0x46f05e[_0x1ccd87(0x190)]();_0x116d75[_0x1ccd87(0x1c4)]=_0x1ccd87(0x1c3)+_0xebee41+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>'+_0x4eb31f+_0x1ccd87(0x1c0)+_0x3e26a6+_0x1ccd87(0x1fe)+_0xebee41+_0x1ccd87(0x17b);}}document[_0x1ccd87(0x210)](_0x1ccd87(0x1d4))[_0x1ccd87(0x20f)][_0x1ccd87(0x1bd)]=_0x1ccd87(0x170),_0x46f05e[_0x1ccd87(0x20f)][_0x1ccd87(0x1bd)]=_0x1ccd87(0x1a0);}window[_0x323018(0x188)]=async function(_0x2ffa96){const _0xa95bf1=_0x323018;showLoader();try{const _0x289efc=ref(db,'TicketsTotal/'+_0x2ffa96),_0x586a6f=await get(_0x289efc);if(_0x586a6f['exists']()){const _0x2fb9e7=_0x586a6f['val']();if(!_0x2fb9e7[_0xa95bf1(0x233)]||_0x2fb9e7[_0xa95bf1(0x233)][_0xa95bf1(0x219)]===0x0)throw new Error(_0xa95bf1(0x1fc));ticketToSell={'category':_0x2ffa96,'user':_0x2fb9e7[_0xa95bf1(0x233)][0x0],'password':_0x2fb9e7[_0xa95bf1(0x229)][0x0],'price':_0x2fb9e7[_0xa95bf1(0x1cd)][0x0],'updatedData':{..._0x2fb9e7,'utilisateur':_0x2fb9e7['utilisateur'][_0xa95bf1(0x1f9)](0x1),'motDePasse':_0x2fb9e7[_0xa95bf1(0x229)][_0xa95bf1(0x1f9)](0x1),'prix':_0x2fb9e7['prix']['slice'](0x1)}},showConfirmation(ticketToSell),hideLoader();}}catch(_0x356e14){console[_0xa95bf1(0x19d)](_0xa95bf1(0x1f5),_0x356e14),showNotification('Erreur',_0xa95bf1(0x187)),hideLoader();}};function showConfirmation(_0xecd5e9){const _0x54e00c=_0x323018,_0x4c9bc4=document[_0x54e00c(0x239)](_0x54e00c(0x1ab)),_0x91a94e=document[_0x54e00c(0x239)](_0x54e00c(0x1f0)),_0x20772a=document[_0x54e00c(0x239)](_0x54e00c(0x241)),_0x5320dc=document[_0x54e00c(0x239)](_0x54e00c(0x18b));document[_0x54e00c(0x239)](_0x54e00c(0x1d8))[_0x54e00c(0x23d)]=_0x54e00c(0x1f7),_0x91a94e[_0x54e00c(0x1c4)]='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Voulez-vous\x20vendre\x20ce\x20ticket\x20?</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Catégorie:</strong>\x20'+_0xecd5e9[_0x54e00c(0x1ba)]+_0x54e00c(0x23f)+_0xecd5e9['price']+'\x20FCFA</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',_0x5320dc[_0x54e00c(0x20f)]['display']=_0x54e00c(0x1b9),_0x20772a[_0x54e00c(0x20f)][_0x54e00c(0x1bd)]=_0x54e00c(0x170),_0x4c9bc4[_0x54e00c(0x20f)][_0x54e00c(0x1bd)]='block';}window[_0x323018(0x17e)]=async function(){const _0x564195=_0x323018;showLoader();if(!ticketToSell){showNotification(_0x564195(0x216),_0x564195(0x173)),hideLoader();return;}try{const _0x4c976c=ref(db,_0x564195(0x21b)+ticketToSell['category']);await set(_0x4c976c,ticketToSell['updatedData']);const _0x903569=ref(db,'TicketsVendus');await push(_0x903569,{'category':ticketToSell[_0x564195(0x1ba)],'user':ticketToSell['user'],'password':ticketToSell[_0x564195(0x182)],'price':ticketToSell[_0x564195(0x1ca)],'soldAt':Date[_0x564195(0x18c)](),'vendorId':currentVendorId});const _0x62c845=ref(db,_0x564195(0x16f)+currentVendorId);await push(_0x62c845,{'category':ticketToSell['category'],'user':ticketToSell[_0x564195(0x1b6)],'password':ticketToSell[_0x564195(0x182)],'price':ticketToSell[_0x564195(0x1ca)],'soldAt':Date[_0x564195(0x18c)]()}),showTicketDetails(ticketToSell),await syncTickets(),hideLoader();}catch(_0x18fa82){console[_0x564195(0x19d)](_0x564195(0x23e),_0x18fa82),showNotification(_0x564195(0x216),_0x564195(0x213)),hideLoader();}ticketToSell=null;};function showTicketDetails(_0x3f5f92){const _0x849aef=_0x323018,_0x3a9f89=document[_0x849aef(0x239)](_0x849aef(0x1ab)),_0x4ccd20=document['getElementById'](_0x849aef(0x1f0)),_0x47ad7e=document['getElementById'](_0x849aef(0x241)),_0x51cb00=document[_0x849aef(0x239)]('confirmation-buttons');document[_0x849aef(0x239)](_0x849aef(0x1d8))[_0x849aef(0x23d)]=_0x849aef(0x236),_0x4ccd20['innerHTML']='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Catégorie:</strong>\x20'+_0x3f5f92[_0x849aef(0x1ba)]+_0x849aef(0x195)+_0x3f5f92[_0x849aef(0x1b6)]+_0x849aef(0x214)+_0x3f5f92[_0x849aef(0x182)]+'</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Prix:</strong>\x20'+_0x3f5f92[_0x849aef(0x1ca)]+_0x849aef(0x242),_0x51cb00[_0x849aef(0x20f)][_0x849aef(0x1bd)]=_0x849aef(0x170),_0x47ad7e[_0x849aef(0x20f)][_0x849aef(0x1bd)]='flex',_0x3a9f89[_0x849aef(0x20f)][_0x849aef(0x1bd)]='block',lucide[_0x849aef(0x21c)]();}function showSaleConfirmation(_0x167a59){const _0x3157a1=_0x323018,_0x2e771f=document[_0x3157a1(0x239)](_0x3157a1(0x1ab)),_0x5ad53b=document[_0x3157a1(0x239)]('notification-message'),_0x55962d=document[_0x3157a1(0x239)](_0x3157a1(0x18e));_0x5ad53b[_0x3157a1(0x1c4)]=_0x3157a1(0x1b4)+_0x167a59['category']+_0x3157a1(0x195)+_0x167a59['user']+'</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Mot\x20de\x20passe:</strong>\x20'+_0x167a59[_0x3157a1(0x182)]+_0x3157a1(0x23f)+_0x167a59[_0x3157a1(0x1ca)]+_0x3157a1(0x242),_0x55962d[_0x3157a1(0x1c4)]=_0x3157a1(0x234),_0x2e771f[_0x3157a1(0x20f)]['display']='block',lucide[_0x3157a1(0x21c)]();}window[_0x323018(0x1b7)]=async function(){const _0x3b23d0=_0x323018;showLoader();if(!currentReservedTicket){showNotification(_0x3b23d0(0x216),_0x3b23d0(0x1da)),hideLoader();return;}try{const _0x16a270=ref(db,_0x3b23d0(0x1ad));await push(_0x16a270,{...currentReservedTicket,'soldAt':Date[_0x3b23d0(0x18c)](),'vendorId':currentVendorId});const _0x24d582=ref(db,_0x3b23d0(0x16f)+currentVendorId);await push(_0x24d582,{...currentReservedTicket,'soldAt':Date[_0x3b23d0(0x18c)]()}),showNotification(_0x3b23d0(0x179),'Ticket\x20vendu\x20avec\x20succès!'),currentReservedTicket=null,hideNotification(),await syncTickets(),hideLoader();}catch(_0x389540){console['error'](_0x3b23d0(0x192),_0x389540),showNotification(_0x3b23d0(0x216),_0x3b23d0(0x18d)),hideLoader();}},window[_0x323018(0x17f)]=function(){currentReservedTicket=null,hideNotification();};function showNotification(_0x1e29ea,_0x4a5cd2){const _0x34ca69=_0x323018,_0x5562ba=document[_0x34ca69(0x239)](_0x34ca69(0x1ab)),_0x2cdb31=document['getElementById'](_0x34ca69(0x1d8)),_0x411f69=document[_0x34ca69(0x239)](_0x34ca69(0x1f0)),_0x2b1a40=document[_0x34ca69(0x239)](_0x34ca69(0x18e)),_0x40a88f=document['getElementById'](_0x34ca69(0x241));_0x2cdb31[_0x34ca69(0x23d)]=_0x1e29ea,_0x411f69['innerHTML']=_0x4a5cd2,_0x1e29ea===_0x34ca69(0x179)||_0x1e29ea===_0x34ca69(0x216)?(_0x2b1a40[_0x34ca69(0x20f)][_0x34ca69(0x1bd)]=_0x34ca69(0x170),_0x40a88f[_0x34ca69(0x20f)][_0x34ca69(0x1bd)]=_0x34ca69(0x170)):(_0x2b1a40['style']['display']='flex',_0x40a88f[_0x34ca69(0x20f)][_0x34ca69(0x1bd)]=_0x34ca69(0x170)),_0x5562ba[_0x34ca69(0x20f)]['display']=_0x34ca69(0x1f3);}window[_0x323018(0x1db)]=function(){const _0x34c60d=_0x323018;document[_0x34c60d(0x239)]('notification')[_0x34c60d(0x20f)][_0x34c60d(0x1bd)]=_0x34c60d(0x170);};async function loadHistory(){const _0x9d83db=_0x323018;showLoader();try{const _0x31a690=ref(db,'VendorsHistory/'+currentVendorId),_0x360dbc=await get(_0x31a690);let _0x13911f=[];_0x360dbc['exists']()&&(_0x13911f=Object[_0x9d83db(0x1d2)](_0x360dbc[_0x9d83db(0x228)]())[_0x9d83db(0x207)](([_0x19d3c7,_0x3e51dc])=>({'id':_0x19d3c7,..._0x3e51dc}))),filterHistory(_0x13911f),hideLoader();}catch(_0x1331f7){console[_0x9d83db(0x19d)](_0x9d83db(0x1e6),_0x1331f7),showNotification('Erreur',_0x9d83db(0x180)),hideLoader();}}function filterHistory(_0x3973e1){const _0x2cdf05=_0x323018,_0x12dd89=document[_0x2cdf05(0x239)](_0x2cdf05(0x209))[_0x2cdf05(0x22c)],_0x287986=new Date(),_0x2cb980={'today':new Date(_0x287986['setHours'](0x0,0x0,0x0,0x0)),'week':new Date(_0x287986[_0x2cdf05(0x1bb)](_0x287986['getDate']()-_0x287986[_0x2cdf05(0x1aa)]())),'month':new Date(_0x287986[_0x2cdf05(0x1bb)](0x1)),'all':new Date(0x0)};let _0x2eb225=_0x3973e1;_0x12dd89!==_0x2cdf05(0x23b)&&(_0x2eb225=_0x3973e1[_0x2cdf05(0x21d)](_0x35773d=>new Date(_0x35773d[_0x2cdf05(0x18a)])>=_0x2cb980[_0x12dd89])),updateStats(_0x2eb225),updateHistoryTable(_0x2eb225);}function _0xeabf(_0xcb218b,_0x5ed858){const _0x2774a6=_0x2774();return _0xeabf=function(_0xeabf0d,_0x3c1b60){_0xeabf0d=_0xeabf0d-0x16f;let _0x57af4b=_0x2774a6[_0xeabf0d];return _0x57af4b;},_0xeabf(_0xcb218b,_0x5ed858);}window[_0x323018(0x1cc)]=function(){const _0xb53879=_0x323018,_0x2e5bad=new Date(document[_0xb53879(0x239)](_0xb53879(0x1b3))[_0xb53879(0x22c)]),_0x18153a=new Date(document['getElementById'](_0xb53879(0x19f))[_0xb53879(0x22c)]);_0x18153a[_0xb53879(0x1e8)](0x17,0x3b,0x3b);if(isNaN(_0x2e5bad['getTime']())||isNaN(_0x18153a[_0xb53879(0x19c)]())){showNotification(_0xb53879(0x216),'Veuillez\x20sélectionner\x20une\x20date\x20de\x20début\x20et\x20une\x20date\x20de\x20fin.');return;}const _0x1a3a24=ref(db,'VendorsHistory/'+currentVendorId);get(_0x1a3a24)['then'](_0x2793ee=>{const _0x36f3e1=_0xb53879;let _0x134acf=[];_0x2793ee['exists']()&&(_0x134acf=Object[_0x36f3e1(0x1d2)](_0x2793ee[_0x36f3e1(0x228)]())['map'](([_0x4498e4,_0x46f361])=>({'id':_0x4498e4,..._0x46f361})));const _0xc2bc94=_0x134acf[_0x36f3e1(0x21d)](_0x7b85c=>{const _0x3ba822=_0x36f3e1,_0x1eea85=new Date(_0x7b85c[_0x3ba822(0x18a)]);return _0x1eea85>=_0x2e5bad&&_0x1eea85<=_0x18153a;});updateStats(_0xc2bc94),updateHistoryTable(_0xc2bc94);});};function updateStats(_0x2eb7a0){const _0x218d7f=_0x323018,_0x1285d2=_0x2eb7a0[_0x218d7f(0x219)],_0x7f6750=_0x2eb7a0[_0x218d7f(0x1fa)]((_0x6b7249,_0x1eaa5b)=>_0x6b7249+parseFloat(_0x1eaa5b[_0x218d7f(0x1ca)]),0x0),_0x219740=_0x2eb7a0[_0x218d7f(0x1fa)]((_0x347609,_0x9509d7)=>{const _0x1a523f=_0x218d7f;return _0x347609[_0x9509d7[_0x1a523f(0x1ba)]]=(_0x347609[_0x9509d7['category']]||0x0)+0x1,_0x347609;},{}),_0x5190bb=Object[_0x218d7f(0x1d2)](_0x219740)[_0x218d7f(0x197)]((_0x1aef02,_0x427ef8)=>_0x427ef8[0x1]-_0x1aef02[0x1])[0x0]?.[0x0]||'-',_0x5260f1=_0x2eb7a0[_0x218d7f(0x219)]>0x0?Math[_0x218d7f(0x17a)](0x1,Math['ceil']((Date[_0x218d7f(0x18c)]()-Math['min'](..._0x2eb7a0[_0x218d7f(0x207)](_0x251d58=>_0x251d58[_0x218d7f(0x18a)])))/(0x3e8*0x3c*0x3c*0x18))):0x1,_0x135574=(_0x1285d2/_0x5260f1)[_0x218d7f(0x1a8)](0x1);document[_0x218d7f(0x239)]('totalTickets')['textContent']=_0x1285d2,document['getElementById'](_0x218d7f(0x201))['textContent']=_0x7f6750[_0x218d7f(0x215)]()+'\x20FCFA',document[_0x218d7f(0x239)](_0x218d7f(0x193))[_0x218d7f(0x23d)]=_0x5190bb,document[_0x218d7f(0x239)](_0x218d7f(0x1bf))[_0x218d7f(0x23d)]=_0x135574;}function updateHistoryTable(_0x42ebb1){const _0x2dc77d=_0x323018,_0x29dd84=document[_0x2dc77d(0x239)](_0x2dc77d(0x1d9));_0x29dd84[_0x2dc77d(0x1c4)]=_0x42ebb1[_0x2dc77d(0x197)]((_0x1aee40,_0xf3e822)=>_0xf3e822['soldAt']-_0x1aee40['soldAt'])['map'](_0x35e665=>_0x2dc77d(0x225)+_0x35e665['id']+'\x27)\x22\x20style=\x22cursor:\x20pointer;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>'+new Date(_0x35e665[_0x2dc77d(0x18a)])['toLocaleString']()+_0x2dc77d(0x1c0)+_0x35e665[_0x2dc77d(0x1ba)]+_0x2dc77d(0x1c0)+_0x35e665[_0x2dc77d(0x1b6)]+_0x2dc77d(0x1c0)+_0x35e665[_0x2dc77d(0x1ca)]+_0x2dc77d(0x22a))[_0x2dc77d(0x1af)]('');}window[_0x323018(0x217)]=async function(_0x245118){const _0x2022b3=_0x323018;showLoader();try{const _0x128bc9=ref(db,'VendorsHistory/'+currentVendorId+'/'+_0x245118),_0x3e13a0=await get(_0x128bc9);if(_0x3e13a0[_0x2022b3(0x21a)]()){const _0x4db9d4=_0x3e13a0['val']();window[_0x2022b3(0x206)](),showTicketDetails(_0x4db9d4),hideLoader();}else showNotification(_0x2022b3(0x216),'Ticket\x20introuvable\x20dans\x20l\x27historique'),hideLoader();}catch(_0x1d0177){console[_0x2022b3(0x19d)]('Erreur\x20lors\x20de\x20la\x20récupération\x20du\x20ticket:',_0x1d0177),showNotification('Erreur','Impossible\x20de\x20récupérer\x20les\x20détails\x20du\x20ticket'),hideLoader();}},window[_0x323018(0x224)]=function(){const _0x28a68f=_0x323018,_0x4e5e13=document[_0x28a68f(0x239)](_0x28a68f(0x1e2)),_0x7c484e=_0x4e5e13['style'][_0x28a68f(0x1bd)]===_0x28a68f(0x1f3);_0x4e5e13[_0x28a68f(0x20f)][_0x28a68f(0x1bd)]=_0x7c484e?'none':_0x28a68f(0x1f3),!_0x7c484e&&loadHistory();},window[_0x323018(0x206)]=function(){const _0x31b212=_0x323018;document[_0x31b212(0x239)](_0x31b212(0x1e2))[_0x31b212(0x20f)]['display']='none';},window[_0x323018(0x1c2)]=function(){loadHistory();};function listenForNewMessages(){const _0x3c2384=_0x323018,_0x2f31d9=ref(db,_0x3c2384(0x178)+currentVendorId+_0x3c2384(0x1dd));onChildAdded(_0x2f31d9,_0x268fe7=>{const _0x27e4c1=_0x268fe7['val']();displayNewMessage(_0x27e4c1);});}function displayNewMessage(_0x5d49dd){const _0x5dba3e=_0x323018,_0x56d4ba=document[_0x5dba3e(0x239)]('messagesContainer'),_0x3777f4=document[_0x5dba3e(0x18f)](_0x5dba3e(0x1f1));_0x3777f4[_0x5dba3e(0x1f6)]['add'](_0x5dba3e(0x205)),_0x3777f4[_0x5dba3e(0x1c4)]=_0x5dba3e(0x212)+_0x5d49dd['content']+_0x5dba3e(0x1e7)+new Date(_0x5d49dd[_0x5dba3e(0x1a5)])[_0x5dba3e(0x215)]()+'</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',_0x56d4ba[_0x5dba3e(0x1ee)](_0x3777f4),_0x56d4ba[_0x5dba3e(0x184)]=_0x56d4ba[_0x5dba3e(0x231)];}window['shareTicket']=function(){const _0x2e0dd3=_0x323018,_0x4800d7=document['getElementById'](_0x2e0dd3(0x1f0))['innerText'];navigator[_0x2e0dd3(0x20a)]?navigator[_0x2e0dd3(0x20a)]({'title':_0x2e0dd3(0x1b0),'text':_0x4800d7})[_0x2e0dd3(0x222)](()=>console['log'](_0x2e0dd3(0x1a3)))[_0x2e0dd3(0x1c6)](_0x238272=>console[_0x2e0dd3(0x19d)](_0x2e0dd3(0x1b5),_0x238272)):alert(_0x2e0dd3(0x1a6));},window['copyTicket']=function(){const _0x2b613e=_0x323018,_0x110527=document[_0x2b613e(0x239)](_0x2b613e(0x1f0))[_0x2b613e(0x1e1)];navigator[_0x2b613e(0x1ed)][_0x2b613e(0x1ea)](_0x110527)[_0x2b613e(0x222)](()=>{const _0x53d4c3=_0x2b613e;showNotification(_0x53d4c3(0x179),_0x53d4c3(0x176));})['catch'](_0x21a456=>{const _0x2ae0d6=_0x2b613e;console[_0x2ae0d6(0x19d)](_0x2ae0d6(0x1cb),_0x21a456),showNotification(_0x2ae0d6(0x216),_0x2ae0d6(0x230));});},window[_0x323018(0x1be)]=async function(){const _0x3fdf28=_0x323018;showLoader();const _0x46032d=document[_0x3fdf28(0x239)](_0x3fdf28(0x1f0)),_0x44ea35=new jsPDF(),_0x15fbcf=await html2canvas(_0x46032d),_0x47b46a=_0x15fbcf[_0x3fdf28(0x1d5)](_0x3fdf28(0x232));_0x44ea35[_0x3fdf28(0x21f)](_0x47b46a,_0x3fdf28(0x1b2),0xa,0xa,0xbe,0x0),_0x44ea35[_0x3fdf28(0x1a7)]('ticket.pdf'),hideLoader();},window[_0x323018(0x1d1)]=function(){const _0x293830=_0x323018;window[_0x293830(0x1a9)]();},window['exportToPDFHistory']=function(){const _0x3c521f=_0x323018,{jsPDF:_0x4da6c5}=window[_0x3c521f(0x1b8)],_0x4f4d06=new _0x4da6c5(),_0x264b70=document['getElementById'](_0x3c521f(0x1d9)),_0x578628={'fillColor':[0x2a,0x3a,0x6c],'textColor':[0xff,0xff,0xff],'fontStyle':'bold','halign':_0x3c521f(0x202)},_0x439a02={'halign':_0x3c521f(0x20d)},_0x1563d8={'theme':'grid','headStyles':_0x578628,'bodyStyles':_0x439a02,'margin':{'top':0x14},'startY':0x1e,'didDrawPage':function(_0x484491){const _0x3aa079=_0x3c521f;_0x4f4d06['text'](_0x3aa079(0x20e),0xe,0xf);const _0x7d8c08='Page\x20'+_0x4f4d06[_0x3aa079(0x221)][_0x3aa079(0x198)]();_0x4f4d06[_0x3aa079(0x1a2)](0xa);const _0x448b14=_0x4f4d06[_0x3aa079(0x221)]['pageSize'],_0x5e2ea6=_0x448b14[_0x3aa079(0x1e4)]?_0x448b14[_0x3aa079(0x1e4)]:_0x448b14[_0x3aa079(0x1e9)]();_0x4f4d06[_0x3aa079(0x235)](_0x7d8c08,_0x484491[_0x3aa079(0x22d)]['margin']['left'],_0x5e2ea6-0xa),_0x4f4d06[_0x3aa079(0x235)](new Date()['toLocaleString'](),_0x448b14[_0x3aa079(0x1ef)]-_0x484491[_0x3aa079(0x22d)][_0x3aa079(0x1ce)]['right']-0x28,_0x5e2ea6-0xa);}};_0x4f4d06[_0x3c521f(0x1c8)]({'html':_0x3c521f(0x1df),..._0x1563d8}),_0x4f4d06[_0x3c521f(0x1a7)](_0x3c521f(0x1ac));},window[_0x323018(0x1a1)]=function(){const _0x360b42=_0x323018,_0x384393=XLSX[_0x360b42(0x186)][_0x360b42(0x175)](document[_0x360b42(0x239)](_0x360b42(0x1d9)),{'sheet':'Ventes'}),_0x3f46a6=XLSX[_0x360b42(0x1e0)](_0x384393,{'bookType':_0x360b42(0x1eb),'type':'binary'});function _0x3c4257(_0x501d46){const _0x264590=_0x360b42,_0x3e9dab=new ArrayBuffer(_0x501d46[_0x264590(0x219)]),_0x2bf012=new Uint8Array(_0x3e9dab);for(let _0x80093a=0x0;_0x80093a<_0x501d46[_0x264590(0x219)];_0x80093a++)_0x2bf012[_0x80093a]=_0x501d46['charCodeAt'](_0x80093a)&0xff;return _0x3e9dab;}saveAs(new Blob([_0x3c4257(_0x3f46a6)],{'type':_0x360b42(0x1ff)}),_0x360b42(0x22f));};function showLoader(){const _0x5de29e=_0x323018;document['getElementById'](_0x5de29e(0x19e))[_0x5de29e(0x20f)]['display']=_0x5de29e(0x1f3);}function hideLoader(){const _0x7538e=_0x323018;document['getElementById'](_0x7538e(0x19e))[_0x7538e(0x20f)][_0x7538e(0x1bd)]=_0x7538e(0x170);}function showPageLoader(){const _0x3578f0=_0x323018;document[_0x3578f0(0x239)](_0x3578f0(0x1fb))[_0x3578f0(0x20f)]['display']=_0x3578f0(0x1b9);}function hidePageLoader(){const _0x256b9a=_0x323018;document['getElementById']('pageLoaderWrapper')['style'][_0x256b9a(0x1bd)]=_0x256b9a(0x170);}function showSubscriptionRequiredModal(){const _0x30955e=_0x323018;subscriptionRequiredModal[_0x30955e(0x20f)][_0x30955e(0x1bd)]=_0x30955e(0x1b9);}function hideSubscriptionRequiredModal(){const _0x2a0af1=_0x323018;subscriptionRequiredModal[_0x2a0af1(0x20f)][_0x2a0af1(0x1bd)]='none';}function redirectToSubscription(){const _0x4591ff=_0x323018;window[_0x4591ff(0x1c7)][_0x4591ff(0x1dc)]=_0x4591ff(0x220);}async function checkSubscriptionStatus(){const _0x1db2a8=_0x323018,_0x259ca9=document[_0x1db2a8(0x239)](_0x1db2a8(0x1e5));_0x259ca9[_0x1db2a8(0x23d)]='Vérification\x20de\x20l\x27abonnement...';try{const _0x172384=await get(adminRef),_0x2a42a6=_0x172384[_0x1db2a8(0x228)](),_0x311dd6=new Date();if(_0x2a42a6&&_0x2a42a6['status']==='active'){const _0x2efa35=new Date(_0x2a42a6[_0x1db2a8(0x19f)]);_0x2efa35<_0x311dd6?(_0x259ca9[_0x1db2a8(0x23d)]=_0x1db2a8(0x238),showSubscriptionRequiredModal(),await adminRef[_0x1db2a8(0x237)]({'status':'expired'})):_0x259ca9[_0x1db2a8(0x23d)]=_0x1db2a8(0x23c);}else _0x259ca9[_0x1db2a8(0x23d)]='Pas\x20d\x27abonnement\x20actif',showSubscriptionRequiredModal();}catch(_0x3fe216){console[_0x1db2a8(0x19d)](_0x1db2a8(0x203),_0x3fe216),_0x259ca9[_0x1db2a8(0x23d)]=_0x1db2a8(0x1c1),showNotification(_0x1db2a8(0x216),'Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement.');}}document[_0x323018(0x223)](_0x323018(0x1ae),()=>{const _0xf7af81=_0x323018;checkSubscriptionStatus()[_0xf7af81(0x222)](()=>{const _0x396ffb=_0xf7af81;fetchVendors(),lucide[_0x396ffb(0x21c)](),hidePageLoader();})['catch'](_0x552bd3=>{const _0x12b226=_0xf7af81;console['error'](_0x12b226(0x177),_0x552bd3),showNotification(_0x12b226(0x216),_0x12b226(0x227)),hidePageLoader();});}),window[_0x323018(0x1bc)]=redirectToSubscription,window['hideSubscriptionRequiredModal']=redirectToSubscription;
+    </script>
+</body>
+</html>

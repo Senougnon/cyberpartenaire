@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion Administrateur</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --background-color: #ecf0f1;
+            --text-color: #34495e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Connexion Administrateur</h1>
+        <form id="loginForm" onsubmit="return login(event)">
+            <div class="input-group">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">Se connecter</button>
+        </form>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <script>
+function _0x557b(){const _0x1ab93c=['style','a3.html','67ofrvEX','display','AIzaSyAyrniQKyBc9zTwUCbHlryyR411HLzbDkk','ref','initializeApp','error','20438aggPSz','password','username','preventDefault','location','val','active','find','5646664dGPRMZ','true','4111387wEffPO','980825684625','1:980825684625:web:dbf5a31b93db0d13261d30','endDate','Erreur\x20de\x20connexion:','sikaconnect-2f279.firebaseapp.com','textContent','440313QgxpZH','sikaconnect-2f279.firebasestorage.app','admins','6iHcytA','Votre\x20abonnement\x20n\x27est\x20pas\x20actif.\x20Veuillez\x20vous\x20abonner.','index.html','once','11943176qvugHj','https://sikaconnect-2f279-default-rtdb.firebaseio.com','9xEvJhD','isLoggedIn','9624EEgAJX','getElementById','value','database','admin/subscription','6596655BrDlPP','Nom\x20d\x27utilisateur\x20ou\x20mot\x20de\x20passe\x20incorrect','1810sstFMH','values','errorMessage','block'];_0x557b=function(){return _0x1ab93c;};return _0x557b();}const _0x9a564d=_0x335d;(function(_0x49cc36,_0x2c69d3){const _0x157a13=_0x335d,_0x4102f7=_0x49cc36();while(!![]){try{const _0x18da38=parseInt(_0x157a13(0x1b3))/0x1*(parseInt(_0x157a13(0x1a6))/0x2)+parseInt(_0x157a13(0x19b))/0x3+-parseInt(_0x157a13(0x192))/0x4+parseInt(_0x157a13(0x1ab))/0x5+-parseInt(_0x157a13(0x19e))/0x6*(parseInt(_0x157a13(0x194))/0x7)+parseInt(_0x157a13(0x1a2))/0x8*(parseInt(_0x157a13(0x1a4))/0x9)+parseInt(_0x157a13(0x1ad))/0xa*(-parseInt(_0x157a13(0x18a))/0xb);if(_0x18da38===_0x2c69d3)break;else _0x4102f7['push'](_0x4102f7['shift']());}catch(_0x1a2a4c){_0x4102f7['push'](_0x4102f7['shift']());}}}(_0x557b,0xe6fb2));const firebaseConfig={'apiKey':_0x9a564d(0x186),'authDomain':_0x9a564d(0x199),'databaseURL':_0x9a564d(0x1a3),'projectId':'sikaconnect-2f279','storageBucket':_0x9a564d(0x19c),'messagingSenderId':_0x9a564d(0x195),'appId':_0x9a564d(0x196),'measurementId':'G-579KVT1Y97'};firebase[_0x9a564d(0x188)](firebaseConfig);const database=firebase[_0x9a564d(0x1a9)]();function _0x335d(_0x1be802,_0x1b1e62){const _0x557b98=_0x557b();return _0x335d=function(_0x335d45,_0x265507){_0x335d45=_0x335d45-0x186;let _0x37fd1d=_0x557b98[_0x335d45];return _0x37fd1d;},_0x335d(_0x1be802,_0x1b1e62);}async function login(_0x12c43b){const _0x443449=_0x9a564d;_0x12c43b[_0x443449(0x18d)]();const _0x1a93e7=document['getElementById'](_0x443449(0x18c))[_0x443449(0x1a8)],_0x11e3cb=document[_0x443449(0x1a7)](_0x443449(0x18b))[_0x443449(0x1a8)],_0x47fb19=document[_0x443449(0x1a7)](_0x443449(0x1af));try{const _0x3f83c9=database[_0x443449(0x187)](_0x443449(0x19d)),_0x16f3ca=await _0x3f83c9['once'](_0x443449(0x1a8)),_0x7c2bea=_0x16f3ca[_0x443449(0x18f)](),_0x568c67=Object[_0x443449(0x1ae)](_0x7c2bea)[_0x443449(0x191)](_0x2394ca=>_0x2394ca[_0x443449(0x18c)]===_0x1a93e7&&_0x2394ca[_0x443449(0x18b)]===_0x11e3cb);if(_0x568c67){const _0x5ad166=database[_0x443449(0x187)](_0x443449(0x1aa)),_0x3f9419=await _0x5ad166[_0x443449(0x1a1)](_0x443449(0x1a8)),_0x1d2872=_0x3f9419['val']();_0x1d2872&&_0x1d2872['status']===_0x443449(0x190)&&new Date(_0x1d2872[_0x443449(0x197)])>new Date()?(sessionStorage['setItem'](_0x443449(0x1a5),_0x443449(0x193)),window[_0x443449(0x18e)]['href']=_0x443449(0x1b2)):(_0x47fb19['textContent']=_0x443449(0x19f),_0x47fb19[_0x443449(0x1b1)][_0x443449(0x1b4)]=_0x443449(0x1b0),setTimeout(()=>{const _0x3aff88=_0x443449;window['location']['href']=_0x3aff88(0x1a0);},0xbb8));}else _0x47fb19[_0x443449(0x19a)]=_0x443449(0x1ac),_0x47fb19[_0x443449(0x1b1)][_0x443449(0x1b4)]=_0x443449(0x1b0);}catch(_0x48740a){console[_0x443449(0x189)](_0x443449(0x198),_0x48740a),_0x47fb19['textContent']='Une\x20erreur\x20est\x20survenue.\x20Veuillez\x20réessayer.',_0x47fb19[_0x443449(0x1b1)]['display']='block';}}
+    </script>
+</body>
+</html>

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Administrateur - Sika Connect</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #424242, #073018, #553a01);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card h3 {
+            color: #fdbb2d;
+            margin-bottom: 10px;
+        }
+
+        .filters {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        select, input {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        select option {
+            background: #1a2a6c;
+            color: white;
+        }
+
+        .sales-table {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative; /* Ajout pour le positionnement absolu des boutons */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            background: rgba(0, 0, 0, 0.2);
+            color: #fdbb2d;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+            color: rgb(60, 255, 0);
+        }
+
+        .delete-btn {
+            background: #b21f1f;
+        }
+
+        .clear-btn {
+            background: #1a2a6c;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .partners-management {
+            margin-bottom: 30px;
+        }
+
+        .partner-actions {
+            margin-bottom: 20px;
+        }
+
+        .partner-form {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .partner-form input {
+            margin-bottom: 10px;
+        }
+
+        .partners-table table {
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+        }
+
+        .loader-wrapper {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+        }
+
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .page-loader-wrapper {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1002;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .page-loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        .loader-message {
+            color: white;
+            margin-top: 16px;
+            font-size: 1rem;
+            text-align: center;
+            max-width: 80%;
+        }
+        .subscription-required {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .subscription-required-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .subscription-required-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .subscription-required-content p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .subscription-required-content button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0 10px;
+        }
+
+        .subscription-required-content button:hover {
+            background-color: #e6a727;
+        }
+
+        /* Styles pour les boutons d'exportation */
+        .export-buttons {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+            z-index: 10; /* Pour s'assurer qu'ils restent au-dessus du tableau */
+        }
+
+        .export-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .export-btn:hover {
+            background-color: #218838;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .export-btn i {
+            margin-right: 6px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="page-loader-wrapper" id="pageLoaderWrapper">
+        <div class="page-loader"></div>
+        <div class="loader-message" id="pageLoaderMessage">Initialisation...</div>
+    </div>
+    <div class="loader-wrapper" id="loaderWrapper">
+        <div class="loader"></div>
+    </div>
+    <div class="container">
+        <div class="header">
+            <h1>Dashboard Administrateur</h1>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total des ventes</h3>
+                <div id="totalSales">0 FCFA</div>
+            </div>
+            <div class="stat-card">
+                <h3>Nombre de tickets vendus</h3>
+                <div id="totalTickets">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Meilleur vendeur</h3>
+                <div id="topVendor">-</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <select id="vendorFilter">
+                <option value="all">Tous les vendeurs</option>
+            </select>
+            <select id="periodFilter">
+                <option value="today">Aujourd'hui</option>
+                <option value="week">Cette semaine</option>
+                <option value="month">Ce mois</option>
+                <option value="all">Toute la période</option>
+            </select>
+            <input type="date" id="startDate">
+            <input type="date" id="endDate">
+            <button class="action-btn" onclick="applyFilters()">Filtrer</button>
+        </div>
+
+        <div class="sales-table">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Vendeur</th>
+                        <th>Catégorie</th>
+                        <th>Utilisateur</th>
+                        <th>Prix</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="salesTable"></tbody>
+            </table>
+            <div class="export-buttns">
+                <button class="action-btn delete-btn" onclick="printTable()"><i data-lucide="printer"></i> Imprimer</button>
+                <button class="action-btn delete-btn" onclick="exportToPDF()"><i data-lucide="file-down"></i> Exporter en PDF</button>
+                <button class="action-btn delete-btn" onclick="exportToExcel()"><i data-lucide="file-spreadsheet"></i> Exporter en Excel</button>
+            </div>
+        </div>
+
+        <div class="partners-management">
+            <h2>Gestion des partenaires</h2>
+            <div class="partner-actions">
+                <button class="action-btn" onclick="showAddPartnerForm()">Ajouter un partenaire</button>
+            </div>
+
+            <div class="partner-form" id="addPartnerForm" style="display: none;">
+                <h3>Ajouter un partenaire</h3>
+                <input type="text" id="newPartnerName" placeholder="Nom du partenaire">
+                <input type="password" id="newPartnerPassword" placeholder="Mot de passe">
+                <button class="action-btn" onclick="addPartner()">Enregistrer</button>
+                <button class="action-btn clear-btn" onclick="hideAddPartnerForm()">Annuler</button>
+            </div>
+
+            <div class="partners-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nom du partenaire</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partnersTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="editPartnerModal" class="modal">
+            <div class="modal-content">
+                <h2>Modifier le partenaire</h2>
+                <input type="hidden" id="editPartnerId">
+                <input type="text" id="editPartnerName" placeholder="Nom du partenaire">
+                <input type="password" id="editPartnerPassword" placeholder="Mot de passe">
+                <div class="modal-actions">
+                    <button class="action-btn" onclick="closeEditModal()">Annuler</button>
+                    <button class="action-btn" onclick="updatePartner()">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="messagePartnerModal" class="modal">
+            <div class="modal-content">
+                <h2>Envoyer un message</h2>
+                <input type="hidden" id="messagePartnerId">
+                <textarea id="messageContent" placeholder="Votre message"></textarea>
+                <div class="modal-actions">
+                    <button class="action-btn" onclick="closeMessageModal()">Annuler</button>
+                    <button class="action-btn" onclick="sendMessage()">Envoyer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h2>Confirmation</h2>
+            <p id="modalMessage"></p>
+            <div class="modal-actions">
+                <button class="action-btn" onclick="closeModal()">Annuler</button>
+                <button class="action-btn delete-btn" id="confirmBtn">Confirmer</button>
+            </div>
+        </div>
+    </div>
+    <div id="subscriptionRequiredModal" class="subscription-required" style="display: none;">
+        <div class="subscription-required-content">
+            <h2>Abonnement Requis</h2>
+            <p>Un abonnement actif est nécessaire pour accéder à cette fonctionnalité.</p>
+            <button onclick="redirectToSubscription()">S'abonner</button>
+            <button onclick="hideSubscriptionRequiredModal()">Fermer</button>
+        </div>
+    </div>
+    <script type="module">
+const _0x244385=_0x4126;(function(_0x314f3b,_0x43247d){const _0x4756ff=_0x4126,_0x4f69b0=_0x314f3b();while(!![]){try{const _0x1a5e33=parseInt(_0x4756ff(0x1c6))/0x1*(-parseInt(_0x4756ff(0x224))/0x2)+parseInt(_0x4756ff(0x1e7))/0x3+parseInt(_0x4756ff(0x1fc))/0x4*(parseInt(_0x4756ff(0x1b7))/0x5)+parseInt(_0x4756ff(0x1bf))/0x6*(parseInt(_0x4756ff(0x1c8))/0x7)+-parseInt(_0x4756ff(0x226))/0x8*(-parseInt(_0x4756ff(0x1bc))/0x9)+parseInt(_0x4756ff(0x1ad))/0xa*(-parseInt(_0x4756ff(0x21f))/0xb)+-parseInt(_0x4756ff(0x1b9))/0xc*(parseInt(_0x4756ff(0x1a7))/0xd);if(_0x1a5e33===_0x43247d)break;else _0x4f69b0['push'](_0x4f69b0['shift']());}catch(_0x27012f){_0x4f69b0['push'](_0x4f69b0['shift']());}}}(_0x4a47,0xaad4f));import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';import{getDatabase,ref,get,remove,set,push}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';const firebaseConfig={'apiKey':_0x244385(0x1e1),'authDomain':_0x244385(0x22a),'databaseURL':'https://sikaconnect-2f279-default-rtdb.firebaseio.com','projectId':'sikaconnect-2f279','storageBucket':'sikaconnect-2f279.firebasestorage.app','messagingSenderId':_0x244385(0x234),'appId':_0x244385(0x1b5),'measurementId':_0x244385(0x1d4)},app=initializeApp(firebaseConfig),db=getDatabase(app),adminRef=ref(db,'admin/subscription');let allSales=[],vendors=new Set(),partners={};async function loadPartners(){const _0xa10e30=_0x244385;try{const _0xd2d02=ref(db,'Vendors'),_0x4c2721=await get(_0xd2d02);_0x4c2721['exists']()&&(partners=_0x4c2721[_0xa10e30(0x1c1)](),updatePartnersTable());}catch(_0x41e18a){console[_0xa10e30(0x1a9)](_0xa10e30(0x1f1),_0x41e18a);}}function updatePartnersTable(){const _0x23218a=_0x244385,_0x3c9c5f=document['getElementById'](_0x23218a(0x1d9));_0x3c9c5f[_0x23218a(0x221)]='';for(const _0x3576f8 in partners){const _0x4ca770=partners[_0x3576f8],_0x4d2e36=document[_0x23218a(0x238)]('tr');_0x4d2e36['innerHTML']=_0x23218a(0x245)+_0x3576f8+_0x23218a(0x218)+_0x3576f8+_0x23218a(0x23a)+_0x3576f8+_0x23218a(0x1b0)+_0x3576f8+_0x23218a(0x1cd),_0x3c9c5f[_0x23218a(0x20a)](_0x4d2e36);}}window[_0x244385(0x23d)]=function(){const _0xb1a5ba=_0x244385;document[_0xb1a5ba(0x243)](_0xb1a5ba(0x1d8))[_0xb1a5ba(0x19b)]['display']=_0xb1a5ba(0x217);},window[_0x244385(0x211)]=function(){const _0xf03ecb=_0x244385;document['getElementById'](_0xf03ecb(0x1f3))[_0xf03ecb(0x219)]='',document[_0xf03ecb(0x243)]('newPartnerPassword')[_0xf03ecb(0x219)]='',document[_0xf03ecb(0x243)](_0xf03ecb(0x1d8))[_0xf03ecb(0x19b)][_0xf03ecb(0x207)]=_0xf03ecb(0x1e2);},window[_0x244385(0x1fd)]=async function(){const _0x5ad904=_0x244385,_0x5962ef=document[_0x5ad904(0x243)](_0x5ad904(0x1f3))[_0x5ad904(0x219)],_0x5836e3=document[_0x5ad904(0x243)](_0x5ad904(0x1c4))[_0x5ad904(0x219)];if(_0x5962ef&&_0x5836e3)try{const _0x2e05c1=ref(db,_0x5ad904(0x1ed)+_0x5962ef);await set(_0x2e05c1,{'password':_0x5836e3}),await loadPartners(),hideAddPartnerForm();}catch(_0x7721d6){console[_0x5ad904(0x1a9)]('Erreur\x20lors\x20de\x20l\x27ajout\x20du\x20partenaire:',_0x7721d6);}else alert(_0x5ad904(0x20d));},window[_0x244385(0x1dc)]=function(_0x47390b){const _0x248f31=_0x244385,_0x2b4dfe=document[_0x248f31(0x243)]('editPartnerModal');document[_0x248f31(0x243)](_0x248f31(0x236))['value']=_0x47390b,document['getElementById']('editPartnerName')[_0x248f31(0x219)]=_0x47390b,document[_0x248f31(0x243)](_0x248f31(0x1fb))['value']=partners[_0x47390b][_0x248f31(0x209)],_0x2b4dfe['style'][_0x248f31(0x207)]=_0x248f31(0x208);},window['closeEditModal']=function(){document['getElementById']('editPartnerModal')['style']['display']='none';},window[_0x244385(0x225)]=async function(){const _0x50eb56=_0x244385,_0x4638a7=document[_0x50eb56(0x243)](_0x50eb56(0x236))[_0x50eb56(0x219)],_0x34221b=document[_0x50eb56(0x243)](_0x50eb56(0x19f))['value'],_0x3fe749=document[_0x50eb56(0x243)]('editPartnerPassword')['value'];if(_0x34221b&&_0x3fe749)try{const _0x34105f=ref(db,_0x50eb56(0x1ed)+_0x34221b);await set(_0x34105f,{'password':_0x3fe749}),_0x4638a7!==_0x34221b&&await remove(ref(db,'Vendors/'+_0x4638a7)),await loadPartners(),closeEditModal();}catch(_0x35e3e0){console['error'](_0x50eb56(0x1a0),_0x35e3e0);}else alert(_0x50eb56(0x20d));},window[_0x244385(0x213)]=async function(_0x590e83){const _0x5e389b=_0x244385;if(confirm(_0x5e389b(0x1d6)+_0x590e83+'\x20?'))try{const _0xd50e78=ref(db,_0x5e389b(0x1ed)+_0x590e83);await remove(_0xd50e78),await loadPartners();}catch(_0x23417a){console[_0x5e389b(0x1a9)](_0x5e389b(0x1e3),_0x23417a);}},window[_0x244385(0x21b)]=function(_0xa2ab2c){const _0x3edb22=_0x244385,_0x3a416e=document[_0x3edb22(0x243)]('messagePartnerModal');document[_0x3edb22(0x243)](_0x3edb22(0x1ea))[_0x3edb22(0x219)]=_0xa2ab2c,document[_0x3edb22(0x243)](_0x3edb22(0x19e))[_0x3edb22(0x219)]='',_0x3a416e[_0x3edb22(0x19b)][_0x3edb22(0x207)]=_0x3edb22(0x208);},window[_0x244385(0x1bb)]=function(){const _0xc3b582=_0x244385;document[_0xc3b582(0x243)](_0xc3b582(0x1e6))[_0xc3b582(0x19b)]['display']=_0xc3b582(0x1e2);},window[_0x244385(0x231)]=async function(){const _0x38937a=_0x244385,_0x3ab785=document[_0x38937a(0x243)](_0x38937a(0x1ea))[_0x38937a(0x219)],_0x4c5ed5=document[_0x38937a(0x243)]('messageContent')[_0x38937a(0x219)];if(_0x4c5ed5)try{const _0x372582=ref(db,'Vendors/'+_0x3ab785+_0x38937a(0x1e4));await push(_0x372582,{'content':_0x4c5ed5,'timestamp':Date[_0x38937a(0x237)]()}),alert(_0x38937a(0x233)),closeMessageModal();}catch(_0x1c847d){console[_0x38937a(0x1a9)](_0x38937a(0x1ac),_0x1c847d);}else alert(_0x38937a(0x1c9));};async function loadSalesData(){const _0x150848=_0x244385;try{const _0x48a31b=ref(db,_0x150848(0x1ee)),_0x1c20b8=await get(_0x48a31b);_0x1c20b8['exists']()&&(vendors=new Set(Object[_0x150848(0x22d)](_0x1c20b8[_0x150848(0x1c1)]())),updateVendorFilter());const _0x13788d=ref(db,_0x150848(0x1ee)),_0x47d84c=await get(_0x13788d);if(_0x47d84c['exists']()){allSales=[];const _0x2a1667=_0x47d84c[_0x150848(0x1c1)]();Object[_0x150848(0x1e5)](_0x2a1667)[_0x150848(0x23f)](([_0x17a884,_0x2821f6])=>{const _0x59cd92=_0x150848;Object[_0x59cd92(0x1e5)](_0x2821f6)[_0x59cd92(0x23f)](([_0xcf3822,_0x1b700e])=>{const _0x427b4e=_0x59cd92;allSales[_0x427b4e(0x212)]({'id':_0xcf3822,'vendor':_0x17a884,..._0x1b700e});});}),applyFilters();}}catch(_0x88f2a3){console[_0x150848(0x1a9)](_0x150848(0x1f2),_0x88f2a3);}}function updateVendorFilter(){const _0x170bcf=_0x244385,_0x264d55=document['getElementById'](_0x170bcf(0x199));_0x264d55['innerHTML']=_0x170bcf(0x220),vendors[_0x170bcf(0x23f)](_0x322967=>{const _0x1e011c=_0x170bcf;_0x264d55['innerHTML']+=_0x1e011c(0x239)+_0x322967+'\x22>'+_0x322967+_0x1e011c(0x210);});}async function loadSales(){const _0x4de7e1=_0x244385;try{const _0x1b08af=ref(db,_0x4de7e1(0x1ee)),_0x209f22=await get(_0x1b08af);if(_0x209f22['exists']()){allSales=[];const _0x3cdd50=_0x209f22[_0x4de7e1(0x1c1)]();Object['entries'](_0x3cdd50)[_0x4de7e1(0x23f)](([_0x245aec,_0x57faa2])=>{const _0x1f7c2a=_0x4de7e1;Object[_0x1f7c2a(0x1e5)](_0x57faa2)[_0x1f7c2a(0x23f)](([_0x320b7f,_0x5bd9a6])=>{allSales['push']({'id':_0x320b7f,'vendor':_0x245aec,..._0x5bd9a6});});}),applyFilters();}}catch(_0xae97d5){console['error'](_0x4de7e1(0x1f7),_0xae97d5);}}window[_0x244385(0x227)]=function(){const _0x7b893f=_0x244385,_0x581110=document[_0x7b893f(0x243)](_0x7b893f(0x199))['value'],_0x242359=document[_0x7b893f(0x243)](_0x7b893f(0x214))[_0x7b893f(0x219)],_0x131da2=new Date(document['getElementById'](_0x7b893f(0x229))[_0x7b893f(0x219)]),_0x4c02d=new Date(document[_0x7b893f(0x243)](_0x7b893f(0x1be))[_0x7b893f(0x219)]);_0x4c02d[_0x7b893f(0x204)](0x17,0x3b,0x3b);let _0x407dd3=allSales;_0x581110!==_0x7b893f(0x1e9)&&(_0x407dd3=_0x407dd3[_0x7b893f(0x1ec)](_0x44300b=>_0x44300b['vendor']===_0x581110));if(_0x242359!==_0x7b893f(0x1e9)||!isNaN(_0x131da2['getTime']())||!isNaN(_0x4c02d[_0x7b893f(0x223)]())){const _0xf1f908=new Date(),_0x389b36={'today':new Date(_0xf1f908[_0x7b893f(0x204)](0x0,0x0,0x0,0x0)),'week':new Date(_0xf1f908['setDate'](_0xf1f908['getDate']()-_0xf1f908[_0x7b893f(0x1cb)]())),'month':new Date(_0xf1f908[_0x7b893f(0x198)](0x1))};_0x407dd3=_0x407dd3[_0x7b893f(0x1ec)](_0x544fd9=>{const _0x4731b9=_0x7b893f,_0x291871=new Date(_0x544fd9[_0x4731b9(0x1c0)]);if(_0x242359!==_0x4731b9(0x1e9)&&_0x389b36[_0x242359])return _0x291871>=_0x389b36[_0x242359];if(!isNaN(_0x131da2[_0x4731b9(0x223)]())&&!isNaN(_0x4c02d[_0x4731b9(0x223)]()))return _0x291871>=_0x131da2&&_0x291871<=_0x4c02d;return!![];});}updateTable(_0x407dd3),updateStats(_0x407dd3);};function updateTable(_0x550136){const _0x48133a=_0x244385,_0x3ef987=document[_0x48133a(0x243)](_0x48133a(0x21e));_0x3ef987[_0x48133a(0x221)]=_0x550136[_0x48133a(0x1a1)]((_0x1cd965,_0x31ed46)=>_0x31ed46['soldAt']-_0x1cd965[_0x48133a(0x1c0)])[_0x48133a(0x1fa)](_0xc5327d=>'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>'+new Date(_0xc5327d[_0x48133a(0x1c0)])[_0x48133a(0x21c)]()+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>'+_0xc5327d['vendor']+_0x48133a(0x235)+_0xc5327d[_0x48133a(0x240)]+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>'+_0xc5327d['user']+_0x48133a(0x235)+_0xc5327d[_0x48133a(0x1ce)]+_0x48133a(0x1eb)+_0xc5327d[_0x48133a(0x20b)]+_0x48133a(0x1d2)+_0xc5327d['id']+_0x48133a(0x241))[_0x48133a(0x1c2)]('');}function updateStats(_0xef7ace){const _0x300912=_0x244385,_0x49fad4=_0xef7ace['reduce']((_0x2c0215,_0x2862dd)=>_0x2c0215+parseFloat(_0x2862dd[_0x300912(0x1ce)]),0x0),_0x9a737c=_0xef7ace[_0x300912(0x1ae)],_0x2b759d=_0xef7ace[_0x300912(0x20e)]((_0x48eefc,_0x30a5c1)=>{const _0x4e7f50=_0x300912;return _0x48eefc[_0x30a5c1[_0x4e7f50(0x20b)]]=(_0x48eefc[_0x30a5c1[_0x4e7f50(0x20b)]]||0x0)+parseFloat(_0x30a5c1[_0x4e7f50(0x1ce)]),_0x48eefc;},{}),_0x3f79b0=Object[_0x300912(0x1e5)](_0x2b759d)[_0x300912(0x1a1)](([,_0x405209],[,_0x28f9a8])=>_0x28f9a8-_0x405209)[0x0]?.[0x0]||'-';document['getElementById']('totalSales')[_0x300912(0x1bd)]=_0x49fad4[_0x300912(0x21c)]()+_0x300912(0x1c5),document[_0x300912(0x243)](_0x300912(0x216))[_0x300912(0x1bd)]=_0x9a737c,document[_0x300912(0x243)](_0x300912(0x1f0))[_0x300912(0x1bd)]=_0x3f79b0;}window[_0x244385(0x242)]=function(_0x312234,_0x3e7e28){const _0x49fdd8=_0x244385,_0x4e54d3=document[_0x49fdd8(0x243)](_0x49fdd8(0x1b6));document[_0x49fdd8(0x243)](_0x49fdd8(0x1d3))[_0x49fdd8(0x1bd)]=_0x49fdd8(0x1db);const _0x576992=document[_0x49fdd8(0x243)](_0x49fdd8(0x19c));_0x576992[_0x49fdd8(0x1da)]=async()=>{const _0x379359=_0x49fdd8;try{await remove(ref(db,_0x379359(0x200)+_0x312234+'/'+_0x3e7e28)),await loadSales(),closeModal();}catch(_0x44716a){console[_0x379359(0x1a9)](_0x379359(0x1ba),_0x44716a);}},_0x4e54d3[_0x49fdd8(0x19b)][_0x49fdd8(0x207)]=_0x49fdd8(0x208);},window[_0x244385(0x1df)]=function(_0x451a78){const _0x578c63=_0x244385,_0xb31401=document[_0x578c63(0x243)]('confirmModal');document['getElementById']('modalMessage')[_0x578c63(0x1bd)]='Êtes-vous\x20sûr\x20de\x20vouloir\x20effacer\x20tout\x20l\x27historique\x20de\x20'+_0x451a78+'\x20?';const _0x150277=document['getElementById'](_0x578c63(0x19c));_0x150277[_0x578c63(0x1da)]=async()=>{const _0x28ca06=_0x578c63;try{await set(ref(db,_0x28ca06(0x200)+_0x451a78),null),await loadSales(),closeModal();}catch(_0x59af92){console[_0x28ca06(0x1a9)]('Erreur\x20lors\x20de\x20l\x27effacement:',_0x59af92);}},_0xb31401[_0x578c63(0x19b)][_0x578c63(0x207)]='flex';},window[_0x244385(0x1e8)]=function(){const _0x3b2504=_0x244385;document[_0x3b2504(0x243)](_0x3b2504(0x1b6))[_0x3b2504(0x19b)][_0x3b2504(0x207)]='none';};function showLoader(){const _0x599411=_0x244385;document['getElementById'](_0x599411(0x1f4))[_0x599411(0x19b)]['display']=_0x599411(0x217);}function hideLoader(){const _0x39dff2=_0x244385;document[_0x39dff2(0x243)](_0x39dff2(0x1f4))[_0x39dff2(0x19b)][_0x39dff2(0x207)]=_0x39dff2(0x1e2);}function showPageLoader(){const _0x8b1ffb=_0x244385;document[_0x8b1ffb(0x243)](_0x8b1ffb(0x19a))[_0x8b1ffb(0x19b)][_0x8b1ffb(0x207)]=_0x8b1ffb(0x208);}function hidePageLoader(){const _0x45d75e=_0x244385;document[_0x45d75e(0x243)](_0x45d75e(0x19a))[_0x45d75e(0x19b)][_0x45d75e(0x207)]=_0x45d75e(0x1e2);}async function processConnectedTickets(){const _0x37ce80=_0x244385,_0x1aae7e=document[_0x37ce80(0x243)](_0x37ce80(0x1ca));try{_0x1aae7e['textContent']=_0x37ce80(0x1f8);const _0x1c7af4=ref(db,_0x37ce80(0x1af)),_0x2eb402=await get(_0x1c7af4);let _0x4a64ab=_0x2eb402[_0x37ce80(0x1c1)]()||{};const _0x207dc2={};for(const _0x82f672 in _0x4a64ab){const _0x497729=_0x4a64ab[_0x82f672][_0x37ce80(0x1fe)];!_0x207dc2[_0x497729]&&(_0x207dc2[_0x497729]=_0x4a64ab[_0x82f672]);}_0x1aae7e[_0x37ce80(0x1bd)]='Traitement\x20des\x20tickets\x20uniques...';for(const _0x2fa6fa in _0x207dc2){await processTicket(_0x207dc2[_0x2fa6fa]);}_0x1aae7e['textContent']='Nettoyage\x20des\x20tickets\x20traités...';for(const _0x406921 in _0x207dc2){const _0xcb399a=Object[_0x37ce80(0x22d)](_0x4a64ab)[_0x37ce80(0x1b4)](_0x263f0a=>_0x4a64ab[_0x263f0a]['username']===_0x406921);_0xcb399a&&await remove(ref(db,_0x37ce80(0x1d5)+_0xcb399a));}}catch(_0x4dfb65){console['error'](_0x37ce80(0x1f9),_0x4dfb65),showNotification(_0x37ce80(0x23c),'Une\x20erreur\x20est\x20survenue\x20lors\x20du\x20traitement\x20des\x20tickets.');}}async function processTicket(_0x142324){const _0x261ece=_0x244385,_0x4147ee=document[_0x261ece(0x243)]('pageLoaderMessage');try{_0x4147ee[_0x261ece(0x1bd)]=_0x261ece(0x228)+_0x142324['username']+'...';const _0x233d63=ref(db,'VendorsHistory'),_0x102704=await get(_0x233d63),_0x39a1b7=_0x102704[_0x261ece(0x1c1)]()||{};let _0x421a3f=![];for(const _0x5636e7 in _0x39a1b7){const _0x173a21=_0x39a1b7[_0x5636e7];for(const _0x1e60ad in _0x173a21){if(_0x173a21[_0x1e60ad][_0x261ece(0x206)]===_0x142324['username']){_0x421a3f=!![];break;}}if(_0x421a3f)break;}if(!_0x421a3f){_0x4147ee[_0x261ece(0x1bd)]='Traitement\x20du\x20ticket\x20'+_0x142324[_0x261ece(0x1fe)]+_0x261ece(0x1cc);const _0x3e2591=ref(db,_0x261ece(0x215)),_0x4a1308=ref(db,_0x261ece(0x1d7)),_0x576863=await get(_0x3e2591),_0xefd4c5=await get(_0x4a1308),_0x436d6a=_0x576863[_0x261ece(0x1c1)]()||{},_0x112ccb=_0xefd4c5[_0x261ece(0x1c1)]()||{};let _0x457507=null,_0x27b6d7=null,_0x43e821=null;for(const _0x585617 in _0x436d6a){const _0x338749=(_0x436d6a[_0x585617][_0x261ece(0x1ff)]||[])['indexOf'](_0x142324[_0x261ece(0x1fe)]);if(_0x338749>-0x1){_0x457507={'category':_0x585617,'user':_0x436d6a[_0x585617][_0x261ece(0x1ff)][_0x338749],'password':_0x436d6a[_0x585617]['motDePasse'][_0x338749],'price':_0x436d6a[_0x585617][_0x261ece(0x19d)][_0x338749],'updatedData':{..._0x436d6a[_0x585617],'utilisateur':_0x436d6a[_0x585617][_0x261ece(0x1ff)][_0x261ece(0x1ec)]((_0x81ea3b,_0x2dd665)=>_0x2dd665!==_0x338749),'motDePasse':_0x436d6a[_0x585617]['motDePasse'][_0x261ece(0x1ec)]((_0x2047e0,_0x481e18)=>_0x481e18!==_0x338749),'prix':_0x436d6a[_0x585617][_0x261ece(0x19d)][_0x261ece(0x1ec)]((_0x42245c,_0x443180)=>_0x443180!==_0x338749)}},_0x27b6d7=ref(db,_0x261ece(0x244)+_0x585617),_0x43e821=_0x261ece(0x215);break;}}if(!_0x457507)for(const _0x5f4946 in _0x112ccb){if(_0x112ccb[_0x5f4946][_0x261ece(0x206)]===_0x142324[_0x261ece(0x1fe)]){_0x457507={'category':_0x112ccb[_0x5f4946]['category'],'user':_0x112ccb[_0x5f4946][_0x261ece(0x206)],'password':_0x112ccb[_0x5f4946]['password'],'price':_0x112ccb[_0x5f4946][_0x261ece(0x1ce)]},_0x27b6d7=ref(db,_0x261ece(0x23b)+_0x5f4946),_0x43e821='TicketsTransit';break;}}_0x457507&&(_0x4147ee[_0x261ece(0x1bd)]=_0x261ece(0x247)+_0x142324[_0x261ece(0x1fe)]+_0x261ece(0x1cc),await sellTicketAutomatically(_0x457507,_0x27b6d7,_0x43e821));}}catch(_0x43ae2c){console[_0x261ece(0x1a9)](_0x261ece(0x1c3),_0x43ae2c),showNotification(_0x261ece(0x23c),_0x261ece(0x1b1)+_0x142324[_0x261ece(0x1fe)]+'.');}}function _0x4126(_0x6586d3,_0x351c33){const _0x4a4787=_0x4a47();return _0x4126=function(_0x412632,_0x35d1f3){_0x412632=_0x412632-0x198;let _0x39dc04=_0x4a4787[_0x412632];return _0x39dc04;},_0x4126(_0x6586d3,_0x351c33);}async function sellTicketAutomatically(_0x25209c,_0x29729f,_0x8615a){const _0x382479=_0x244385;try{const _0x36c92a=_0x382479(0x1b8),_0x1925a9=ref(db,_0x382479(0x200)+_0x36c92a);await push(_0x1925a9,{'category':_0x25209c[_0x382479(0x240)],'user':_0x25209c['user'],'password':_0x25209c[_0x382479(0x209)],'price':_0x25209c[_0x382479(0x1ce)],'soldAt':Date[_0x382479(0x237)]()});const _0x5e2165=ref(db,_0x382479(0x202));await push(_0x5e2165,{'category':_0x25209c['category'],'user':_0x25209c['user'],'password':_0x25209c[_0x382479(0x209)],'price':_0x25209c['price'],'soldAt':Date[_0x382479(0x237)](),'vendorId':_0x36c92a}),_0x8615a===_0x382479(0x215)?await set(_0x29729f,_0x25209c['updatedData']):await remove(_0x29729f),console[_0x382479(0x205)]('Ticket\x20'+_0x25209c[_0x382479(0x206)]+'\x20vendu\x20automatiquement.');}catch(_0x3f165a){console[_0x382479(0x1a9)](_0x382479(0x21d),_0x3f165a),showNotification(_0x382479(0x23c),'Erreur\x20lors\x20de\x20la\x20vente\x20automatique\x20du\x20ticket.');}}function showSubscriptionRequiredModal(){const _0x2d8410=_0x244385;subscriptionRequiredModal[_0x2d8410(0x19b)][_0x2d8410(0x207)]=_0x2d8410(0x208);}function hideSubscriptionRequiredModal(){const _0x1e2621=_0x244385;subscriptionRequiredModal[_0x1e2621(0x19b)]['display']=_0x1e2621(0x1e2);}function redirectToSubscription(){const _0x21038d=_0x244385;window['location'][_0x21038d(0x1a4)]=_0x21038d(0x22c);}async function checkSubscriptionStatus(){const _0x50c141=_0x244385,_0x3986b8=document[_0x50c141(0x243)](_0x50c141(0x1ca));_0x3986b8[_0x50c141(0x1bd)]=_0x50c141(0x1c7);try{const _0x3b653f=await get(adminRef),_0x472b8c=_0x3b653f[_0x50c141(0x1c1)](),_0x317ca2=new Date();if(_0x472b8c&&_0x472b8c[_0x50c141(0x1f6)]===_0x50c141(0x203)){const _0x2deaab=new Date(_0x472b8c[_0x50c141(0x1be)]);_0x2deaab<_0x317ca2?(_0x3986b8[_0x50c141(0x1bd)]=_0x50c141(0x1dd),hidePageLoader(),showSubscriptionRequiredModal(),await adminRef[_0x50c141(0x232)]({'status':_0x50c141(0x20f)})):(_0x3986b8[_0x50c141(0x1bd)]='Abonnement\x20actif',hidePageLoader());}else _0x3986b8[_0x50c141(0x1bd)]=_0x50c141(0x1a2),hidePageLoader(),showSubscriptionRequiredModal();}catch(_0x43e91e){hidePageLoader(),console[_0x50c141(0x1a9)](_0x50c141(0x23e),_0x43e91e),_0x3986b8['textContent']='Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement',showNotification(_0x50c141(0x23c),_0x50c141(0x222));}}function _0x4a47(){const _0x358dcb=['<option\x20value=\x22all\x22>Tous\x20les\x20vendeurs</option>','innerHTML','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement.','getTime','20158hkaLVV','updatePartner','4487208VfubwG','applyFilters','Vérification\x20du\x20ticket\x20pour\x20','startDate','sikaconnect-2f279.firebaseapp.com','save','index.html','keys','exportToPDF','utils','xlsx','sendMessage','update','Message\x20envoyé\x20!','980825684625','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','editPartnerId','now','createElement','<option\x20value=\x22','\x27)\x22>Modifier</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22action-btn\x20delete-btn\x22\x20onclick=\x22deletePartner(\x27','TicketsTransit/','Erreur','showAddPartnerForm','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement\x20:','forEach','category','\x27)\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Supprimer\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','deleteSale','getElementById','TicketsTotal/','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','printTable','Vente\x20du\x20ticket\x20','setDate','vendorFilter','pageLoaderWrapper','style','confirmBtn','prix','messageContent','editPartnerName','Erreur\x20lors\x20de\x20la\x20mise\x20à\x20jour\x20du\x20partenaire:','sort','Pas\x20d\x27abonnement\x20actif','left','href','bold','binary','236561CcoSEz','application/octet-stream','error','print','autoTable','Erreur\x20lors\x20de\x20l\x27envoi\x20du\x20message:','10PSZiVx','length','TicketConnecté','\x27)\x22>Supprimer</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22action-btn\x22\x20onclick=\x22showMessagePartnerForm(\x27','Erreur\x20lors\x20du\x20traitement\x20du\x20ticket\x20','center','Ventes','find','1:980825684625:web:dbf5a31b93db0d13261d30','confirmModal','2215TAZGts','Vendeur\x20automatique','1644nldHPk','Erreur\x20lors\x20de\x20la\x20suppression:','closeMessageModal','9uhYzoR','textContent','endDate','6767454QqlYfb','soldAt','val','join','Erreur\x20lors\x20du\x20traitement\x20du\x20ticket\x20:','newPartnerPassword','\x20FCFA','13NgMdor','Vérification\x20de\x20l\x27abonnement...','7BldlKl','Veuillez\x20saisir\x20un\x20message.','pageLoaderMessage','getDay','...','\x27)\x22>Message</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','price','ventes.pdf','grid','charCodeAt','\x27,\x20\x27','modalMessage','G-579KVT1Y97','TicketConnecté/','Êtes-vous\x20sûr\x20de\x20vouloir\x20supprimer\x20le\x20partenaire\x20','TicketsTransit','addPartnerForm','partnersTable','onclick','Êtes-vous\x20sûr\x20de\x20vouloir\x20supprimer\x20cette\x20vente\x20?','showEditPartnerForm','Abonnement\x20expiré','Liste\x20des\x20ventes','clearVendorHistory','text','AIzaSyAyrniQKyBc9zTwUCbHlryyR411HLzbDkk','none','Erreur\x20lors\x20de\x20la\x20suppression\x20du\x20partenaire:','/messages','entries','messagePartnerModal','3138207pBFVWm','closeModal','all','messagePartnerId','\x20FCFA</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22action-btn\x20delete-btn\x22\x20onclick=\x22deleteSale(\x27','filter','Vendors/','VendorsHistory','addEventListener','topVendor','Erreur\x20lors\x20du\x20chargement\x20des\x20partenaires:','Erreur\x20lors\x20du\x20chargement\x20des\x20données:','newPartnerName','loaderWrapper','table_to_book','status','Erreur\x20lors\x20du\x20chargement\x20des\x20ventes:','Vérification\x20des\x20tickets\x20connectés...','Erreur\x20lors\x20du\x20traitement\x20des\x20tickets\x20connectés\x20:','map','editPartnerPassword','12484XGahjH','addPartner','username','utilisateur','VendorsHistory/','redirectToSubscription','TicketsVendus','active','setHours','log','user','display','flex','password','appendChild','vendor','jspdf','Veuillez\x20remplir\x20tous\x20les\x20champs.','reduce','expired','</option>','hideAddPartnerForm','push','deletePartner','periodFilter','TicketsTotal','totalTickets','block','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22action-btn\x22\x20onclick=\x22showEditPartnerForm(\x27','value','createIcons','showMessagePartnerForm','toLocaleString','Erreur\x20lors\x20de\x20la\x20vente\x20automatique\x20du\x20ticket\x20:','salesTable','8731129fMXrEt'];_0x4a47=function(){return _0x358dcb;};return _0x4a47();}window[_0x244385(0x246)]=function(){const _0x2705b6=_0x244385;window[_0x2705b6(0x1aa)]();},window[_0x244385(0x22e)]=function(){const _0x1389db=_0x244385,{jsPDF:_0x4021d8}=window[_0x1389db(0x20c)],_0x3e3efd=new _0x4021d8(),_0x45aa05=document[_0x1389db(0x243)]('salesTable'),_0x3ea811={'fillColor':[0x2a,0x3a,0x6c],'textColor':[0xff,0xff,0xff],'fontStyle':_0x1389db(0x1a5),'halign':_0x1389db(0x1b2)},_0x9e87f5={'halign':_0x1389db(0x1a3)},_0x3d9324={'theme':_0x1389db(0x1d0),'headStyles':_0x3ea811,'bodyStyles':_0x9e87f5,'margin':{'top':0x14},'startY':0x14};_0x3e3efd[_0x1389db(0x1e0)](_0x1389db(0x1de),0xe,0xf),_0x3e3efd[_0x1389db(0x1ab)]({'html':'#salesTable',..._0x3d9324}),_0x3e3efd[_0x1389db(0x22b)](_0x1389db(0x1cf));},window['exportToExcel']=function(){const _0x18241e=_0x244385,_0x1a46e4=XLSX[_0x18241e(0x22f)][_0x18241e(0x1f5)](document[_0x18241e(0x243)]('salesTable'),{'sheet':_0x18241e(0x1b3)}),_0x5148d8=XLSX['write'](_0x1a46e4,{'bookType':_0x18241e(0x230),'type':_0x18241e(0x1a6)});function _0x566654(_0x19695c){const _0x3ef958=_0x18241e,_0x3b4ab7=new ArrayBuffer(_0x19695c[_0x3ef958(0x1ae)]),_0x230324=new Uint8Array(_0x3b4ab7);for(let _0x503ca9=0x0;_0x503ca9<_0x19695c['length'];_0x503ca9++)_0x230324[_0x503ca9]=_0x19695c[_0x3ef958(0x1d1)](_0x503ca9)&0xff;return _0x3b4ab7;}saveAs(new Blob([_0x566654(_0x5148d8)],{'type':_0x18241e(0x1a8)}),'ventes.xlsx');},window[_0x244385(0x1ef)]('DOMContentLoaded',async()=>{const _0x292d80=_0x244385;await checkSubscriptionStatus(),await loadSalesData(),await loadPartners(),document[_0x292d80(0x243)]('periodFilter')[_0x292d80(0x219)]='today',applyFilters(),lucide[_0x292d80(0x21a)]();}),window[_0x244385(0x201)]=redirectToSubscription,window['hideSubscriptionRequiredModal']=redirectToSubscription;
+    </script>
+</body>
+</html>
