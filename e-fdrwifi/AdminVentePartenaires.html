@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Administrateur - E-FDR WIFI ZONE</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #424242, #073018, #553a01);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card h3 {
+            color: #fdbb2d;
+            margin-bottom: 10px;
+        }
+
+        .filters {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        select, input {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        select option {
+            background: #1a2a6c;
+            color: white;
+        }
+
+        .sales-table {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative; /* Ajout pour le positionnement absolu des boutons */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            background: rgba(0, 0, 0, 0.2);
+            color: #fdbb2d;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+            color: rgb(60, 255, 0);
+        }
+
+        .delete-btn {
+            background: #b21f1f;
+        }
+
+        .clear-btn {
+            background: #1a2a6c;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .partners-management {
+            margin-bottom: 30px;
+        }
+
+        .partner-actions {
+            margin-bottom: 20px;
+        }
+
+        .partner-form {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .partner-form input {
+            margin-bottom: 10px;
+        }
+
+        .partners-table table {
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+        }
+
+        .loader-wrapper {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+        }
+
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .page-loader-wrapper {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1002;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .page-loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        .loader-message {
+            color: white;
+            margin-top: 16px;
+            font-size: 1rem;
+            text-align: center;
+            max-width: 80%;
+        }
+        .subscription-required {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .subscription-required-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .subscription-required-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .subscription-required-content p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .subscription-required-content button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0 10px;
+        }
+
+        .subscription-required-content button:hover {
+            background-color: #e6a727;
+        }
+
+        /* Styles pour les boutons d'exportation */
+        .export-buttons {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+            z-index: 10; /* Pour s'assurer qu'ils restent au-dessus du tableau */
+        }
+
+        .export-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .export-btn:hover {
+            background-color: #218838;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .export-btn i {
+            margin-right: 6px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="page-loader-wrapper" id="pageLoaderWrapper">
+        <div class="page-loader"></div>
+        <div class="loader-message" id="pageLoaderMessage">Initialisation...</div>
+    </div>
+    <div class="loader-wrapper" id="loaderWrapper">
+        <div class="loader"></div>
+    </div>
+    <div class="container">
+        <div class="header">
+            <h1>Dashboard Administrateur</h1>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total des ventes</h3>
+                <div id="totalSales">0 FCFA</div>
+            </div>
+            <div class="stat-card">
+                <h3>Nombre de tickets vendus</h3>
+                <div id="totalTickets">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Meilleur vendeur</h3>
+                <div id="topVendor">-</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <select id="vendorFilter">
+                <option value="all">Tous les vendeurs</option>
+            </select>
+            <select id="periodFilter">
+                <option value="today">Aujourd'hui</option>
+                <option value="week">Cette semaine</option>
+                <option value="month">Ce mois</option>
+                <option value="all">Toute la période</option>
+            </select>
+            <input type="date" id="startDate">
+            <input type="date" id="endDate">
+            <button class="action-btn" onclick="applyFilters()">Filtrer</button>
+        </div>
+
+        <div class="sales-table">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Vendeur</th>
+                        <th>Catégorie</th>
+                        <th>Utilisateur</th>
+                        <th>Prix</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="salesTable"></tbody>
+            </table>
+            <div class="export-buttns">
+                <button class="action-btn delete-btn" onclick="printTable()"><i data-lucide="printer"></i> Imprimer</button>
+                <button class="action-btn delete-btn" onclick="exportToPDF()"><i data-lucide="file-down"></i> Exporter en PDF</button>
+                <button class="action-btn delete-btn" onclick="exportToExcel()"><i data-lucide="file-spreadsheet"></i> Exporter en Excel</button>
+            </div>
+        </div>
+
+        <div class="partners-management">
+            <h2>Gestion des partenaires</h2>
+            <div class="partner-actions">
+                <button class="action-btn" onclick="showAddPartnerForm()">Ajouter un partenaire</button>
+            </div>
+
+            <div class="partner-form" id="addPartnerForm" style="display: none;">
+                <h3>Ajouter un partenaire</h3>
+                <input type="text" id="newPartnerName" placeholder="Nom du partenaire">
+                <input type="password" id="newPartnerPassword" placeholder="Mot de passe">
+                <button class="action-btn" onclick="addPartner()">Enregistrer</button>
+                <button class="action-btn clear-btn" onclick="hideAddPartnerForm()">Annuler</button>
+            </div>
+
+            <div class="partners-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nom du partenaire</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partnersTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="editPartnerModal" class="modal">
+            <div class="modal-content">
+                <h2>Modifier le partenaire</h2>
+                <input type="hidden" id="editPartnerId">
+                <input type="text" id="editPartnerName" placeholder="Nom du partenaire">
+                <input type="password" id="editPartnerPassword" placeholder="Mot de passe">
+                <div class="modal-actions">
+                    <button class="action-btn" onclick="closeEditModal()">Annuler</button>
+                    <button class="action-btn" onclick="updatePartner()">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="messagePartnerModal" class="modal">
+            <div class="modal-content">
+                <h2>Envoyer un message</h2>
+                <input type="hidden" id="messagePartnerId">
+                <textarea id="messageContent" placeholder="Votre message"></textarea>
+                <div class="modal-actions">
+                    <button class="action-btn" onclick="closeMessageModal()">Annuler</button>
+                    <button class="action-btn" onclick="sendMessage()">Envoyer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h2>Confirmation</h2>
+            <p id="modalMessage"></p>
+            <div class="modal-actions">
+                <button class="action-btn" onclick="closeModal()">Annuler</button>
+                <button class="action-btn delete-btn" id="confirmBtn">Confirmer</button>
+            </div>
+        </div>
+    </div>
+    <div id="subscriptionRequiredModal" class="subscription-required" style="display: none;">
+        <div class="subscription-required-content">
+            <h2>Abonnement Requis</h2>
+            <p>Un abonnement actif est nécessaire pour accéder à cette fonctionnalité.</p>
+            <button onclick="redirectToSubscription()">S'abonner</button>
+            <button onclick="hideSubscriptionRequiredModal()">Fermer</button>
+        </div>
+    </div>
+    <script type="module">
+const _0x53e4b2=_0x2044;(function(_0x651809,_0x8ad2ea){const _0x489d3e=_0x2044,_0x571497=_0x651809();while(!![]){try{const _0x1adf59=-parseInt(_0x489d3e(0x132))/0x1+parseInt(_0x489d3e(0x12e))/0x2*(parseInt(_0x489d3e(0x14d))/0x3)+-parseInt(_0x489d3e(0x15e))/0x4+-parseInt(_0x489d3e(0x118))/0x5+-parseInt(_0x489d3e(0x114))/0x6+-parseInt(_0x489d3e(0x164))/0x7+parseInt(_0x489d3e(0x174))/0x8*(parseInt(_0x489d3e(0x102))/0x9);if(_0x1adf59===_0x8ad2ea)break;else _0x571497['push'](_0x571497['shift']());}catch(_0x15f55d){_0x571497['push'](_0x571497['shift']());}}}(_0xff93,0xd8d27));function _0x2044(_0x2d0706,_0x1f482a){const _0xff93db=_0xff93();return _0x2044=function(_0x204428,_0x54a922){_0x204428=_0x204428-0xd8;let _0xaa55d6=_0xff93db[_0x204428];return _0xaa55d6;},_0x2044(_0x2d0706,_0x1f482a);}import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';import{getDatabase,ref,get,remove,set,push}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';const firebaseConfig={'apiKey':_0x53e4b2(0xfc),'authDomain':'e-fdr-wifi-zone.firebaseapp.com','databaseURL':_0x53e4b2(0x11d),'projectId':'e-fdr-wifi-zone','storageBucket':_0x53e4b2(0x126),'messagingSenderId':_0x53e4b2(0x155),'appId':_0x53e4b2(0x12c),'measurementId':'G-ZP7NDJ1TCW'},app=initializeApp(firebaseConfig),db=getDatabase(app),adminRef=ref(db,_0x53e4b2(0x14a));let allSales=[],vendors=new Set(),partners={};async function loadPartners(){const _0x5d209c=_0x53e4b2;try{const _0x3103a4=ref(db,_0x5d209c(0xdf)),_0x3aa567=await get(_0x3103a4);_0x3aa567[_0x5d209c(0xe9)]()&&(partners=_0x3aa567['val'](),updatePartnersTable());}catch(_0x31173e){console[_0x5d209c(0x146)](_0x5d209c(0x107),_0x31173e);}}function _0xff93(){const _0x57deca=['AIzaSyA427nwGB3DfsySqvBCnkpRUdDAcYyhn2Q','Erreur\x20lors\x20du\x20chargement\x20des\x20données:','bold','editPartnerModal','Ticket\x20','soldAt','2264751OHogtc','Erreur\x20lors\x20du\x20traitement\x20des\x20tickets\x20connectés\x20:','value','vendorFilter','Erreur\x20lors\x20de\x20la\x20mise\x20à\x20jour\x20du\x20partenaire:','Erreur\x20lors\x20du\x20chargement\x20des\x20partenaires:','indexOf','Erreur\x20lors\x20de\x20l\x27envoi\x20du\x20message:','Erreur\x20lors\x20du\x20chargement\x20des\x20ventes:','center','editPartnerPassword','addPartnerForm','log','innerHTML','partnersTable','application/octet-stream','\x27)\x22>Message</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','exportToPDF','8426532zTJHfT','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement','printTable','block','8243960dKiqbl','ventes.xlsx','Erreur\x20lors\x20de\x20la\x20suppression\x20du\x20partenaire:','\x27)\x22>Supprimer</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22action-btn\x22\x20onclick=\x22showMessagePartnerForm(\x27','totalTickets','https://e-fdr-wifi-zone-default-rtdb.firebaseio.com','TicketConnecté/','style','filter','table_to_book','Vendeur\x20automatique','Erreur','Traitement\x20du\x20ticket\x20','update','e-fdr-wifi-zone.firebasestorage.app','clearVendorHistory','closeMessageModal','none','autoTable','createIcons','1:345974541860:web:a296190bcea2ce496bd2b1','status','44ZmDXTe','<option\x20value=\x22','messagePartnerId','VendorsHistory/','278518ThzahZ','keys','setDate','VendorsHistory','\x27)\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Supprimer\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','redirectToSubscription','sort','getDate','messagePartnerModal','active','index.html','Vérification\x20du\x20ticket\x20pour\x20','display','save','grid','left','now','addEventListener','length','\x27)\x22>Modifier</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22action-btn\x20delete-btn\x22\x20onclick=\x22deletePartner(\x27','error','val','loaderWrapper','\x27,\x20\x27','admin/subscription','forEach','</option>','67767Chsjfo','TicketsTransit/','Traitement\x20des\x20tickets\x20uniques...','map','\x20FCFA','Erreur\x20lors\x20du\x20traitement\x20du\x20ticket\x20','location','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement\x20:','345974541860','Êtes-vous\x20sûr\x20de\x20vouloir\x20supprimer\x20le\x20partenaire\x20','sendMessage','motDePasse','TicketsTransit','confirmBtn','getTime','setHours','showEditPartnerForm','4759320KLjEuE','addPartner','reduce','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','Vérification\x20des\x20tickets\x20connectés...','Abonnement\x20expiré','9647876trvJcC','endDate','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','deletePartner','category','showAddPartnerForm','push','Veuillez\x20remplir\x20tous\x20les\x20champs.','updatedData','username','salesTable','vendor','jspdf','exportToExcel','entries','Erreur\x20lors\x20de\x20l\x27effacement:','200pFGGiX','price','topVendor','xlsx','print','user','text','utils','flex','Erreur\x20lors\x20de\x20la\x20vente\x20automatique\x20du\x20ticket.','pageLoaderWrapper','messageContent','all','href','password','...','hideSubscriptionRequiredModal','\x20FCFA</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22action-btn\x20delete-btn\x22\x20onclick=\x22deleteSale(\x27','newPartnerName','pageLoaderMessage','onclick','getElementById','Vendors','TicketsVendus','TicketsTotal','prix','Erreur\x20lors\x20de\x20l\x27ajout\x20du\x20partenaire:','confirmModal','write','applyFilters','Erreur\x20lors\x20de\x20la\x20vente\x20automatique\x20du\x20ticket\x20:','editPartnerId','exists','Vérification\x20de\x20l\x27abonnement...','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement.','textContent','periodFilter','DOMContentLoaded','Vendors/','<option\x20value=\x22all\x22>Tous\x20les\x20vendeurs</option>','utilisateur','Liste\x20des\x20ventes','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','ventes.pdf','newPartnerPassword','modalMessage','binary','editPartnerName','join','Êtes-vous\x20sûr\x20de\x20vouloir\x20supprimer\x20cette\x20vente\x20?','Pas\x20d\x27abonnement\x20actif'];_0xff93=function(){return _0x57deca;};return _0xff93();}function updatePartnersTable(){const _0x975f47=_0x53e4b2,_0xcea62b=document[_0x975f47(0xde)](_0x975f47(0x110));_0xcea62b['innerHTML']='';for(const _0x15191e in partners){const _0x5d8f07=partners[_0x15191e],_0x14e2a0=document['createElement']('tr');_0x14e2a0[_0x975f47(0x10f)]=_0x975f47(0xf3)+_0x15191e+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22action-btn\x22\x20onclick=\x22showEditPartnerForm(\x27'+_0x15191e+_0x975f47(0x145)+_0x15191e+_0x975f47(0x11b)+_0x15191e+_0x975f47(0x112),_0xcea62b['appendChild'](_0x14e2a0);}}window[_0x53e4b2(0x169)]=function(){const _0x8bba57=_0x53e4b2;document[_0x8bba57(0xde)](_0x8bba57(0x10d))[_0x8bba57(0x11f)][_0x8bba57(0x13e)]='block';},window['hideAddPartnerForm']=function(){const _0x7f196f=_0x53e4b2;document[_0x7f196f(0xde)](_0x7f196f(0xdb))[_0x7f196f(0x104)]='',document['getElementById']('newPartnerPassword')[_0x7f196f(0x104)]='',document['getElementById'](_0x7f196f(0x10d))['style']['display']='none';},window[_0x53e4b2(0x15f)]=async function(){const _0x548cee=_0x53e4b2,_0x55850a=document['getElementById']('newPartnerName')[_0x548cee(0x104)],_0x2207dd=document[_0x548cee(0xde)](_0x548cee(0xf5))[_0x548cee(0x104)];if(_0x55850a&&_0x2207dd)try{const _0x3dd077=ref(db,_0x548cee(0xef)+_0x55850a);await set(_0x3dd077,{'password':_0x2207dd}),await loadPartners(),hideAddPartnerForm();}catch(_0x231a51){console[_0x548cee(0x146)](_0x548cee(0xe3),_0x231a51);}else alert(_0x548cee(0x16b));},window[_0x53e4b2(0x15d)]=function(_0x50a7fa){const _0x443307=_0x53e4b2,_0x1dd921=document[_0x443307(0xde)](_0x443307(0xff));document[_0x443307(0xde)](_0x443307(0xe8))[_0x443307(0x104)]=_0x50a7fa,document['getElementById'](_0x443307(0xf8))[_0x443307(0x104)]=_0x50a7fa,document[_0x443307(0xde)](_0x443307(0x10c))[_0x443307(0x104)]=partners[_0x50a7fa][_0x443307(0x182)],_0x1dd921[_0x443307(0x11f)][_0x443307(0x13e)]=_0x443307(0x17c);},window['closeEditModal']=function(){const _0x2d216c=_0x53e4b2;document[_0x2d216c(0xde)](_0x2d216c(0xff))[_0x2d216c(0x11f)][_0x2d216c(0x13e)]=_0x2d216c(0x129);},window['updatePartner']=async function(){const _0x18e401=_0x53e4b2,_0x3f4b8c=document['getElementById'](_0x18e401(0xe8))['value'],_0x138afa=document[_0x18e401(0xde)](_0x18e401(0xf8))[_0x18e401(0x104)],_0x2fbc78=document[_0x18e401(0xde)](_0x18e401(0x10c))['value'];if(_0x138afa&&_0x2fbc78)try{const _0x49de41=ref(db,_0x18e401(0xef)+_0x138afa);await set(_0x49de41,{'password':_0x2fbc78}),_0x3f4b8c!==_0x138afa&&await remove(ref(db,_0x18e401(0xef)+_0x3f4b8c)),await loadPartners(),closeEditModal();}catch(_0x4bdd3b){console[_0x18e401(0x146)](_0x18e401(0x106),_0x4bdd3b);}else alert(_0x18e401(0x16b));},window[_0x53e4b2(0x167)]=async function(_0x560208){const _0x560971=_0x53e4b2;if(confirm(_0x560971(0x156)+_0x560208+'\x20?'))try{const _0x7b529d=ref(db,_0x560971(0xef)+_0x560208);await remove(_0x7b529d),await loadPartners();}catch(_0x4439e3){console[_0x560971(0x146)](_0x560971(0x11a),_0x4439e3);}},window['showMessagePartnerForm']=function(_0x25ebab){const _0x5d0bf1=_0x53e4b2,_0x5b8d34=document[_0x5d0bf1(0xde)](_0x5d0bf1(0x13a));document['getElementById']('messagePartnerId')[_0x5d0bf1(0x104)]=_0x25ebab,document[_0x5d0bf1(0xde)](_0x5d0bf1(0x17f))['value']='',_0x5b8d34[_0x5d0bf1(0x11f)]['display']=_0x5d0bf1(0x17c);},window[_0x53e4b2(0x128)]=function(){const _0x2a5a39=_0x53e4b2;document[_0x2a5a39(0xde)](_0x2a5a39(0x13a))['style'][_0x2a5a39(0x13e)]='none';},window[_0x53e4b2(0x157)]=async function(){const _0x26301c=_0x53e4b2,_0x39a34b=document[_0x26301c(0xde)](_0x26301c(0x130))[_0x26301c(0x104)],_0x344a75=document[_0x26301c(0xde)](_0x26301c(0x17f))[_0x26301c(0x104)];if(_0x344a75)try{const _0x99297c=ref(db,_0x26301c(0xef)+_0x39a34b+'/messages');await push(_0x99297c,{'content':_0x344a75,'timestamp':Date['now']()}),alert('Message\x20envoyé\x20!'),closeMessageModal();}catch(_0xf2078){console['error'](_0x26301c(0x109),_0xf2078);}else alert('Veuillez\x20saisir\x20un\x20message.');};async function loadSalesData(){const _0x379470=_0x53e4b2;try{const _0x9770b7=ref(db,_0x379470(0x135)),_0x38e4f6=await get(_0x9770b7);_0x38e4f6[_0x379470(0xe9)]()&&(vendors=new Set(Object[_0x379470(0x133)](_0x38e4f6[_0x379470(0x147)]())),updateVendorFilter());const _0x38bda0=ref(db,'VendorsHistory'),_0x3df0c3=await get(_0x38bda0);if(_0x3df0c3['exists']()){allSales=[];const _0x575416=_0x3df0c3[_0x379470(0x147)]();Object['entries'](_0x575416)['forEach'](([_0x5782a9,_0x45101b])=>{const _0x336248=_0x379470;Object['entries'](_0x45101b)[_0x336248(0x14b)](([_0x29815a,_0x459bf0])=>{allSales['push']({'id':_0x29815a,'vendor':_0x5782a9,..._0x459bf0});});}),applyFilters();}}catch(_0x5f2901){console['error'](_0x379470(0xfd),_0x5f2901);}}function updateVendorFilter(){const _0x5f0b02=_0x53e4b2,_0x3a102c=document['getElementById'](_0x5f0b02(0x105));_0x3a102c[_0x5f0b02(0x10f)]=_0x5f0b02(0xf0),vendors['forEach'](_0x48b45f=>{const _0x4a93f8=_0x5f0b02;_0x3a102c[_0x4a93f8(0x10f)]+=_0x4a93f8(0x12f)+_0x48b45f+'\x22>'+_0x48b45f+_0x4a93f8(0x14c);});}async function loadSales(){const _0x51806b=_0x53e4b2;try{const _0x53b412=ref(db,_0x51806b(0x135)),_0x257217=await get(_0x53b412);if(_0x257217[_0x51806b(0xe9)]()){allSales=[];const _0x48ea6c=_0x257217[_0x51806b(0x147)]();Object[_0x51806b(0x172)](_0x48ea6c)[_0x51806b(0x14b)](([_0x537cc3,_0x50ea27])=>{const _0x2f058c=_0x51806b;Object[_0x2f058c(0x172)](_0x50ea27)[_0x2f058c(0x14b)](([_0x24c248,_0x3998bd])=>{const _0x3d734b=_0x2f058c;allSales[_0x3d734b(0x16a)]({'id':_0x24c248,'vendor':_0x537cc3,..._0x3998bd});});}),applyFilters();}}catch(_0x3fd57){console[_0x51806b(0x146)](_0x51806b(0x10a),_0x3fd57);}}window[_0x53e4b2(0xe6)]=function(){const _0x39e699=_0x53e4b2,_0x8c237b=document[_0x39e699(0xde)](_0x39e699(0x105))[_0x39e699(0x104)],_0x22cf40=document['getElementById'](_0x39e699(0xed))[_0x39e699(0x104)],_0x20e743=new Date(document['getElementById']('startDate')['value']),_0x56a9e6=new Date(document[_0x39e699(0xde)](_0x39e699(0x165))[_0x39e699(0x104)]);_0x56a9e6[_0x39e699(0x15c)](0x17,0x3b,0x3b);let _0x34d395=allSales;_0x8c237b!=='all'&&(_0x34d395=_0x34d395[_0x39e699(0x120)](_0x2c8ef8=>_0x2c8ef8[_0x39e699(0x16f)]===_0x8c237b));if(_0x22cf40!==_0x39e699(0x180)||!isNaN(_0x20e743[_0x39e699(0x15b)]())||!isNaN(_0x56a9e6[_0x39e699(0x15b)]())){const _0x35bd21=new Date(),_0x2787ee={'today':new Date(_0x35bd21[_0x39e699(0x15c)](0x0,0x0,0x0,0x0)),'week':new Date(_0x35bd21[_0x39e699(0x134)](_0x35bd21[_0x39e699(0x139)]()-_0x35bd21['getDay']())),'month':new Date(_0x35bd21[_0x39e699(0x134)](0x1))};_0x34d395=_0x34d395[_0x39e699(0x120)](_0x3755d1=>{const _0x1d906f=_0x39e699,_0x1fb547=new Date(_0x3755d1[_0x1d906f(0x101)]);if(_0x22cf40!=='all'&&_0x2787ee[_0x22cf40])return _0x1fb547>=_0x2787ee[_0x22cf40];if(!isNaN(_0x20e743[_0x1d906f(0x15b)]())&&!isNaN(_0x56a9e6[_0x1d906f(0x15b)]()))return _0x1fb547>=_0x20e743&&_0x1fb547<=_0x56a9e6;return!![];});}updateTable(_0x34d395),updateStats(_0x34d395);};function updateTable(_0x367a6f){const _0x50e128=_0x53e4b2,_0xc34331=document[_0x50e128(0xde)](_0x50e128(0x16e));_0xc34331[_0x50e128(0x10f)]=_0x367a6f['sort']((_0x42c2f8,_0x51d361)=>_0x51d361[_0x50e128(0x101)]-_0x42c2f8[_0x50e128(0x101)])[_0x50e128(0x150)](_0x136e43=>_0x50e128(0x166)+new Date(_0x136e43['soldAt'])['toLocaleString']()+_0x50e128(0x161)+_0x136e43[_0x50e128(0x16f)]+_0x50e128(0x161)+_0x136e43[_0x50e128(0x168)]+_0x50e128(0x161)+_0x136e43['user']+_0x50e128(0x161)+_0x136e43[_0x50e128(0x175)]+_0x50e128(0xda)+_0x136e43[_0x50e128(0x16f)]+_0x50e128(0x149)+_0x136e43['id']+_0x50e128(0x136))[_0x50e128(0xf9)]('');}function updateStats(_0x4ee446){const _0x40873e=_0x53e4b2,_0x36d19f=_0x4ee446['reduce']((_0x1c9d77,_0x47aa88)=>_0x1c9d77+parseFloat(_0x47aa88[_0x40873e(0x175)]),0x0),_0x4e9085=_0x4ee446[_0x40873e(0x144)],_0x3afeec=_0x4ee446[_0x40873e(0x160)]((_0x475971,_0x4fcd47)=>{const _0x254918=_0x40873e;return _0x475971[_0x4fcd47[_0x254918(0x16f)]]=(_0x475971[_0x4fcd47['vendor']]||0x0)+parseFloat(_0x4fcd47[_0x254918(0x175)]),_0x475971;},{}),_0x16f55c=Object[_0x40873e(0x172)](_0x3afeec)[_0x40873e(0x138)](([,_0x5cf293],[,_0x5db51b])=>_0x5db51b-_0x5cf293)[0x0]?.[0x0]||'-';document['getElementById']('totalSales')['textContent']=_0x36d19f['toLocaleString']()+_0x40873e(0x151),document[_0x40873e(0xde)](_0x40873e(0x11c))['textContent']=_0x4e9085,document['getElementById'](_0x40873e(0x176))['textContent']=_0x16f55c;}window['deleteSale']=function(_0x2ae27f,_0x571aef){const _0x17fe0b=_0x53e4b2,_0x423419=document[_0x17fe0b(0xde)]('confirmModal');document[_0x17fe0b(0xde)]('modalMessage')['textContent']=_0x17fe0b(0xfa);const _0xada4df=document['getElementById'](_0x17fe0b(0x15a));_0xada4df[_0x17fe0b(0xdd)]=async()=>{const _0x4c638d=_0x17fe0b;try{await remove(ref(db,_0x4c638d(0x131)+_0x2ae27f+'/'+_0x571aef)),await loadSales(),closeModal();}catch(_0x17ba12){console['error']('Erreur\x20lors\x20de\x20la\x20suppression:',_0x17ba12);}},_0x423419['style'][_0x17fe0b(0x13e)]=_0x17fe0b(0x17c);},window[_0x53e4b2(0x127)]=function(_0x5c6f85){const _0x1977d9=_0x53e4b2,_0x3ca17c=document[_0x1977d9(0xde)](_0x1977d9(0xe4));document['getElementById'](_0x1977d9(0xf6))[_0x1977d9(0xec)]='Êtes-vous\x20sûr\x20de\x20vouloir\x20effacer\x20tout\x20l\x27historique\x20de\x20'+_0x5c6f85+'\x20?';const _0x2678a4=document[_0x1977d9(0xde)](_0x1977d9(0x15a));_0x2678a4['onclick']=async()=>{const _0x5e21a6=_0x1977d9;try{await set(ref(db,_0x5e21a6(0x131)+_0x5c6f85),null),await loadSales(),closeModal();}catch(_0x48fc04){console['error'](_0x5e21a6(0x173),_0x48fc04);}},_0x3ca17c[_0x1977d9(0x11f)][_0x1977d9(0x13e)]=_0x1977d9(0x17c);},window['closeModal']=function(){const _0x3cdac0=_0x53e4b2;document['getElementById'](_0x3cdac0(0xe4))[_0x3cdac0(0x11f)]['display']='none';};function showLoader(){const _0x29f4da=_0x53e4b2;document[_0x29f4da(0xde)](_0x29f4da(0x148))[_0x29f4da(0x11f)][_0x29f4da(0x13e)]=_0x29f4da(0x117);}function hideLoader(){const _0x171ef2=_0x53e4b2;document[_0x171ef2(0xde)](_0x171ef2(0x148))[_0x171ef2(0x11f)][_0x171ef2(0x13e)]=_0x171ef2(0x129);}function showPageLoader(){const _0x234597=_0x53e4b2;document[_0x234597(0xde)](_0x234597(0x17e))[_0x234597(0x11f)][_0x234597(0x13e)]='flex';}function hidePageLoader(){const _0x162294=_0x53e4b2;document[_0x162294(0xde)](_0x162294(0x17e))[_0x162294(0x11f)][_0x162294(0x13e)]=_0x162294(0x129);}async function processConnectedTickets(){const _0x4fcdb5=_0x53e4b2,_0x236254=document[_0x4fcdb5(0xde)](_0x4fcdb5(0xdc));try{_0x236254['textContent']=_0x4fcdb5(0x162);const _0x1376e6=ref(db,'TicketConnecté'),_0x55b90f=await get(_0x1376e6);let _0x1fb442=_0x55b90f[_0x4fcdb5(0x147)]()||{};const _0x4cbc2c={};for(const _0x12c314 in _0x1fb442){const _0x303bdd=_0x1fb442[_0x12c314][_0x4fcdb5(0x16d)];!_0x4cbc2c[_0x303bdd]&&(_0x4cbc2c[_0x303bdd]=_0x1fb442[_0x12c314]);}_0x236254[_0x4fcdb5(0xec)]=_0x4fcdb5(0x14f);for(const _0x4f0701 in _0x4cbc2c){await processTicket(_0x4cbc2c[_0x4f0701]);}_0x236254[_0x4fcdb5(0xec)]='Nettoyage\x20des\x20tickets\x20traités...';for(const _0x4ecc6b in _0x4cbc2c){const _0x3810c2=Object[_0x4fcdb5(0x133)](_0x1fb442)['find'](_0x6a7c8b=>_0x1fb442[_0x6a7c8b][_0x4fcdb5(0x16d)]===_0x4ecc6b);_0x3810c2&&await remove(ref(db,_0x4fcdb5(0x11e)+_0x3810c2));}}catch(_0xb83cb0){console['error'](_0x4fcdb5(0x103),_0xb83cb0),showNotification(_0x4fcdb5(0x123),'Une\x20erreur\x20est\x20survenue\x20lors\x20du\x20traitement\x20des\x20tickets.');}}async function processTicket(_0x4a92d3){const _0x4e6e56=_0x53e4b2,_0x398bd7=document['getElementById']('pageLoaderMessage');try{_0x398bd7[_0x4e6e56(0xec)]=_0x4e6e56(0x13d)+_0x4a92d3[_0x4e6e56(0x16d)]+'...';const _0x4b8845=ref(db,_0x4e6e56(0x135)),_0x175a2a=await get(_0x4b8845),_0x3a272d=_0x175a2a[_0x4e6e56(0x147)]()||{};let _0x4f1de9=![];for(const _0x2d134b in _0x3a272d){const _0x207ba6=_0x3a272d[_0x2d134b];for(const _0x426855 in _0x207ba6){if(_0x207ba6[_0x426855][_0x4e6e56(0x179)]===_0x4a92d3[_0x4e6e56(0x16d)]){_0x4f1de9=!![];break;}}if(_0x4f1de9)break;}if(!_0x4f1de9){_0x398bd7[_0x4e6e56(0xec)]=_0x4e6e56(0x124)+_0x4a92d3[_0x4e6e56(0x16d)]+'...';const _0x478b23=ref(db,'TicketsTotal'),_0x69c47=ref(db,_0x4e6e56(0x159)),_0x4bc7a3=await get(_0x478b23),_0x5e30b7=await get(_0x69c47),_0x2d8e57=_0x4bc7a3[_0x4e6e56(0x147)]()||{},_0x5a50ba=_0x5e30b7[_0x4e6e56(0x147)]()||{};let _0x2ab102=null,_0x57a524=null,_0xdba599=null;for(const _0x4806d0 in _0x2d8e57){const _0x14db59=(_0x2d8e57[_0x4806d0][_0x4e6e56(0xf1)]||[])[_0x4e6e56(0x108)](_0x4a92d3[_0x4e6e56(0x16d)]);if(_0x14db59>-0x1){_0x2ab102={'category':_0x4806d0,'user':_0x2d8e57[_0x4806d0]['utilisateur'][_0x14db59],'password':_0x2d8e57[_0x4806d0]['motDePasse'][_0x14db59],'price':_0x2d8e57[_0x4806d0][_0x4e6e56(0xe2)][_0x14db59],'updatedData':{..._0x2d8e57[_0x4806d0],'utilisateur':_0x2d8e57[_0x4806d0][_0x4e6e56(0xf1)][_0x4e6e56(0x120)]((_0x184753,_0x4a79b5)=>_0x4a79b5!==_0x14db59),'motDePasse':_0x2d8e57[_0x4806d0][_0x4e6e56(0x158)][_0x4e6e56(0x120)]((_0x3b3d35,_0x1a22ab)=>_0x1a22ab!==_0x14db59),'prix':_0x2d8e57[_0x4806d0][_0x4e6e56(0xe2)][_0x4e6e56(0x120)]((_0x55e271,_0x230592)=>_0x230592!==_0x14db59)}},_0x57a524=ref(db,'TicketsTotal/'+_0x4806d0),_0xdba599=_0x4e6e56(0xe1);break;}}if(!_0x2ab102)for(const _0x156750 in _0x5a50ba){if(_0x5a50ba[_0x156750][_0x4e6e56(0x179)]===_0x4a92d3[_0x4e6e56(0x16d)]){_0x2ab102={'category':_0x5a50ba[_0x156750]['category'],'user':_0x5a50ba[_0x156750][_0x4e6e56(0x179)],'password':_0x5a50ba[_0x156750][_0x4e6e56(0x182)],'price':_0x5a50ba[_0x156750][_0x4e6e56(0x175)]},_0x57a524=ref(db,_0x4e6e56(0x14e)+_0x156750),_0xdba599='TicketsTransit';break;}}_0x2ab102&&(_0x398bd7[_0x4e6e56(0xec)]='Vente\x20du\x20ticket\x20'+_0x4a92d3[_0x4e6e56(0x16d)]+_0x4e6e56(0xd8),await sellTicketAutomatically(_0x2ab102,_0x57a524,_0xdba599));}}catch(_0x37c338){console['error']('Erreur\x20lors\x20du\x20traitement\x20du\x20ticket\x20:',_0x37c338),showNotification(_0x4e6e56(0x123),_0x4e6e56(0x152)+_0x4a92d3[_0x4e6e56(0x16d)]+'.');}}async function sellTicketAutomatically(_0x4f0335,_0x32e2fe,_0x344be5){const _0x35b2c3=_0x53e4b2;try{const _0x342451=_0x35b2c3(0x122),_0x454391=ref(db,_0x35b2c3(0x131)+_0x342451);await push(_0x454391,{'category':_0x4f0335[_0x35b2c3(0x168)],'user':_0x4f0335[_0x35b2c3(0x179)],'password':_0x4f0335[_0x35b2c3(0x182)],'price':_0x4f0335[_0x35b2c3(0x175)],'soldAt':Date[_0x35b2c3(0x142)]()});const _0x2d4826=ref(db,_0x35b2c3(0xe0));await push(_0x2d4826,{'category':_0x4f0335[_0x35b2c3(0x168)],'user':_0x4f0335[_0x35b2c3(0x179)],'password':_0x4f0335['password'],'price':_0x4f0335[_0x35b2c3(0x175)],'soldAt':Date[_0x35b2c3(0x142)](),'vendorId':_0x342451}),_0x344be5==='TicketsTotal'?await set(_0x32e2fe,_0x4f0335[_0x35b2c3(0x16c)]):await remove(_0x32e2fe),console[_0x35b2c3(0x10e)](_0x35b2c3(0x100)+_0x4f0335[_0x35b2c3(0x179)]+'\x20vendu\x20automatiquement.');}catch(_0x35179b){console[_0x35b2c3(0x146)](_0x35b2c3(0xe7),_0x35179b),showNotification(_0x35b2c3(0x123),_0x35b2c3(0x17d));}}function showSubscriptionRequiredModal(){const _0x58fcf6=_0x53e4b2;subscriptionRequiredModal[_0x58fcf6(0x11f)][_0x58fcf6(0x13e)]=_0x58fcf6(0x17c);}function hideSubscriptionRequiredModal(){const _0xf798ff=_0x53e4b2;subscriptionRequiredModal[_0xf798ff(0x11f)][_0xf798ff(0x13e)]=_0xf798ff(0x129);}function redirectToSubscription(){const _0x14b7fd=_0x53e4b2;window[_0x14b7fd(0x153)][_0x14b7fd(0x181)]=_0x14b7fd(0x13c);}async function checkSubscriptionStatus(){const _0x576892=_0x53e4b2,_0x448f5c=document[_0x576892(0xde)](_0x576892(0xdc));_0x448f5c[_0x576892(0xec)]=_0x576892(0xea);try{const _0x3c2734=await get(adminRef),_0x1f4b7d=_0x3c2734[_0x576892(0x147)](),_0x19f863=new Date();if(_0x1f4b7d&&_0x1f4b7d[_0x576892(0x12d)]===_0x576892(0x13b)){const _0x18d9e5=new Date(_0x1f4b7d[_0x576892(0x165)]);_0x18d9e5<_0x19f863?(_0x448f5c[_0x576892(0xec)]=_0x576892(0x163),hidePageLoader(),showSubscriptionRequiredModal(),await adminRef[_0x576892(0x125)]({'status':'expired'})):(_0x448f5c['textContent']='Abonnement\x20actif',hidePageLoader());}else _0x448f5c[_0x576892(0xec)]=_0x576892(0xfb),hidePageLoader(),showSubscriptionRequiredModal();}catch(_0x3b0d66){hidePageLoader(),console[_0x576892(0x146)](_0x576892(0x154),_0x3b0d66),_0x448f5c[_0x576892(0xec)]=_0x576892(0x115),showNotification(_0x576892(0x123),_0x576892(0xeb));}}window[_0x53e4b2(0x116)]=function(){const _0x2cadcb=_0x53e4b2;window[_0x2cadcb(0x178)]();},window[_0x53e4b2(0x113)]=function(){const _0x37ba54=_0x53e4b2,{jsPDF:_0x40ff9b}=window[_0x37ba54(0x170)],_0x3671b6=new _0x40ff9b(),_0x110c1a=document[_0x37ba54(0xde)](_0x37ba54(0x16e)),_0x4ccc90={'fillColor':[0x2a,0x3a,0x6c],'textColor':[0xff,0xff,0xff],'fontStyle':_0x37ba54(0xfe),'halign':_0x37ba54(0x10b)},_0x403667={'halign':_0x37ba54(0x141)},_0x5d4683={'theme':_0x37ba54(0x140),'headStyles':_0x4ccc90,'bodyStyles':_0x403667,'margin':{'top':0x14},'startY':0x14};_0x3671b6[_0x37ba54(0x17a)](_0x37ba54(0xf2),0xe,0xf),_0x3671b6[_0x37ba54(0x12a)]({'html':'#salesTable',..._0x5d4683}),_0x3671b6[_0x37ba54(0x13f)](_0x37ba54(0xf4));},window[_0x53e4b2(0x171)]=function(){const _0x386325=_0x53e4b2,_0x375318=XLSX[_0x386325(0x17b)][_0x386325(0x121)](document[_0x386325(0xde)](_0x386325(0x16e)),{'sheet':'Ventes'}),_0x2526a5=XLSX[_0x386325(0xe5)](_0x375318,{'bookType':_0x386325(0x177),'type':_0x386325(0xf7)});function _0x25e840(_0x50ad0e){const _0x25372c=_0x386325,_0x5450a8=new ArrayBuffer(_0x50ad0e['length']),_0x56017d=new Uint8Array(_0x5450a8);for(let _0x3911f0=0x0;_0x3911f0<_0x50ad0e[_0x25372c(0x144)];_0x3911f0++)_0x56017d[_0x3911f0]=_0x50ad0e['charCodeAt'](_0x3911f0)&0xff;return _0x5450a8;}saveAs(new Blob([_0x25e840(_0x2526a5)],{'type':_0x386325(0x111)}),_0x386325(0x119));},window[_0x53e4b2(0x143)](_0x53e4b2(0xee),async()=>{const _0x203706=_0x53e4b2;await checkSubscriptionStatus(),await loadSalesData(),await loadPartners(),document['getElementById']('periodFilter')[_0x203706(0x104)]='today',applyFilters(),lucide[_0x203706(0x12b)]();}),window[_0x53e4b2(0x137)]=redirectToSubscription,window[_0x53e4b2(0xd9)]=redirectToSubscription;
+    </script>
+</body>
+</html>

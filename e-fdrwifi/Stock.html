@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord des ventes WiFi Zone</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-database-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <button id="theme-toggle" aria-label="Toggle theme">🌙</button>
+
+    <div id="loginContainer" class="container">
+        <h1>Connexion</h1>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+            <input type="password" id="password" placeholder="Mot de passe" required>
+            <button type="submit">Se connecter</button>
+        </form>
+        <p>Vous n'avez pas de compte ? <button id="signupButton">S'inscrire</button></p>
+    </div>
+
+    <div id="signupContainer" class="container" style="display: none;">
+        <h1>Inscription</h1>
+        <form id="signupForm">
+            <input type="text" id="signupUsername" placeholder="Nom d'utilisateur" required>
+            <input type="password" id="signupPassword" placeholder="Mot de passe" required>
+            <button type="submit">S'inscrire</button>
+        </form>
+        <p>Vous avez déjà un compte ? <button id="loginFromSignup">Se connecter</button></p>
+    </div>
+
+    <div id="dashboardContainer" class="container" style="display: none;">
+        <div id="dashboardHeader">
+            <h1>E-FDR WIFI ZONE</h1>
+            <div id="userInfo"></div>
+        </div>
+        
+        <h2>Enregistrer une nouvelle opération</h2>
+        <form id="salesForm">
+            <input type="datetime-local" id="dateTime" required>
+            <select id="product" required>
+                <option value="">Sélectionner un produit</option>
+                <!-- Les options seront ajoutées ici par script.js -->
+            </select>
+            <input type="number" id="SI" placeholder="Stock Initial" required>
+            <input type="number" id="APP" placeholder="Approvisionnement" required>
+            <input type="number" id="V" placeholder="Ventes" required>
+            <input type="number" id="SF" placeholder="Stock Final" readonly>
+            <input type="number" id="PV" placeholder="Prix de Vente" readonly>
+            <button type="submit">Ajouter</button>
+        </form>
+
+        <h2>Détails des stocks</h2>
+        <div class="date-filter">
+            <input type="datetime-local" id="stockStartDate">
+            <input type="datetime-local" id="stockEndDate">
+            <button id="filterStockDates">Filtrer</button>
+        </div>
+        <div class="stock-table">
+            <h3>Stock Global</h3>
+            <div class="table-wrapper">
+                <table id="stockTableGlobal">
+                    <thead>
+                        <tr>
+                            <th data-sort="product">Produit</th>
+                            <th data-sort="SF">Stock Final</th>
+                            <th data-sort="dateTime">Date et Heure</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="button-container">
+            <button id="toggleSalesButton" class="toggle-button">Détail des ventes</button>
+            <button id="toggleAnalysisButton" class="toggle-button">Analyse des ventes</button>
+        </div>
+
+        <div id="salesDetailsSection">
+            <h2>Détails des ventes</h2>
+            <div class="date-filter">
+                <input type="datetime-local" id="salesStartDate">
+                <input type="datetime-local" id="salesEndDate">
+                <button id="filterSalesDates">Filtrer</button>
+            </div>
+            <div id="searchInputs">
+                <input type="text" id="searchDateTime" placeholder="Rechercher Date/Heure">
+                <input type="text" id="searchProduct" placeholder="Rechercher Produit">
+                <input type="text" id="searchSI" placeholder="Rechercher SI">
+                <input type="text" id="searchAPP" placeholder="Rechercher APP">
+                <input type="text" id="searchV" placeholder="Rechercher V">
+                <input type="text" id="searchSF" placeholder="Rechercher SF">
+                <input type="text" id="searchPV" placeholder="Rechercher PV">
+                <input type="text" id="searchTotal" placeholder="Rechercher Total">
+            </div>
+            <table id="salesTable">
+                <thead>
+                    <tr>
+                        <th data-sort="dateTime">Date et Heure</th>
+                        <th data-sort="product">Produit</th>
+                        <th data-sort="SI">SI</th>
+                        <th data-sort="APP">APP</th>
+                        <th data-sort="V">V</th>
+                        <th data-sort="SF">SF</th>
+                        <th data-sort="PV">PV (FCFA)</th>
+                        <th data-sort="total">Total (FCFA)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <button id="exportExcel" class="export-button">Exporter vers Excel</button>
+        </div>
+
+        <div id="analysisSection">
+            <h2>Analyse des ventes</h2>
+            <p id="totalSales"></p>
+            <p id="averageSales"></p>
+            <canvas id="salesChart"></canvas>
+
+            <div class="period-analysis" id="weekAnalysis">
+                <h3>Analyse de la semaine</h3>
+                <p id="weekTotalSales"></p>
+                <p id="weekAverageSales"></p>
+            </div>
+
+            <div class="period-analysis" id="monthAnalysis">
+                <h3>Analyse du mois</h3>
+                <p id="monthTotalSales"></p>
+                <p id="monthAverageSales"></p>
+            </div>
+
+            <div class="period-analysis" id="threeMonthAnalysis">
+                <h3>Analyse des 3 derniers mois</h3>
+                <p id="threeMonthTotalSales"></p>
+                <p id="threeMonthAverageSales"></p>
+            </div>
+        </div>
+    </div>
+    <div id="subscriptionRequiredModal" class="subscription-required" style="display: none;">
+        <div class="subscription-required-content">
+            <h2>Abonnement Requis</h2>
+            <p>Un abonnement actif est nécessaire pour accéder à cette fonctionnalité.</p>
+            <button onclick="redirectToSubscription()">S'abonner</button>
+            <button onclick="redirectToSubscription()">Fermer</button>
+        </div>
+    </div>
+    <script src="scriptStock.js"></script>
+</body>
+</html>
