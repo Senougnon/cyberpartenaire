@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion Utilisateur</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styleA.css">
+    <style>
+         /* Style pour le formulaire de connexion */
+         body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #fff;
+            background: linear-gradient(135deg, #1a2a6c, #fdbb2d);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+             margin: 0; /* Reset margin for the body */
+            padding: 0; /* Reset padding for the body */
+        }
+        .login-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a2a6c;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            text-align: left;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #1a2a6c;
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background-color: #1a2a6c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0e1639;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 1rem;
+            display: none;
+        }
+      /* Media query pour les écrans plus petits (smartphones) */
+        @media (max-width: 600px) {
+            .login-container {
+                padding: 1.5rem;
+                 max-width: 90%;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+                margin-bottom: 1.5rem;
+            }
+
+            input {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+            }
+          button {
+               padding: 0.8rem;
+              font-size: 0.9rem;
+          }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Connexion Administrateur</h1>
+        <form id="loginForm" onsubmit="return login(event)">
+            <div class="input-group">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">Se connecter</button>
+        </form>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <script>
+function _0x6e1c(){const _0x17f129=['values','error','block','60618EDDVAJ','237oJUBud','username','Une\x20erreur\x20est\x20survenue.\x20Veuillez\x20réessayer.','preventDefault','Erreur\x20de\x20connexion:','820qswpuB','signature-hotspot.firebasestorage.app','true','ref','style','849087tifTXt','424ADgACf','6859048fyEYaR','54372KGqmga','32340620RisWrj','AIzaSyBuRN31liV9m_Rire14EQ91Hz9TECqeSxA','1:413468878792:web:540854701309fda2afc2fd','https://signature-hotspot-default-rtdb.firebaseio.com','setItem','getElementById','once','textContent','password','find','errorMessage','display','value','6638QSlyOb','Nom\x20d\x27utilisateur\x20ou\x20mot\x20de\x20passe\x20incorrect','val','signature-hotspot','admins','database','initializeApp','259833EtVEuJ'];_0x6e1c=function(){return _0x17f129;};return _0x6e1c();}const _0x3d7299=_0x1d60;function _0x1d60(_0x5acbba,_0x5d8d15){const _0x6e1c0e=_0x6e1c();return _0x1d60=function(_0x1d60a9,_0xe3a91c){_0x1d60a9=_0x1d60a9-0xdf;let _0x8cc233=_0x6e1c0e[_0x1d60a9];return _0x8cc233;},_0x1d60(_0x5acbba,_0x5d8d15);}(function(_0x823e0a,_0x181db7){const _0x108fd3=_0x1d60,_0x59c032=_0x823e0a();while(!![]){try{const _0x1da67a=-parseInt(_0x108fd3(0xe1))/0x1+parseInt(_0x108fd3(0xef))/0x2*(-parseInt(_0x108fd3(0xfb))/0x3)+-parseInt(_0x108fd3(0xe0))/0x4+parseInt(_0x108fd3(0x100))/0x5*(parseInt(_0x108fd3(0xfa))/0x6)+parseInt(_0x108fd3(0xf6))/0x7*(-parseInt(_0x108fd3(0xdf))/0x8)+parseInt(_0x108fd3(0x105))/0x9+parseInt(_0x108fd3(0xe2))/0xa;if(_0x1da67a===_0x181db7)break;else _0x59c032['push'](_0x59c032['shift']());}catch(_0x14a57a){_0x59c032['push'](_0x59c032['shift']());}}}(_0x6e1c,0xf0e1f));const firebaseConfig={'apiKey':_0x3d7299(0xe3),'authDomain':'signature-hotspot.firebaseapp.com','databaseURL':_0x3d7299(0xe5),'projectId':_0x3d7299(0xf2),'storageBucket':_0x3d7299(0x101),'messagingSenderId':'413468878792','appId':_0x3d7299(0xe4),'measurementId':'G-D2PWPV8VDY'};firebase[_0x3d7299(0xf5)](firebaseConfig);const database=firebase[_0x3d7299(0xf4)]();async function login(_0x24d080){const _0x3d25d9=_0x3d7299;_0x24d080[_0x3d25d9(0xfe)]();const _0xcfaa05=document['getElementById'](_0x3d25d9(0xfc))[_0x3d25d9(0xee)],_0x51a0ba=document[_0x3d25d9(0xe7)](_0x3d25d9(0xea))[_0x3d25d9(0xee)],_0x3cec0d=document[_0x3d25d9(0xe7)](_0x3d25d9(0xec));try{const _0x4e80e2=database[_0x3d25d9(0x103)](_0x3d25d9(0xf3)),_0x50cfbf=await _0x4e80e2[_0x3d25d9(0xe8)]('value'),_0x34e14a=_0x50cfbf[_0x3d25d9(0xf1)]();if(!_0x34e14a){_0x3cec0d['textContent']=_0x3d25d9(0xf0),_0x3cec0d['style']['display']='block';return;}const _0x1c1a64=Object[_0x3d25d9(0xf7)](_0x34e14a)[_0x3d25d9(0xeb)](_0xcc5d44=>_0xcc5d44[_0x3d25d9(0xfc)]===_0xcfaa05&&_0xcc5d44[_0x3d25d9(0xea)]===_0x51a0ba);_0x1c1a64?(sessionStorage[_0x3d25d9(0xe6)]('isLoggedIn',_0x3d25d9(0x102)),window['location']['href']='index.html'):(_0x3cec0d['textContent']=_0x3d25d9(0xf0),_0x3cec0d[_0x3d25d9(0x104)][_0x3d25d9(0xed)]=_0x3d25d9(0xf9));}catch(_0x58108e){console[_0x3d25d9(0xf8)](_0x3d25d9(0xff),_0x58108e),_0x3cec0d[_0x3d25d9(0xe9)]=_0x3d25d9(0xfd),_0x3cec0d[_0x3d25d9(0x104)][_0x3d25d9(0xed)]='block';}}
+    </script>
+</body>
+</html>

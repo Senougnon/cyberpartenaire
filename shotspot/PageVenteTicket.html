@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vente Tickets Cyber Campus</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        /* ... (Styles CSS - Pas de modifications ici) ... */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg,  #424242, #073018, #553a01);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #fff;
+            overflow-x: hidden;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        section:hover{
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+            margin-top: 16px;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        td{
+            transition: background-color 0.3s ease;
+        }
+        tr:hover td{
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            touch-action: manipulation;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+            color: #1a2a6c;
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .notification h3 {
+            margin-bottom: 16px;
+            color: #1a2a6c;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .ticket-details {
+            margin: 16px 0;
+            font-size: 0.95rem;
+        }
+
+        .ticket-details p {
+            margin: 8px 0;
+            word-break: break-word;
+        }
+
+        .action-icons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .action-icon {
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+        }
+
+        .action-icon:active {
+            transform: scale(0.9);
+        }
+
+        .icon-share { color: #4CAF50; }
+        .icon-copy { color: #2196F3; }
+        .icon-pdf { color: #f44336; }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sell {
+            background-color: #4CAF50;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-cancel {
+            background-color: #f44336;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .close-icon {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            cursor: pointer;
+            font-size: 24px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            display: none;
+            z-index: 1001;
+            text-align: center;
+            max-width: 200px;
+            left: 50% !important;
+            transform: translateX(-50%);
+            bottom: 24px;
+        }
+        .history-section {
+            display: none;
+            background: rgba(26, 42, 108, 0.95); /* Fond plus opaque avec une teinte bleue foncée */
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .history-section:hover{
+            transform: translate(-50%, -50%) translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Amélioration du style de l'en-tête de l'historique pour plus de lisibilité */
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            background: inherit;
+            padding: 10px 0;
+            z-index: 1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Amélioration de la lisibilité des cartes de statistiques */
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover{
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card h4 {
+            color: #fdbb2d;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .toggle-history {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #fdbb2d;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .toggle-history i{
+            transition: transform 0.3s ease;
+        }
+        .toggle-history:hover{
+            transform: scale(1.1);
+        }
+        .toggle-history:hover i{
+            transform: rotate(180deg);
+        }
+
+        .toggle-history:active {
+            transform: scale(0.95);
+        }
+        .export-buttons {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .export-buttons button {
+            margin: 0 10px;
+        }
+
+        .date-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .date-filter input[type="date"] {
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+        .date-filter button{
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+        .date-filter select {
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 16px;
+            background-color: rgba(0, 0, 0, 0.5);
+            font-size: 0.9rem;
+        }
+
+        /* Media Queries */
+        @media (max-width: 480px) {
+            body {
+                font-size: 14px;
+            }
+
+            .container {
+                padding: 12px;
+            }
+
+            section {
+                padding: 12px;
+                margin: 12px 0;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 8px 6px;
+            }
+
+            td:last-child {
+                text-align: right;
+            }
+
+            button {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .notification {
+                padding: 20px 16px;
+                width: 95%;
+            }
+
+            .action-icons {
+                gap: 16px;
+            }
+
+            .action-icon {
+                width: 40px;
+                height: 40px;
+                padding: 10px;
+            }
+
+            .buttons button {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .close-icon {
+                top: 8px;
+                right: 8px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .history-table {
+                font-size: 0.8rem;
+            }
+
+            .date-filter {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .buttons {
+                flex-direction: column;
+            }
+
+            .action-icons {
+                gap: 12px;
+            }
+
+            .action-icon {
+                width: 36px;
+                height: 36px;
+            }
+        }
+
+        .login-section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .login-section h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .login-section input[type="text"],
+        .login-section input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .login-section button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .login-section button:active {
+            transform: scale(0.95);
+        }
+
+        .error-message {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .messages-section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            max-height: 300px; /* Hauteur maximale pour la section des messages */
+            overflow-y: auto; /* Permettre le défilement vertical si le contenu dépasse la hauteur maximale */
+        }
+
+        .messages-section h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .message {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .message .timestamp {
+            font-size: 0.7rem;
+            color: #ccc;
+            margin-top: 5px;
+        }
+
+        /* Styles pour l'autocomplétion */
+        .autocomplete-container {
+            position: relative;
+        }
+
+        .autocomplete-suggestions {
+            position: absolute;
+            border: 1px solid #ccc;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            z-index: 100;
+            background-color: white;
+            width: 100%; /* Assurez-vous que la liste a la même largeur que le champ de saisie */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Ombre pour un effet visuel */
+        }
+
+        .autocomplete-suggestions li {
+            padding: 5px;
+            cursor: pointer;
+            color: #000;
+        }
+
+        .autocomplete-suggestions li:hover {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+        }
+        .loader-wrapper {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+        }
+
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .page-loader-wrapper {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1002;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .page-loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        .loader-message {
+            color: white;
+            margin-top: 16px;
+            font-size: 1rem;
+            text-align: center;
+            max-width: 80%;
+        }
+        .subscription-required {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .subscription-required-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .subscription-required-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .subscription-required-content p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .subscription-required-content button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0 10px;
+        }
+
+        .subscription-required-content button:hover {
+            background-color: #e6a727;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="page-loader-wrapper" id="pageLoaderWrapper">
+        <div class="page-loader"></div>
+        <div class="loader-message" id="pageLoaderMessage">Initialisation...</div>
+    </div>
+    <div class="loader-wrapper" id="loaderWrapper">
+        <div class="loader"></div>
+    </div>
+    <section class="login-section" id="loginSection">
+        <h2>Connexion Partenaire</h2>
+        <form id="loginForm">
+            <div class="autocomplete-container">
+                <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+                <ul class="autocomplete-suggestions" id="autocompleteSuggestions" style="display: none;"></ul>
+            </div>
+            <input type="password" id="password" placeholder="Mot de passe" required>
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <input type="checkbox" id="rememberMe">
+                <label for="rememberMe" style="color: white; margin-left: 5px;">Se souvenir de moi (24h)</label>
+            </div>
+            <button type="submit">Se connecter</button>
+        </form>
+        <div class="error-message" id="loginError" style="display: none; color: red;"></div>
+    </section>
+
+    <div class="container">
+        <section class="rates-section" style="display: none;">
+            <h2>Vente de tickets WiFi</h2>
+            <div class="loading-message">Chargement des tickets...</div>
+            <table style="display: none;"></table>
+        </section>
+    </div>
+
+    <div class="notification" id="notification">
+        <span class="close-icon" onclick="hideNotification()">×</span>
+        <h3 id="notification-title">Confirmation de vente</h3>
+        <div class="ticket-details" id="notification-message"></div>
+        <div class="buttons" id="confirmation-buttons">
+            <button class="btn-sell" onclick="window.proceedWithSale()">Confirmer</button>
+            <button class="btn-cancel" onclick="hideNotification()">Annuler</button>
+        </div>
+        <div class="action-icons" id="ticket-actions" style="display: none;">
+            <div class="action-icon icon-share" onclick="shareTicket()" title="Partager">
+                <i data-lucide="share-2"></i>
+            </div>
+            <div class="action-icon icon-pdf" onclick="exportToPDF()" title="Exporter en PDF">
+                <i data-lucide="file-text"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="toggle-history" onclick="toggleHistory()">
+        <i data-lucide="history"></i>
+    </div>
+
+    <div class="history-section" id="historySection" style="display: none;">
+        <div class="history-header">
+            <h2>Historique des ventes</h2>
+            <button onclick="closeHistory()">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+
+        <div class="date-filter">
+            <select id="periodFilter" onchange="filterHistory()">
+                <option value="today">Aujourd'hui</option>
+                <option value="week">Cette semaine</option>
+                <option value="month">Ce mois</option>
+                <option value="all">Tout l'historique</option>
+            </select>
+            <input type="date" id="startDate">
+            <input type="date" id="endDate">
+            <button onclick="filterHistoryByDateRange()">Filtrer par date</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4>Tickets vendus</h4>
+                <div id="totalTickets" class="value">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Chiffre d'affaires</h4>
+                <div id="totalRevenue" class="value">0 FCFA</div>
+            </div>
+            <div class="stat-card">
+                <h4>Ticket le plus vendu</h4>
+                <div id="topCategory" class="value">-</div>
+            </div>
+            <div class="stat-card">
+                <h4>Moyenne par jour</h4>
+                <div id="avgDaily" class="value">0</div>
+            </div>
+        </div>
+        <div class="export-buttons">
+            <button onclick="printHistory()"><i data-lucide="printer"></i> Imprimer</button>
+            <button onclick="exportToPDFHistory()"><i data-lucide="file-down"></i> Exporter en PDF</button>
+        </div>
+
+        <div class="history-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Catégorie</th>
+                        <th>Utilisateur</th>
+                        <th>Prix</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <section class="messages-section" id="messagesSection" style="display: none;">
+        <h2>Messages Reçus</h2>
+        <div id="messagesContainer">
+            <!-- Les messages seront ajoutés ici -->
+        </div>
+    </section>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <footer>
+        <div class="anitext">PROPULSE PAR EVISIONS</div>
+    </footer>
+
+    <div id="subscriptionRequiredModal" class="subscription-required" style="display: none;">
+        <div class="subscription-required-content">
+            <h2>Abonnement Requis</h2>
+            <p>Un abonnement actif est nécessaire pour accéder à cette fonctionnalité.</p>
+            <button onclick="redirectToSubscription()">S'abonner</button>
+            <button onclick="hideSubscriptionRequiredModal()">Fermer</button>
+        </div>
+    </div>
+
+    <script type="module">
+const _0x3f842=_0x7db4;(function(_0x40305e,_0x1e3028){const _0x40df39=_0x7db4,_0x21eb8f=_0x40305e();while(!![]){try{const _0x957ee9=-parseInt(_0x40df39(0x16a))/0x1*(-parseInt(_0x40df39(0xf6))/0x2)+-parseInt(_0x40df39(0x13c))/0x3+-parseInt(_0x40df39(0x11d))/0x4*(-parseInt(_0x40df39(0x163))/0x5)+parseInt(_0x40df39(0x145))/0x6*(-parseInt(_0x40df39(0x17b))/0x7)+-parseInt(_0x40df39(0x184))/0x8*(parseInt(_0x40df39(0xf3))/0x9)+-parseInt(_0x40df39(0x11f))/0xa*(-parseInt(_0x40df39(0x168))/0xb)+parseInt(_0x40df39(0x18f))/0xc*(parseInt(_0x40df39(0x130))/0xd);if(_0x957ee9===_0x1e3028)break;else _0x21eb8f['push'](_0x21eb8f['shift']());}catch(_0x67748f){_0x21eb8f['push'](_0x21eb8f['shift']());}}}(_0x2982,0x28466));import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';import{getDatabase,ref,get,set,push,remove,onChildAdded}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';const firebaseConfig={'apiKey':_0x3f842(0x1ab),'authDomain':_0x3f842(0xdf),'databaseURL':'https://signature-hotspot-default-rtdb.firebaseio.com','projectId':'signature-hotspot','storageBucket':'signature-hotspot.firebasestorage.app','messagingSenderId':'413468878792','appId':_0x3f842(0x194),'measurementId':'G-D2PWPV8VDY'},app=initializeApp(firebaseConfig),db=getDatabase(app),adminRef=ref(db,_0x3f842(0xe5));let ticketToSell=null,localTickets={},currentReservedTicket=null,currentVendorId='',vendors={},availableUsernames=[];window[_0x3f842(0x158)]=window[_0x3f842(0x13e)][_0x3f842(0x158)];async function fetchVendors(){const _0x230749=_0x3f842;try{const _0x3a5bea=ref(db,'Vendors'),_0x4bf7cf=await get(_0x3a5bea);_0x4bf7cf[_0x230749(0x16d)]()?(vendors=_0x4bf7cf[_0x230749(0x133)](),availableUsernames=Object[_0x230749(0x149)](vendors)):console[_0x230749(0xe7)](_0x230749(0x14c));}catch(_0x431c7c){console['error']('Erreur\x20lors\x20de\x20la\x20récupération\x20des\x20vendeurs:',_0x431c7c);}}const usernameInput=document[_0x3f842(0x136)](_0x3f842(0x15b)),passwordInput=document[_0x3f842(0x136)](_0x3f842(0x19a)),suggestionsList=document[_0x3f842(0x136)](_0x3f842(0x160));usernameInput[_0x3f842(0x19d)](_0x3f842(0x11a),()=>{const _0x5bfad6=_0x3f842,_0x32c5b7=usernameInput['value'][_0x5bfad6(0x17e)](),_0x1f62d4=availableUsernames[_0x5bfad6(0x116)](_0x1002d2=>_0x1002d2[_0x5bfad6(0x17e)]()[_0x5bfad6(0x12a)](_0x32c5b7));suggestionsList[_0x5bfad6(0x11e)]='';if(_0x32c5b7[_0x5bfad6(0x100)]===0x0||_0x1f62d4[_0x5bfad6(0x100)]===0x0){suggestionsList['style'][_0x5bfad6(0xf7)]=_0x5bfad6(0x174);return;}_0x1f62d4['forEach'](_0x553b65=>{const _0x323f28=_0x5bfad6,_0x2612df=document[_0x323f28(0x18a)]('li');_0x2612df[_0x323f28(0x117)]=_0x553b65,_0x2612df[_0x323f28(0x19d)](_0x323f28(0xf4),()=>{const _0x1d3fb6=_0x323f28;usernameInput[_0x1d3fb6(0x114)]=_0x553b65,suggestionsList[_0x1d3fb6(0x11e)]='',suggestionsList[_0x1d3fb6(0xff)][_0x1d3fb6(0xf7)]=_0x1d3fb6(0x174);}),suggestionsList[_0x323f28(0x1a4)](_0x2612df);}),suggestionsList[_0x5bfad6(0xff)]['display']=_0x5bfad6(0x1a2);}),document['addEventListener'](_0x3f842(0xf4),_0x38ad7c=>{const _0x5b1b1b=_0x3f842;!usernameInput[_0x5b1b1b(0x193)](_0x38ad7c['target'])&&!suggestionsList[_0x5b1b1b(0x193)](_0x38ad7c[_0x5b1b1b(0x104)])&&(suggestionsList['style'][_0x5b1b1b(0xf7)]=_0x5b1b1b(0x174));});const rememberMeCheckbox=document[_0x3f842(0x136)](_0x3f842(0x143)),storedUsername=localStorage[_0x3f842(0x16e)](_0x3f842(0x15b)),storedPassword=localStorage['getItem']('password'),storedTimestamp=localStorage[_0x3f842(0x16e)](_0x3f842(0x157)),now=Date['now'](),twentyFourHours=0x18*0x3c*0x3c*0x3e8;storedUsername&&storedPassword&&storedTimestamp&&now-storedTimestamp<twentyFourHours&&(usernameInput['value']=storedUsername,passwordInput[_0x3f842(0x114)]=storedPassword,rememberMeCheckbox['checked']=!![]);const loginForm=document['getElementById'](_0x3f842(0xfb)),loginError=document['getElementById'](_0x3f842(0x12f)),ratesSection=document['querySelector']('.rates-section'),historySection=document[_0x3f842(0x136)]('historySection'),loginSection=document['getElementById'](_0x3f842(0xf8)),messagesSection=document[_0x3f842(0x136)](_0x3f842(0x179));loginForm[_0x3f842(0x19d)](_0x3f842(0x18b),async _0xa94b=>{const _0x23301c=_0x3f842;_0xa94b[_0x23301c(0x111)](),showLoader();const _0x317cc0=usernameInput[_0x23301c(0x114)],_0x28e5d0=passwordInput[_0x23301c(0x114)];vendors[_0x317cc0]&&vendors[_0x317cc0]['password']===_0x28e5d0?(loginError[_0x23301c(0xff)][_0x23301c(0xf7)]=_0x23301c(0x174),ratesSection[_0x23301c(0xff)][_0x23301c(0xf7)]=_0x23301c(0x1a2),historySection[_0x23301c(0xff)][_0x23301c(0xf7)]=_0x23301c(0x174),loginSection[_0x23301c(0xff)][_0x23301c(0xf7)]=_0x23301c(0x174),messagesSection[_0x23301c(0xff)][_0x23301c(0xf7)]=_0x23301c(0x1a2),currentVendorId=_0x317cc0,rememberMeCheckbox[_0x23301c(0x1a8)]?(localStorage[_0x23301c(0x181)]('username',_0x317cc0),localStorage[_0x23301c(0x181)](_0x23301c(0x19a),_0x28e5d0),localStorage[_0x23301c(0x181)](_0x23301c(0x157),Date[_0x23301c(0x108)]())):(localStorage[_0x23301c(0x132)]('username'),localStorage[_0x23301c(0x132)](_0x23301c(0x19a)),localStorage[_0x23301c(0x132)](_0x23301c(0x157))),await syncTickets(),loadHistory(),listenForNewMessages(),lucide[_0x23301c(0xec)](),hideLoader()):(loginError[_0x23301c(0xff)]['display']=_0x23301c(0x1a2),loginError['textContent']=_0x23301c(0x183),hideLoader());});async function syncTickets(){const _0x590982=_0x3f842;try{const _0x2c812d=document[_0x590982(0x18d)](_0x590982(0x112)),_0x1d1e79=document[_0x590982(0x18d)]('.rates-section\x20table');_0x2c812d[_0x590982(0xff)]['display']=_0x590982(0x1a2),_0x1d1e79[_0x590982(0xff)][_0x590982(0xf7)]=_0x590982(0x174);const _0x27df11=ref(db,'TicketsTotal'),_0x1c8b45=await get(_0x27df11);_0x1c8b45[_0x590982(0x16d)]()?(localTickets=_0x1c8b45[_0x590982(0x133)](),createTicketTable(),_0x2c812d[_0x590982(0xff)][_0x590982(0xf7)]='none',_0x1d1e79[_0x590982(0xff)]['display']=_0x590982(0x1a3)):_0x2c812d[_0x590982(0x117)]=_0x590982(0x178);}catch(_0x236e81){console[_0x590982(0x159)](_0x590982(0x152),_0x236e81),loadingMessage[_0x590982(0x117)]=_0x590982(0x180);}}async function createTicketTable(){const _0x407c6f=_0x3f842,_0x1d0714=document['querySelector'](_0x407c6f(0x122));_0x1d0714[_0x407c6f(0x11e)]=_0x407c6f(0x10a);for(const [_0x319e88,_0x1cd28c]of Object[_0x407c6f(0x17f)](localTickets)){const _0x1414b6=_0x1cd28c['utilisateur']?_0x1cd28c['utilisateur'][_0x407c6f(0x100)]:0x0;if(_0x1414b6>0x0){const _0x29db05=_0x1cd28c[_0x407c6f(0x169)][0x0],_0x20ca14=_0x1d0714[_0x407c6f(0x12b)]();_0x20ca14[_0x407c6f(0x11e)]=_0x407c6f(0x12e)+_0x319e88+_0x407c6f(0x103)+_0x29db05+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>'+_0x1414b6+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td><button\x20onclick=\x22window.initTicketSale(\x27'+_0x319e88+_0x407c6f(0x127);}}document[_0x407c6f(0x18d)](_0x407c6f(0x112))[_0x407c6f(0xff)]['display']=_0x407c6f(0x174),_0x1d0714[_0x407c6f(0xff)][_0x407c6f(0xf7)]=_0x407c6f(0x1a3);}function _0x2982(){const _0x457068=['periodFilter','filterHistory','Ticket\x20copié\x20dans\x20le\x20presse-papiers!','keys','innerText','add','Aucun\x20vendeur\x20trouvé.','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>','Erreur\x20lors\x20de\x20la\x20vente:','ticket-actions','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Catégorie:</strong>\x20','status','Erreur\x20de\x20synchronisation:','motDePasse','shareTicket','Erreur','toLocaleString','usernameTimestamp','jsPDF','error','avgDaily','username','historySection','Historique\x20des\x20ventes','soldAt','TicketsTotal/','autocompleteSuggestions','min','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Prix:</strong>\x20','7060xgYYxN','startDate','content','location','historyTableBody','697367hrEqWw','prix','1JjYtcn','endDate','utilisateur','exists','getItem','settings','active','Partage\x20réussi','expired','setDate','none','flex','topCategory','getTime','Aucun\x20ticket\x20disponible.','messagesSection','reduce','35GgxEAj','hideSubscriptionRequiredModal','Erreur\x20lors\x20du\x20chargement\x20de\x20l\x27historique:','toLowerCase','entries','Erreur\x20de\x20synchronisation\x20des\x20tickets.','setItem','price','Nom\x20d\x27utilisateur\x20ou\x20mot\x20de\x20passe\x20incorrect.','95976UUuyOI','updatedData','VendorsHistory/','\x20FCFA</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td><i\x20class=\x22fa-solid\x20fa-arrow-right\x22></i></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','bold','grid','createElement','submit','Veuillez\x20sélectionner\x20une\x20date\x20de\x20début\x20et\x20une\x20date\x20de\x20fin.','querySelector','scrollTop','3658764uFjJgG','\x27)\x22\x20style=\x22cursor:\x20pointer;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','getDate','Page\x20','contains','1:413468878792:web:540854701309fda2afc2fd','copyTicket','toggleHistory','scrollHeight','notification','href','password','Impossible\x20de\x20charger\x20l\x27historique','Abonnement\x20expiré','addEventListener','clipboard','confirmation-buttons','join','ticket.pdf','block','table','appendChild','pageSize','closeHistory','height','checked','getDay','\x20FCFA','AIzaSyBuRN31liV9m_Rire14EQ91Hz9TECqeSxA','pageLoaderMessage','Confirmation\x20de\x20vente','toDataURL','totalRevenue','signature-hotspot.firebaseapp.com','margin','getHeight','then','Erreur\x20lors\x20de\x20la\x20confirmation\x20de\x20la\x20vente','slice','admin/subscription','Erreur\x20lors\x20de\x20l\x27initialisation\x20:','log','cancelSale','historique_ventes.pdf','addImage','internal','createIcons','Erreur:','notification-title','table_to_book','Impossible\x20de\x20finaliser\x20la\x20vente','notification-message','catch','9KakEyW','click','writeText','275662HQluWl','display','loginSection','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Mot\x20de\x20passe:</strong>\x20','write','loginForm','initTicketSale','Impossible\x20de\x20récupérer\x20le\x20ticket','category','style','length','Erreur\x20lors\x20du\x20partage:','charCodeAt','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','target','user','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement.','timestamp','now','ceil','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Catégorie</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Prix\x20(FCFA)</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Restants</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Action</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Succès','pageLoaderWrapper','Erreur\x20de\x20confirmation:','hideNotification','setFontSize','right','preventDefault','.loading-message','notification-buttons','value','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Nom\x20d\x27utilisateur:</strong>\x20','filter','textContent','#historyTableBody','setHours','input','Ventes','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement\x20:','148yMdeYP','innerHTML','10AMgoCJ','Aucun\x20ticket\x20à\x20vendre','exportToPDFHistory','.rates-section\x20table','Ticket\x20vendu\x20avec\x20succès!','Plus\x20de\x20tickets\x20disponibles','share','Une\x20erreur\x20est\x20survenue\x20lors\x20de\x20l\x27initialisation.','\x27)\x22>Vendre</button></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Vendors/','div','startsWith','insertRow','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Voulez-vous\x20vendre\x20ce\x20ticket\x20?</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Catégorie:</strong>\x20','loaderWrapper','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','loginError','13OTSlaD','max','removeItem','val','TicketsVendus','map','getElementById','text','Abonnement\x20actif','autoTable','save','totalTickets','307233fyMraS','\x20FCFA</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','jspdf','exportToPDF','Impossible\x20de\x20copier\x20le\x20ticket','printHistory','/messages','rememberMe','binary','334794kZDGbt'];_0x2982=function(){return _0x457068;};return _0x2982();}window[_0x3f842(0xfc)]=async function(_0x28edb3){const _0xb83537=_0x3f842;showLoader();try{const _0x597244=ref(db,_0xb83537(0x15f)+_0x28edb3),_0x31768a=await get(_0x597244);if(_0x31768a['exists']()){const _0x482728=_0x31768a['val']();if(!_0x482728['utilisateur']||_0x482728['utilisateur'][_0xb83537(0x100)]===0x0)throw new Error(_0xb83537(0x124));ticketToSell={'category':_0x28edb3,'user':_0x482728['utilisateur'][0x0],'password':_0x482728[_0xb83537(0x153)][0x0],'price':_0x482728[_0xb83537(0x169)][0x0],'updatedData':{..._0x482728,'utilisateur':_0x482728[_0xb83537(0x16c)][_0xb83537(0xe4)](0x1),'motDePasse':_0x482728[_0xb83537(0x153)]['slice'](0x1),'prix':_0x482728[_0xb83537(0x169)]['slice'](0x1)}},showConfirmation(ticketToSell),hideLoader();}}catch(_0x389a62){console[_0xb83537(0x159)](_0xb83537(0xed),_0x389a62),showNotification(_0xb83537(0x155),_0xb83537(0xfd)),hideLoader();}};function showConfirmation(_0x1a75b4){const _0xb2d1c8=_0x3f842,_0x15b32f=document[_0xb2d1c8(0x136)]('notification'),_0x56f115=document['getElementById']('notification-message'),_0x194028=document[_0xb2d1c8(0x136)](_0xb2d1c8(0x14f)),_0x45a01f=document[_0xb2d1c8(0x136)]('confirmation-buttons');document['getElementById'](_0xb2d1c8(0xee))[_0xb2d1c8(0x117)]=_0xb2d1c8(0x1ad),_0x56f115['innerHTML']=_0xb2d1c8(0x12c)+_0x1a75b4[_0xb2d1c8(0xfe)]+_0xb2d1c8(0x162)+_0x1a75b4['price']+_0xb2d1c8(0x13d),_0x45a01f[_0xb2d1c8(0xff)][_0xb2d1c8(0xf7)]='flex',_0x194028[_0xb2d1c8(0xff)][_0xb2d1c8(0xf7)]='none',_0x15b32f['style'][_0xb2d1c8(0xf7)]=_0xb2d1c8(0x1a2);}window['proceedWithSale']=async function(){const _0x1d72f6=_0x3f842;showLoader();if(!ticketToSell){showNotification(_0x1d72f6(0x155),_0x1d72f6(0x120)),hideLoader();return;}try{const _0x13cc9c=ref(db,'TicketsTotal/'+ticketToSell['category']);await set(_0x13cc9c,ticketToSell[_0x1d72f6(0x185)]);const _0x48453d=ref(db,'TicketsVendus');await push(_0x48453d,{'category':ticketToSell[_0x1d72f6(0xfe)],'user':ticketToSell['user'],'password':ticketToSell[_0x1d72f6(0x19a)],'price':ticketToSell[_0x1d72f6(0x182)],'soldAt':Date['now'](),'vendorId':currentVendorId});const _0x4e4c26=ref(db,'VendorsHistory/'+currentVendorId);await push(_0x4e4c26,{'category':ticketToSell[_0x1d72f6(0xfe)],'user':ticketToSell['user'],'password':ticketToSell['password'],'price':ticketToSell[_0x1d72f6(0x182)],'soldAt':Date[_0x1d72f6(0x108)]()}),showTicketDetails(ticketToSell),await syncTickets(),hideLoader();}catch(_0x13ae69){console[_0x1d72f6(0x159)](_0x1d72f6(0x14e),_0x13ae69),showNotification('Erreur',_0x1d72f6(0xf0)),hideLoader();}ticketToSell=null;};function showTicketDetails(_0x37d737){const _0x2cd4ef=_0x3f842,_0x3c3dff=document[_0x2cd4ef(0x136)]('notification'),_0x2a3be0=document[_0x2cd4ef(0x136)](_0x2cd4ef(0xf1)),_0x1d7269=document[_0x2cd4ef(0x136)]('ticket-actions'),_0x248bcc=document['getElementById'](_0x2cd4ef(0x19f));document['getElementById']('notification-title')[_0x2cd4ef(0x117)]='Ticket\x20vendu\x20avec\x20succès',_0x2a3be0[_0x2cd4ef(0x11e)]=_0x2cd4ef(0x150)+_0x37d737[_0x2cd4ef(0xfe)]+_0x2cd4ef(0x115)+_0x37d737[_0x2cd4ef(0x105)]+_0x2cd4ef(0xf9)+_0x37d737[_0x2cd4ef(0x19a)]+'</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Prix:</strong>\x20'+_0x37d737[_0x2cd4ef(0x182)]+_0x2cd4ef(0x13d),_0x248bcc[_0x2cd4ef(0xff)][_0x2cd4ef(0xf7)]=_0x2cd4ef(0x174),_0x1d7269[_0x2cd4ef(0xff)][_0x2cd4ef(0xf7)]=_0x2cd4ef(0x175),_0x3c3dff[_0x2cd4ef(0xff)][_0x2cd4ef(0xf7)]=_0x2cd4ef(0x1a2),lucide[_0x2cd4ef(0xec)]();}function showSaleConfirmation(_0xf4c7b1){const _0x7e6245=_0x3f842,_0x4195e7=document['getElementById']('notification'),_0x3aa353=document[_0x7e6245(0x136)](_0x7e6245(0xf1)),_0x45fa6b=document['getElementById'](_0x7e6245(0x113));_0x3aa353['innerHTML']='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Catégorie:</strong>\x20'+_0xf4c7b1[_0x7e6245(0xfe)]+_0x7e6245(0x115)+_0xf4c7b1[_0x7e6245(0x105)]+_0x7e6245(0xf9)+_0xf4c7b1[_0x7e6245(0x19a)]+_0x7e6245(0x162)+_0xf4c7b1[_0x7e6245(0x182)]+_0x7e6245(0x13d),_0x45fa6b[_0x7e6245(0x11e)]='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-sell\x22\x20onclick=\x22window.confirmSale()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Confirmer\x20la\x20vente\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-cancel\x22\x20onclick=\x22window.cancelSale()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Annuler\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',_0x4195e7[_0x7e6245(0xff)][_0x7e6245(0xf7)]=_0x7e6245(0x1a2),lucide['createIcons']();}window['confirmSale']=async function(){const _0x249d1e=_0x3f842;showLoader();if(!currentReservedTicket){showNotification(_0x249d1e(0x155),'Aucun\x20ticket\x20en\x20cours\x20de\x20vente'),hideLoader();return;}try{const _0x1cc1e1=ref(db,_0x249d1e(0x134));await push(_0x1cc1e1,{...currentReservedTicket,'soldAt':Date[_0x249d1e(0x108)](),'vendorId':currentVendorId});const _0x333507=ref(db,_0x249d1e(0x186)+currentVendorId);await push(_0x333507,{...currentReservedTicket,'soldAt':Date[_0x249d1e(0x108)]()}),showNotification(_0x249d1e(0x10b),_0x249d1e(0x123)),currentReservedTicket=null,hideNotification(),await syncTickets(),hideLoader();}catch(_0x268311){console[_0x249d1e(0x159)](_0x249d1e(0x10d),_0x268311),showNotification('Erreur',_0x249d1e(0xe3)),hideLoader();}},window[_0x3f842(0xe8)]=function(){currentReservedTicket=null,hideNotification();};function showNotification(_0x51b48d,_0x16a909){const _0x2aae6f=_0x3f842,_0x435de0=document['getElementById'](_0x2aae6f(0x198)),_0x4c85d0=document['getElementById'](_0x2aae6f(0xee)),_0x1964f3=document[_0x2aae6f(0x136)](_0x2aae6f(0xf1)),_0x3947b5=document[_0x2aae6f(0x136)](_0x2aae6f(0x113)),_0x496e2a=document[_0x2aae6f(0x136)](_0x2aae6f(0x14f));_0x4c85d0[_0x2aae6f(0x117)]=_0x51b48d,_0x1964f3['innerHTML']=_0x16a909,_0x51b48d===_0x2aae6f(0x10b)||_0x51b48d===_0x2aae6f(0x155)?(_0x3947b5[_0x2aae6f(0xff)][_0x2aae6f(0xf7)]=_0x2aae6f(0x174),_0x496e2a[_0x2aae6f(0xff)]['display']=_0x2aae6f(0x174)):(_0x3947b5['style']['display']=_0x2aae6f(0x175),_0x496e2a[_0x2aae6f(0xff)][_0x2aae6f(0xf7)]=_0x2aae6f(0x174)),_0x435de0[_0x2aae6f(0xff)][_0x2aae6f(0xf7)]=_0x2aae6f(0x1a2);}window[_0x3f842(0x10e)]=function(){const _0x4def87=_0x3f842;document[_0x4def87(0x136)](_0x4def87(0x198))[_0x4def87(0xff)][_0x4def87(0xf7)]=_0x4def87(0x174);};async function loadHistory(){const _0x4034e4=_0x3f842;showLoader();try{const _0x5ddaac=ref(db,_0x4034e4(0x186)+currentVendorId),_0x37090a=await get(_0x5ddaac);let _0xb72d6c=[];_0x37090a['exists']()&&(_0xb72d6c=Object['entries'](_0x37090a['val']())[_0x4034e4(0x135)](([_0x4cd0af,_0x2167ba])=>({'id':_0x4cd0af,..._0x2167ba}))),filterHistory(_0xb72d6c),hideLoader();}catch(_0x49313f){console[_0x4034e4(0x159)](_0x4034e4(0x17d),_0x49313f),showNotification(_0x4034e4(0x155),_0x4034e4(0x19b)),hideLoader();}}function filterHistory(_0x4ca454){const _0x361418=_0x3f842,_0x15a961=document[_0x361418(0x136)](_0x361418(0x146))[_0x361418(0x114)],_0x3184de=new Date(),_0xf4ff76={'today':new Date(_0x3184de['setHours'](0x0,0x0,0x0,0x0)),'week':new Date(_0x3184de[_0x361418(0x173)](_0x3184de[_0x361418(0x191)]()-_0x3184de[_0x361418(0x1a9)]())),'month':new Date(_0x3184de['setDate'](0x1)),'all':new Date(0x0)};let _0x5ba969=_0x4ca454;_0x15a961!=='all'&&(_0x5ba969=_0x4ca454[_0x361418(0x116)](_0x20f0af=>new Date(_0x20f0af[_0x361418(0x15e)])>=_0xf4ff76[_0x15a961])),updateStats(_0x5ba969),updateHistoryTable(_0x5ba969);}function _0x7db4(_0x2c0962,_0x50cf50){const _0x298208=_0x2982();return _0x7db4=function(_0x7db4d2,_0x46b34f){_0x7db4d2=_0x7db4d2-0xdf;let _0x1bf8ab=_0x298208[_0x7db4d2];return _0x1bf8ab;},_0x7db4(_0x2c0962,_0x50cf50);}window['filterHistoryByDateRange']=function(){const _0x2bed77=_0x3f842,_0x3d40d7=new Date(document[_0x2bed77(0x136)](_0x2bed77(0x164))[_0x2bed77(0x114)]),_0x560646=new Date(document[_0x2bed77(0x136)](_0x2bed77(0x16b))[_0x2bed77(0x114)]);_0x560646[_0x2bed77(0x119)](0x17,0x3b,0x3b);if(isNaN(_0x3d40d7[_0x2bed77(0x177)]())||isNaN(_0x560646[_0x2bed77(0x177)]())){showNotification('Erreur',_0x2bed77(0x18c));return;}const _0x59ed34=ref(db,_0x2bed77(0x186)+currentVendorId);get(_0x59ed34)[_0x2bed77(0xe2)](_0x5b0e9e=>{const _0x39cbf6=_0x2bed77;let _0x5773ab=[];_0x5b0e9e[_0x39cbf6(0x16d)]()&&(_0x5773ab=Object[_0x39cbf6(0x17f)](_0x5b0e9e[_0x39cbf6(0x133)]())[_0x39cbf6(0x135)](([_0x21e18a,_0x2c088e])=>({'id':_0x21e18a,..._0x2c088e})));const _0x3dd97c=_0x5773ab[_0x39cbf6(0x116)](_0x392986=>{const _0x7590df=_0x39cbf6,_0x1e0d4e=new Date(_0x392986[_0x7590df(0x15e)]);return _0x1e0d4e>=_0x3d40d7&&_0x1e0d4e<=_0x560646;});updateStats(_0x3dd97c),updateHistoryTable(_0x3dd97c);});};function updateStats(_0x511300){const _0x4c6a0c=_0x3f842,_0x58623f=_0x511300[_0x4c6a0c(0x100)],_0x4b5b7a=_0x511300['reduce']((_0xf0be2f,_0x4daaaa)=>_0xf0be2f+parseFloat(_0x4daaaa['price']),0x0),_0x61cace=_0x511300[_0x4c6a0c(0x17a)]((_0x5813b3,_0x1b208b)=>{const _0x2d98e3=_0x4c6a0c;return _0x5813b3[_0x1b208b[_0x2d98e3(0xfe)]]=(_0x5813b3[_0x1b208b[_0x2d98e3(0xfe)]]||0x0)+0x1,_0x5813b3;},{}),_0x4d37fc=Object[_0x4c6a0c(0x17f)](_0x61cace)['sort']((_0x49931c,_0x15ea41)=>_0x15ea41[0x1]-_0x49931c[0x1])[0x0]?.[0x0]||'-',_0x486005=_0x511300[_0x4c6a0c(0x100)]>0x0?Math[_0x4c6a0c(0x131)](0x1,Math[_0x4c6a0c(0x109)]((Date[_0x4c6a0c(0x108)]()-Math[_0x4c6a0c(0x161)](..._0x511300[_0x4c6a0c(0x135)](_0x386900=>_0x386900[_0x4c6a0c(0x15e)])))/(0x3e8*0x3c*0x3c*0x18))):0x1,_0x5cd0fe=(_0x58623f/_0x486005)['toFixed'](0x1);document[_0x4c6a0c(0x136)](_0x4c6a0c(0x13b))[_0x4c6a0c(0x117)]=_0x58623f,document[_0x4c6a0c(0x136)](_0x4c6a0c(0x1af))[_0x4c6a0c(0x117)]=_0x4b5b7a[_0x4c6a0c(0x156)]()+_0x4c6a0c(0x1aa),document['getElementById'](_0x4c6a0c(0x176))[_0x4c6a0c(0x117)]=_0x4d37fc,document[_0x4c6a0c(0x136)](_0x4c6a0c(0x15a))[_0x4c6a0c(0x117)]=_0x5cd0fe;}function updateHistoryTable(_0x4c50f8){const _0x1391bc=_0x3f842,_0x4c6b91=document[_0x1391bc(0x136)](_0x1391bc(0x167));_0x4c6b91[_0x1391bc(0x11e)]=_0x4c50f8['sort']((_0x351452,_0x4bcbaa)=>_0x4bcbaa[_0x1391bc(0x15e)]-_0x351452[_0x1391bc(0x15e)])[_0x1391bc(0x135)](_0x5b9e32=>'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20onclick=\x22window.showTicketDetailsFromHistory(\x27'+_0x5b9e32['id']+_0x1391bc(0x190)+new Date(_0x5b9e32[_0x1391bc(0x15e)])[_0x1391bc(0x156)]()+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>'+_0x5b9e32[_0x1391bc(0xfe)]+_0x1391bc(0x103)+_0x5b9e32['user']+_0x1391bc(0x103)+_0x5b9e32[_0x1391bc(0x182)]+_0x1391bc(0x187))[_0x1391bc(0x1a0)]('');}window['showTicketDetailsFromHistory']=async function(_0x2c09ab){const _0x59adf0=_0x3f842;showLoader();try{const _0x2b6850=ref(db,_0x59adf0(0x186)+currentVendorId+'/'+_0x2c09ab),_0x21713e=await get(_0x2b6850);if(_0x21713e[_0x59adf0(0x16d)]()){const _0x374398=_0x21713e[_0x59adf0(0x133)]();window['closeHistory'](),showTicketDetails(_0x374398),hideLoader();}else showNotification(_0x59adf0(0x155),'Ticket\x20introuvable\x20dans\x20l\x27historique'),hideLoader();}catch(_0x5203b4){console[_0x59adf0(0x159)]('Erreur\x20lors\x20de\x20la\x20récupération\x20du\x20ticket:',_0x5203b4),showNotification('Erreur','Impossible\x20de\x20récupérer\x20les\x20détails\x20du\x20ticket'),hideLoader();}},window[_0x3f842(0x196)]=function(){const _0x5e7dec=_0x3f842,_0x318e3a=document['getElementById'](_0x5e7dec(0x15c)),_0x162217=_0x318e3a[_0x5e7dec(0xff)]['display']===_0x5e7dec(0x1a2);_0x318e3a[_0x5e7dec(0xff)][_0x5e7dec(0xf7)]=_0x162217?_0x5e7dec(0x174):_0x5e7dec(0x1a2),!_0x162217&&loadHistory();},window[_0x3f842(0x1a6)]=function(){const _0x541f87=_0x3f842;document[_0x541f87(0x136)](_0x541f87(0x15c))[_0x541f87(0xff)][_0x541f87(0xf7)]=_0x541f87(0x174);},window[_0x3f842(0x147)]=function(){loadHistory();};function listenForNewMessages(){const _0x4bd0b1=_0x3f842,_0x48cd65=ref(db,_0x4bd0b1(0x128)+currentVendorId+_0x4bd0b1(0x142));onChildAdded(_0x48cd65,_0x2b77f9=>{const _0x111d4e=_0x4bd0b1,_0x32147f=_0x2b77f9[_0x111d4e(0x133)]();displayNewMessage(_0x32147f);});}function displayNewMessage(_0x35c687){const _0x3e77ee=_0x3f842,_0x1bc46b=document[_0x3e77ee(0x136)]('messagesContainer'),_0x32fb86=document[_0x3e77ee(0x18a)](_0x3e77ee(0x129));_0x32fb86['classList'][_0x3e77ee(0x14b)]('message'),_0x32fb86['innerHTML']=_0x3e77ee(0x14d)+_0x35c687[_0x3e77ee(0x165)]+'</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22timestamp\x22>'+new Date(_0x35c687[_0x3e77ee(0x107)])[_0x3e77ee(0x156)]()+'</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',_0x1bc46b[_0x3e77ee(0x1a4)](_0x32fb86),_0x1bc46b[_0x3e77ee(0x18e)]=_0x1bc46b[_0x3e77ee(0x197)];}window[_0x3f842(0x154)]=function(){const _0x532c9b=_0x3f842,_0x425e0f=document['getElementById']('notification-message')[_0x532c9b(0x14a)];navigator[_0x532c9b(0x125)]?navigator['share']({'title':'Détails\x20du\x20Ticket','text':_0x425e0f})[_0x532c9b(0xe2)](()=>console['log'](_0x532c9b(0x171)))[_0x532c9b(0xf2)](_0x24ee95=>console[_0x532c9b(0x159)](_0x532c9b(0x101),_0x24ee95)):alert('Le\x20partage\x20n\x27est\x20pas\x20supporté\x20sur\x20votre\x20navigateur.\x20Veuillez\x20copier\x20manuellement\x20les\x20détails\x20du\x20ticket.');},window[_0x3f842(0x195)]=function(){const _0x16bf38=_0x3f842,_0x7f3e26=document[_0x16bf38(0x136)](_0x16bf38(0xf1))[_0x16bf38(0x14a)];navigator[_0x16bf38(0x19e)][_0x16bf38(0xf5)](_0x7f3e26)[_0x16bf38(0xe2)](()=>{const _0x546974=_0x16bf38;showNotification('Succès',_0x546974(0x148));})[_0x16bf38(0xf2)](_0x32d6c1=>{const _0x129f79=_0x16bf38;console[_0x129f79(0x159)]('Erreur\x20lors\x20de\x20la\x20copie:',_0x32d6c1),showNotification(_0x129f79(0x155),_0x129f79(0x140));});},window[_0x3f842(0x13f)]=async function(){const _0x5c2618=_0x3f842;showLoader();const _0x183493=document[_0x5c2618(0x136)]('notification-message'),_0x1934cb=new jsPDF(),_0xea106a=await html2canvas(_0x183493),_0x5c7bef=_0xea106a[_0x5c2618(0x1ae)]('image/png');_0x1934cb[_0x5c2618(0xea)](_0x5c7bef,'PNG',0xa,0xa,0xbe,0x0),_0x1934cb[_0x5c2618(0x13a)](_0x5c2618(0x1a1)),hideLoader();},window[_0x3f842(0x141)]=function(){window['print']();},window[_0x3f842(0x121)]=function(){const _0x37147d=_0x3f842,{jsPDF:_0x44aa78}=window[_0x37147d(0x13e)],_0x34960e=new _0x44aa78(),_0x4bc53e=document['getElementById'](_0x37147d(0x167)),_0x33f8ae={'fillColor':[0x2a,0x3a,0x6c],'textColor':[0xff,0xff,0xff],'fontStyle':_0x37147d(0x188),'halign':'center'},_0x1b3094={'halign':'left'},_0x17224a={'theme':_0x37147d(0x189),'headStyles':_0x33f8ae,'bodyStyles':_0x1b3094,'margin':{'top':0x14},'startY':0x1e,'didDrawPage':function(_0x5cb630){const _0x2e9553=_0x37147d;_0x34960e[_0x2e9553(0x137)](_0x2e9553(0x15d),0xe,0xf);const _0x22745c=_0x2e9553(0x192)+_0x34960e['internal']['getNumberOfPages']();_0x34960e[_0x2e9553(0x10f)](0xa);const _0xf2e859=_0x34960e[_0x2e9553(0xeb)][_0x2e9553(0x1a5)],_0x8bd5e9=_0xf2e859[_0x2e9553(0x1a7)]?_0xf2e859[_0x2e9553(0x1a7)]:_0xf2e859[_0x2e9553(0xe1)]();_0x34960e[_0x2e9553(0x137)](_0x22745c,_0x5cb630[_0x2e9553(0x16f)]['margin']['left'],_0x8bd5e9-0xa),_0x34960e['text'](new Date()['toLocaleString'](),_0xf2e859['width']-_0x5cb630[_0x2e9553(0x16f)][_0x2e9553(0xe0)][_0x2e9553(0x110)]-0x28,_0x8bd5e9-0xa);}};_0x34960e[_0x37147d(0x139)]({'html':_0x37147d(0x118),..._0x17224a}),_0x34960e[_0x37147d(0x13a)](_0x37147d(0xe9));},window['exportToExcelHistory']=function(){const _0x166dcd=_0x3f842,_0x3c4faf=XLSX['utils'][_0x166dcd(0xef)](document['getElementById'](_0x166dcd(0x167)),{'sheet':_0x166dcd(0x11b)}),_0x42ae78=XLSX[_0x166dcd(0xfa)](_0x3c4faf,{'bookType':'xlsx','type':_0x166dcd(0x144)});function _0x3290db(_0x16804c){const _0x126657=_0x166dcd,_0x3760c5=new ArrayBuffer(_0x16804c[_0x126657(0x100)]),_0x14de62=new Uint8Array(_0x3760c5);for(let _0x10eecf=0x0;_0x10eecf<_0x16804c[_0x126657(0x100)];_0x10eecf++)_0x14de62[_0x10eecf]=_0x16804c[_0x126657(0x102)](_0x10eecf)&0xff;return _0x3760c5;}saveAs(new Blob([_0x3290db(_0x42ae78)],{'type':'application/octet-stream'}),'historique_ventes.xlsx');};function showLoader(){const _0x3c104a=_0x3f842;document[_0x3c104a(0x136)](_0x3c104a(0x12d))[_0x3c104a(0xff)]['display']=_0x3c104a(0x1a2);}function hideLoader(){const _0x1d16f0=_0x3f842;document['getElementById'](_0x1d16f0(0x12d))[_0x1d16f0(0xff)]['display']=_0x1d16f0(0x174);}function showPageLoader(){const _0x352cc6=_0x3f842;document[_0x352cc6(0x136)]('pageLoaderWrapper')[_0x352cc6(0xff)][_0x352cc6(0xf7)]=_0x352cc6(0x175);}function hidePageLoader(){const _0x42252d=_0x3f842;document['getElementById'](_0x42252d(0x10c))[_0x42252d(0xff)][_0x42252d(0xf7)]=_0x42252d(0x174);}function showSubscriptionRequiredModal(){const _0x48f0d6=_0x3f842;subscriptionRequiredModal[_0x48f0d6(0xff)][_0x48f0d6(0xf7)]=_0x48f0d6(0x175);}function hideSubscriptionRequiredModal(){subscriptionRequiredModal['style']['display']='none';}function redirectToSubscription(){const _0x457862=_0x3f842;window[_0x457862(0x166)][_0x457862(0x199)]='index.html';}async function checkSubscriptionStatus(){const _0x1154b4=_0x3f842,_0x1eae77=document[_0x1154b4(0x136)](_0x1154b4(0x1ac));_0x1eae77[_0x1154b4(0x117)]='Vérification\x20de\x20l\x27abonnement...';try{const _0x216dc8=await get(adminRef),_0x2b730c=_0x216dc8[_0x1154b4(0x133)](),_0x5e06c3=new Date();if(_0x2b730c&&_0x2b730c[_0x1154b4(0x151)]===_0x1154b4(0x170)){const _0x1a4327=new Date(_0x2b730c[_0x1154b4(0x16b)]);_0x1a4327<_0x5e06c3?(_0x1eae77[_0x1154b4(0x117)]=_0x1154b4(0x19c),showSubscriptionRequiredModal(),await adminRef['update']({'status':_0x1154b4(0x172)})):_0x1eae77['textContent']=_0x1154b4(0x138);}else _0x1eae77[_0x1154b4(0x117)]='Pas\x20d\x27abonnement\x20actif',showSubscriptionRequiredModal();}catch(_0x461208){console[_0x1154b4(0x159)](_0x1154b4(0x11c),_0x461208),_0x1eae77[_0x1154b4(0x117)]='Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement',showNotification(_0x1154b4(0x155),_0x1154b4(0x106));}}document['addEventListener']('DOMContentLoaded',()=>{const _0x159270=_0x3f842;checkSubscriptionStatus()[_0x159270(0xe2)](()=>{fetchVendors(),lucide['createIcons'](),hidePageLoader();})[_0x159270(0xf2)](_0x2776f4=>{const _0x2ed0ba=_0x159270;console[_0x2ed0ba(0x159)](_0x2ed0ba(0xe6),_0x2776f4),showNotification(_0x2ed0ba(0x155),_0x2ed0ba(0x126)),hidePageLoader();});}),window['redirectToSubscription']=redirectToSubscription,window[_0x3f842(0x17c)]=redirectToSubscription;
+    </script>
+</body>
+</html>
