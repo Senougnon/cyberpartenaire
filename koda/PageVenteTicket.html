@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vente Tickets Cyber Campus</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        /* ... (Styles CSS - Pas de modifications ici) ... */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg,  #424242, #073018, #553a01);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #fff;
+            overflow-x: hidden;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        section:hover{
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+            margin-top: 16px;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        td{
+            transition: background-color 0.3s ease;
+        }
+        tr:hover td{
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            touch-action: manipulation;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+            color: #1a2a6c;
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .notification h3 {
+            margin-bottom: 16px;
+            color: #1a2a6c;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .ticket-details {
+            margin: 16px 0;
+            font-size: 0.95rem;
+        }
+
+        .ticket-details p {
+            margin: 8px 0;
+            word-break: break-word;
+        }
+
+        .action-icons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .action-icon {
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+        }
+
+        .action-icon:active {
+            transform: scale(0.9);
+        }
+
+        .icon-share { color: #4CAF50; }
+        .icon-copy { color: #2196F3; }
+        .icon-pdf { color: #f44336; }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sell {
+            background-color: #4CAF50;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-cancel {
+            background-color: #f44336;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .close-icon {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            cursor: pointer;
+            font-size: 24px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            display: none;
+            z-index: 1001;
+            text-align: center;
+            max-width: 200px;
+            left: 50% !important;
+            transform: translateX(-50%);
+            bottom: 24px;
+        }
+        .history-section {
+            display: none;
+            background: rgba(26, 42, 108, 0.95); /* Fond plus opaque avec une teinte bleue foncée */
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .history-section:hover{
+            transform: translate(-50%, -50%) translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Amélioration du style de l'en-tête de l'historique pour plus de lisibilité */
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            background: inherit;
+            padding: 10px 0;
+            z-index: 1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Amélioration de la lisibilité des cartes de statistiques */
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover{
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card h4 {
+            color: #fdbb2d;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .toggle-history {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #fdbb2d;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .toggle-history i{
+            transition: transform 0.3s ease;
+        }
+        .toggle-history:hover{
+            transform: scale(1.1);
+        }
+        .toggle-history:hover i{
+            transform: rotate(180deg);
+        }
+
+        .toggle-history:active {
+            transform: scale(0.95);
+        }
+        .export-buttons {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .export-buttons button {
+            margin: 0 10px;
+        }
+
+        .date-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .date-filter input[type="date"] {
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+        .date-filter button{
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+        .date-filter select {
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 16px;
+            background-color: rgba(0, 0, 0, 0.5);
+            font-size: 0.9rem;
+        }
+
+        /* Media Queries */
+        @media (max-width: 480px) {
+            body {
+                font-size: 14px;
+            }
+
+            .container {
+                padding: 12px;
+            }
+
+            section {
+                padding: 12px;
+                margin: 12px 0;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 8px 6px;
+            }
+
+            td:last-child {
+                text-align: right;
+            }
+
+            button {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .notification {
+                padding: 20px 16px;
+                width: 95%;
+            }
+
+            .action-icons {
+                gap: 16px;
+            }
+
+            .action-icon {
+                width: 40px;
+                height: 40px;
+                padding: 10px;
+            }
+
+            .buttons button {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .close-icon {
+                top: 8px;
+                right: 8px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .history-table {
+                font-size: 0.8rem;
+            }
+
+            .date-filter {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .buttons {
+                flex-direction: column;
+            }
+
+            .action-icons {
+                gap: 12px;
+            }
+
+            .action-icon {
+                width: 36px;
+                height: 36px;
+            }
+        }
+
+        .login-section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .login-section h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .login-section input[type="text"],
+        .login-section input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .login-section button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .login-section button:active {
+            transform: scale(0.95);
+        }
+
+        .error-message {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .messages-section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            max-height: 300px; /* Hauteur maximale pour la section des messages */
+            overflow-y: auto; /* Permettre le défilement vertical si le contenu dépasse la hauteur maximale */
+        }
+
+        .messages-section h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .message {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .message .timestamp {
+            font-size: 0.7rem;
+            color: #ccc;
+            margin-top: 5px;
+        }
+
+        /* Styles pour l'autocomplétion */
+        .autocomplete-container {
+            position: relative;
+        }
+
+        .autocomplete-suggestions {
+            position: absolute;
+            border: 1px solid #ccc;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            z-index: 100;
+            background-color: white;
+            width: 100%; /* Assurez-vous que la liste a la même largeur que le champ de saisie */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Ombre pour un effet visuel */
+        }
+
+        .autocomplete-suggestions li {
+            padding: 5px;
+            cursor: pointer;
+            color: #000;
+        }
+
+        .autocomplete-suggestions li:hover {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+        }
+        .loader-wrapper {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+        }
+
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .page-loader-wrapper {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1002;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .page-loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        .loader-message {
+            color: white;
+            margin-top: 16px;
+            font-size: 1rem;
+            text-align: center;
+            max-width: 80%;
+        }
+        .subscription-required {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .subscription-required-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .subscription-required-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .subscription-required-content p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .subscription-required-content button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0 10px;
+        }
+
+        .subscription-required-content button:hover {
+            background-color: #e6a727;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="page-loader-wrapper" id="pageLoaderWrapper">
+        <div class="page-loader"></div>
+        <div class="loader-message" id="pageLoaderMessage">Initialisation...</div>
+    </div>
+    <div class="loader-wrapper" id="loaderWrapper">
+        <div class="loader"></div>
+    </div>
+    <section class="login-section" id="loginSection">
+        <h2>Connexion Partenaire</h2>
+        <form id="loginForm">
+            <div class="autocomplete-container">
+                <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+                <ul class="autocomplete-suggestions" id="autocompleteSuggestions" style="display: none;"></ul>
+            </div>
+            <input type="password" id="password" placeholder="Mot de passe" required>
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <input type="checkbox" id="rememberMe">
+                <label for="rememberMe" style="color: white; margin-left: 5px;">Se souvenir de moi (24h)</label>
+            </div>
+            <button type="submit">Se connecter</button>
+        </form>
+        <div class="error-message" id="loginError" style="display: none; color: red;"></div>
+    </section>
+
+    <div class="container">
+        <section class="rates-section" style="display: none;">
+            <h2>Vente de tickets WiFi</h2>
+            <div class="loading-message">Chargement des tickets...</div>
+            <table style="display: none;"></table>
+        </section>
+    </div>
+
+    <div class="notification" id="notification">
+        <span class="close-icon" onclick="hideNotification()">×</span>
+        <h3 id="notification-title">Confirmation de vente</h3>
+        <div class="ticket-details" id="notification-message"></div>
+        <div class="buttons" id="confirmation-buttons">
+            <button class="btn-sell" onclick="window.proceedWithSale()">Confirmer</button>
+            <button class="btn-cancel" onclick="hideNotification()">Annuler</button>
+        </div>
+        <div class="action-icons" id="ticket-actions" style="display: none;">
+            <div class="action-icon icon-share" onclick="shareTicket()" title="Partager">
+                <i data-lucide="share-2"></i>
+            </div>
+            <div class="action-icon icon-pdf" onclick="exportToPDF()" title="Exporter en PDF">
+                <i data-lucide="file-text"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="toggle-history" onclick="toggleHistory()">
+        <i data-lucide="history"></i>
+    </div>
+
+    <div class="history-section" id="historySection" style="display: none;">
+        <div class="history-header">
+            <h2>Historique des ventes</h2>
+            <button onclick="closeHistory()">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+
+        <div class="date-filter">
+            <select id="periodFilter" onchange="filterHistory()">
+                <option value="today">Aujourd'hui</option>
+                <option value="week">Cette semaine</option>
+                <option value="month">Ce mois</option>
+                <option value="all">Tout l'historique</option>
+            </select>
+            <input type="date" id="startDate">
+            <input type="date" id="endDate">
+            <button onclick="filterHistoryByDateRange()">Filtrer par date</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4>Tickets vendus</h4>
+                <div id="totalTickets" class="value">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Chiffre d'affaires</h4>
+                <div id="totalRevenue" class="value">0 FCFA</div>
+            </div>
+            <div class="stat-card">
+                <h4>Ticket le plus vendu</h4>
+                <div id="topCategory" class="value">-</div>
+            </div>
+            <div class="stat-card">
+                <h4>Moyenne par jour</h4>
+                <div id="avgDaily" class="value">0</div>
+            </div>
+        </div>
+        <div class="export-buttons">
+            <button onclick="printHistory()"><i data-lucide="printer"></i> Imprimer</button>
+            <button onclick="exportToPDFHistory()"><i data-lucide="file-down"></i> Exporter en PDF</button>
+        </div>
+
+        <div class="history-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Catégorie</th>
+                        <th>Utilisateur</th>
+                        <th>Prix</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <section class="messages-section" id="messagesSection" style="display: none;">
+        <h2>Messages Reçus</h2>
+        <div id="messagesContainer">
+            <!-- Les messages seront ajoutés ici -->
+        </div>
+    </section>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <footer>
+        <div class="anitext">PROPULSE PAR EVISIONS</div>
+    </footer>
+
+    <div id="subscriptionRequiredModal" class="subscription-required" style="display: none;">
+        <div class="subscription-required-content">
+            <h2>Abonnement Requis</h2>
+            <p>Un abonnement actif est nécessaire pour accéder à cette fonctionnalité.</p>
+            <button onclick="redirectToSubscription()">S'abonner</button>
+            <button onclick="hideSubscriptionRequiredModal()">Fermer</button>
+        </div>
+    </div>
+
+    <script type="module">
+ const _0x5bd211=_0xb293;(function(_0xb992e3,_0x102a3f){const _0x17587f=_0xb293,_0x3fb96b=_0xb992e3();while(!![]){try{const _0x5397f9=-parseInt(_0x17587f(0x21e))/0x1*(-parseInt(_0x17587f(0x234))/0x2)+-parseInt(_0x17587f(0x252))/0x3+-parseInt(_0x17587f(0x257))/0x4+-parseInt(_0x17587f(0x1d6))/0x5+-parseInt(_0x17587f(0x20c))/0x6+-parseInt(_0x17587f(0x23f))/0x7+parseInt(_0x17587f(0x1cf))/0x8*(parseInt(_0x17587f(0x19a))/0x9);if(_0x5397f9===_0x102a3f)break;else _0x3fb96b['push'](_0x3fb96b['shift']());}catch(_0x53d3af){_0x3fb96b['push'](_0x3fb96b['shift']());}}}(_0x581c,0xdc62a));import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';import{getDatabase,ref,get,set,push,remove,onChildAdded}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';const firebaseConfig={'apiKey':'AIzaSyDJAR-cxAyV0nbksle0bc1nYp_xZTQhW1c','authDomain':_0x5bd211(0x19d),'databaseURL':_0x5bd211(0x1bf),'projectId':_0x5bd211(0x18e),'storageBucket':'koda-78825.firebasestorage.app','messagingSenderId':'1086286151179','appId':_0x5bd211(0x23a),'measurementId':_0x5bd211(0x1ec)},app=initializeApp(firebaseConfig),db=getDatabase(app),adminRef=ref(db,_0x5bd211(0x258));let ticketToSell=null,localTickets={},currentReservedTicket=null,currentVendorId='',vendors={},availableUsernames=[];window[_0x5bd211(0x208)]=window[_0x5bd211(0x230)][_0x5bd211(0x208)];async function fetchVendors(){const _0x1969a9=_0x5bd211;try{const _0x27f220=ref(db,'Vendors'),_0x2c9e90=await get(_0x27f220);_0x2c9e90['exists']()?(vendors=_0x2c9e90[_0x1969a9(0x1bc)](),availableUsernames=Object['keys'](vendors)):console[_0x1969a9(0x1c2)](_0x1969a9(0x1ae));}catch(_0x2c4aa5){console[_0x1969a9(0x1ca)]('Erreur\x20lors\x20de\x20la\x20récupération\x20des\x20vendeurs:',_0x2c4aa5);}}const usernameInput=document[_0x5bd211(0x1b7)](_0x5bd211(0x1b5)),passwordInput=document[_0x5bd211(0x1b7)](_0x5bd211(0x1ea)),suggestionsList=document[_0x5bd211(0x1b7)](_0x5bd211(0x1f8));usernameInput['addEventListener'](_0x5bd211(0x241),()=>{const _0x191403=_0x5bd211,_0x5e3e1e=usernameInput[_0x191403(0x220)][_0x191403(0x1c9)](),_0x4443fe=availableUsernames[_0x191403(0x222)](_0xf3da96=>_0xf3da96[_0x191403(0x1c9)]()['startsWith'](_0x5e3e1e));suggestionsList[_0x191403(0x1ab)]='';if(_0x5e3e1e['length']===0x0||_0x4443fe[_0x191403(0x229)]===0x0){suggestionsList['style'][_0x191403(0x19c)]=_0x191403(0x206);return;}_0x4443fe[_0x191403(0x1a2)](_0x3cb397=>{const _0xcbe1cd=_0x191403,_0x16fe34=document[_0xcbe1cd(0x239)]('li');_0x16fe34[_0xcbe1cd(0x22d)]=_0x3cb397,_0x16fe34[_0xcbe1cd(0x1f2)]('click',()=>{const _0x34ee2d=_0xcbe1cd;usernameInput[_0x34ee2d(0x220)]=_0x3cb397,suggestionsList['innerHTML']='',suggestionsList['style']['display']=_0x34ee2d(0x206);}),suggestionsList['appendChild'](_0x16fe34);}),suggestionsList['style'][_0x191403(0x19c)]=_0x191403(0x1a4);}),document[_0x5bd211(0x1f2)]('click',_0x541b16=>{const _0x4a6a8a=_0x5bd211;!usernameInput[_0x4a6a8a(0x1ee)](_0x541b16[_0x4a6a8a(0x1ff)])&&!suggestionsList[_0x4a6a8a(0x1ee)](_0x541b16['target'])&&(suggestionsList[_0x4a6a8a(0x1d5)][_0x4a6a8a(0x19c)]=_0x4a6a8a(0x206));});const rememberMeCheckbox=document[_0x5bd211(0x1b7)]('rememberMe'),storedUsername=localStorage[_0x5bd211(0x244)]('username'),storedPassword=localStorage[_0x5bd211(0x244)](_0x5bd211(0x1ea)),storedTimestamp=localStorage[_0x5bd211(0x244)](_0x5bd211(0x227)),now=Date['now'](),twentyFourHours=0x18*0x3c*0x3c*0x3e8;storedUsername&&storedPassword&&storedTimestamp&&now-storedTimestamp<twentyFourHours&&(usernameInput['value']=storedUsername,passwordInput[_0x5bd211(0x220)]=storedPassword,rememberMeCheckbox[_0x5bd211(0x24e)]=!![]);const loginForm=document['getElementById']('loginForm'),loginError=document[_0x5bd211(0x1b7)](_0x5bd211(0x193)),ratesSection=document[_0x5bd211(0x1b4)]('.rates-section'),historySection=document['getElementById'](_0x5bd211(0x1ce)),loginSection=document[_0x5bd211(0x1b7)](_0x5bd211(0x22e)),messagesSection=document['getElementById']('messagesSection');loginForm[_0x5bd211(0x1f2)](_0x5bd211(0x1e4),async _0x4f445a=>{const _0x3f88c6=_0x5bd211;_0x4f445a['preventDefault'](),showLoader();const _0xf0bedf=usernameInput[_0x3f88c6(0x220)],_0x19287d=passwordInput[_0x3f88c6(0x220)];vendors[_0xf0bedf]&&vendors[_0xf0bedf][_0x3f88c6(0x1ea)]===_0x19287d?(loginError[_0x3f88c6(0x1d5)][_0x3f88c6(0x19c)]=_0x3f88c6(0x206),ratesSection['style'][_0x3f88c6(0x19c)]='block',historySection['style'][_0x3f88c6(0x19c)]=_0x3f88c6(0x206),loginSection[_0x3f88c6(0x1d5)][_0x3f88c6(0x19c)]=_0x3f88c6(0x206),messagesSection[_0x3f88c6(0x1d5)][_0x3f88c6(0x19c)]=_0x3f88c6(0x1a4),currentVendorId=_0xf0bedf,rememberMeCheckbox['checked']?(localStorage[_0x3f88c6(0x242)](_0x3f88c6(0x1b5),_0xf0bedf),localStorage[_0x3f88c6(0x242)]('password',_0x19287d),localStorage[_0x3f88c6(0x242)]('usernameTimestamp',Date['now']())):(localStorage[_0x3f88c6(0x217)]('username'),localStorage[_0x3f88c6(0x217)](_0x3f88c6(0x1ea)),localStorage[_0x3f88c6(0x217)](_0x3f88c6(0x227))),await syncTickets(),loadHistory(),listenForNewMessages(),lucide['createIcons'](),hideLoader()):(loginError[_0x3f88c6(0x1d5)][_0x3f88c6(0x19c)]=_0x3f88c6(0x1a4),loginError[_0x3f88c6(0x22d)]='Nom\x20d\x27utilisateur\x20ou\x20mot\x20de\x20passe\x20incorrect.',hideLoader());});async function syncTickets(){const _0x5ae8a8=_0x5bd211;try{const _0x19d843=document[_0x5ae8a8(0x1b4)](_0x5ae8a8(0x1e2)),_0x1c7aec=document[_0x5ae8a8(0x1b4)](_0x5ae8a8(0x202));_0x19d843[_0x5ae8a8(0x1d5)]['display']=_0x5ae8a8(0x1a4),_0x1c7aec[_0x5ae8a8(0x1d5)]['display']=_0x5ae8a8(0x206);const _0x20a629=ref(db,_0x5ae8a8(0x1df)),_0x40986e=await get(_0x20a629);_0x40986e['exists']()?(localTickets=_0x40986e[_0x5ae8a8(0x1bc)](),createTicketTable(),_0x19d843[_0x5ae8a8(0x1d5)][_0x5ae8a8(0x19c)]=_0x5ae8a8(0x206),_0x1c7aec[_0x5ae8a8(0x1d5)][_0x5ae8a8(0x19c)]=_0x5ae8a8(0x25b)):_0x19d843[_0x5ae8a8(0x22d)]=_0x5ae8a8(0x1aa);}catch(_0x2d485c){console[_0x5ae8a8(0x1ca)](_0x5ae8a8(0x1bd),_0x2d485c),loadingMessage[_0x5ae8a8(0x22d)]='Erreur\x20de\x20synchronisation\x20des\x20tickets.';}}async function createTicketTable(){const _0x55c385=_0x5bd211,_0x3d83db=document[_0x55c385(0x1b4)](_0x55c385(0x202));_0x3d83db['innerHTML']=_0x55c385(0x1f5);for(const [_0x2473d7,_0x51e21a]of Object[_0x55c385(0x1ac)](localTickets)){const _0x20cdd5=_0x51e21a[_0x55c385(0x1b9)]?_0x51e21a[_0x55c385(0x1b9)][_0x55c385(0x229)]:0x0;if(_0x20cdd5>0x0){const _0x38cdd1=_0x51e21a[_0x55c385(0x1f9)][0x0],_0x1aac59=_0x3d83db[_0x55c385(0x1c8)]();_0x1aac59[_0x55c385(0x1ab)]=_0x55c385(0x197)+_0x2473d7+_0x55c385(0x1dc)+_0x38cdd1+_0x55c385(0x1dc)+_0x20cdd5+_0x55c385(0x246)+_0x2473d7+'\x27)\x22>Vendre</button></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20';}}document[_0x55c385(0x1b4)](_0x55c385(0x1e2))[_0x55c385(0x1d5)][_0x55c385(0x19c)]=_0x55c385(0x206),_0x3d83db['style']['display']=_0x55c385(0x25b);}window[_0x5bd211(0x1f3)]=async function(_0x34161d){const _0x2b7db4=_0x5bd211;showLoader();try{const _0x30ab2e=ref(db,_0x2b7db4(0x20d)+_0x34161d),_0x2c0531=await get(_0x30ab2e);if(_0x2c0531['exists']()){const _0x42d234=_0x2c0531[_0x2b7db4(0x1bc)]();if(!_0x42d234[_0x2b7db4(0x1b9)]||_0x42d234['utilisateur'][_0x2b7db4(0x229)]===0x0)throw new Error(_0x2b7db4(0x24a));ticketToSell={'category':_0x34161d,'user':_0x42d234[_0x2b7db4(0x1b9)][0x0],'password':_0x42d234[_0x2b7db4(0x210)][0x0],'price':_0x42d234[_0x2b7db4(0x1f9)][0x0],'updatedData':{..._0x42d234,'utilisateur':_0x42d234[_0x2b7db4(0x1b9)]['slice'](0x1),'motDePasse':_0x42d234[_0x2b7db4(0x210)][_0x2b7db4(0x256)](0x1),'prix':_0x42d234[_0x2b7db4(0x1f9)][_0x2b7db4(0x256)](0x1)}},showConfirmation(ticketToSell),hideLoader();}}catch(_0x3d549c){console[_0x2b7db4(0x1ca)](_0x2b7db4(0x21c),_0x3d549c),showNotification(_0x2b7db4(0x1a5),_0x2b7db4(0x1ad)),hideLoader();}};function showConfirmation(_0x1f2619){const _0x21d071=_0x5bd211,_0x9d7225=document[_0x21d071(0x1b7)](_0x21d071(0x20e)),_0x4a631e=document['getElementById'](_0x21d071(0x1a3)),_0x45045c=document[_0x21d071(0x1b7)](_0x21d071(0x21d)),_0x12a738=document['getElementById'](_0x21d071(0x214));document['getElementById'](_0x21d071(0x1d7))['textContent']=_0x21d071(0x1d3),_0x4a631e[_0x21d071(0x1ab)]=_0x21d071(0x212)+_0x1f2619[_0x21d071(0x1a8)]+'</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Prix:</strong>\x20'+_0x1f2619[_0x21d071(0x23d)]+_0x21d071(0x1c5),_0x12a738[_0x21d071(0x1d5)]['display']=_0x21d071(0x24f),_0x45045c[_0x21d071(0x1d5)][_0x21d071(0x19c)]='none',_0x9d7225[_0x21d071(0x1d5)][_0x21d071(0x19c)]=_0x21d071(0x1a4);}window['proceedWithSale']=async function(){const _0x11ae65=_0x5bd211;showLoader();if(!ticketToSell){showNotification(_0x11ae65(0x1a5),_0x11ae65(0x1f1)),hideLoader();return;}try{const _0x388f80=ref(db,_0x11ae65(0x20d)+ticketToSell['category']);await set(_0x388f80,ticketToSell[_0x11ae65(0x1e9)]);const _0x2aee7f=ref(db,_0x11ae65(0x23c));await push(_0x2aee7f,{'category':ticketToSell[_0x11ae65(0x1a8)],'user':ticketToSell[_0x11ae65(0x1e7)],'password':ticketToSell[_0x11ae65(0x1ea)],'price':ticketToSell[_0x11ae65(0x23d)],'soldAt':Date[_0x11ae65(0x233)](),'vendorId':currentVendorId});const _0x118f25=ref(db,'VendorsHistory/'+currentVendorId);await push(_0x118f25,{'category':ticketToSell[_0x11ae65(0x1a8)],'user':ticketToSell[_0x11ae65(0x1e7)],'password':ticketToSell[_0x11ae65(0x1ea)],'price':ticketToSell[_0x11ae65(0x23d)],'soldAt':Date['now']()}),showTicketDetails(ticketToSell),await syncTickets(),hideLoader();}catch(_0x24053e){console[_0x11ae65(0x1ca)]('Erreur\x20lors\x20de\x20la\x20vente:',_0x24053e),showNotification(_0x11ae65(0x1a5),_0x11ae65(0x1a0)),hideLoader();}ticketToSell=null;};function showTicketDetails(_0x5c8730){const _0x2cc842=_0x5bd211,_0x576de3=document['getElementById'](_0x2cc842(0x20e)),_0x287f4d=document[_0x2cc842(0x1b7)](_0x2cc842(0x1a3)),_0x2da503=document[_0x2cc842(0x1b7)]('ticket-actions'),_0x287787=document[_0x2cc842(0x1b7)](_0x2cc842(0x214));document[_0x2cc842(0x1b7)](_0x2cc842(0x1d7))[_0x2cc842(0x22d)]=_0x2cc842(0x240),_0x287f4d[_0x2cc842(0x1ab)]='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Catégorie:</strong>\x20'+_0x5c8730['category']+_0x2cc842(0x1b0)+_0x5c8730[_0x2cc842(0x1e7)]+_0x2cc842(0x24c)+_0x5c8730[_0x2cc842(0x1ea)]+_0x2cc842(0x196)+_0x5c8730[_0x2cc842(0x23d)]+_0x2cc842(0x1c5),_0x287787[_0x2cc842(0x1d5)][_0x2cc842(0x19c)]=_0x2cc842(0x206),_0x2da503['style'][_0x2cc842(0x19c)]='flex',_0x576de3[_0x2cc842(0x1d5)]['display']='block',lucide['createIcons']();}function showSaleConfirmation(_0x13d7ac){const _0x1a0cbc=_0x5bd211,_0x33ee61=document[_0x1a0cbc(0x1b7)](_0x1a0cbc(0x20e)),_0x25928f=document[_0x1a0cbc(0x1b7)](_0x1a0cbc(0x1a3)),_0x24750e=document['getElementById'](_0x1a0cbc(0x1eb));_0x25928f[_0x1a0cbc(0x1ab)]=_0x1a0cbc(0x1a6)+_0x13d7ac['category']+_0x1a0cbc(0x1b0)+_0x13d7ac[_0x1a0cbc(0x1e7)]+'</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Mot\x20de\x20passe:</strong>\x20'+_0x13d7ac[_0x1a0cbc(0x1ea)]+'</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Prix:</strong>\x20'+_0x13d7ac[_0x1a0cbc(0x23d)]+'\x20FCFA</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',_0x24750e[_0x1a0cbc(0x1ab)]=_0x1a0cbc(0x1dd),_0x33ee61[_0x1a0cbc(0x1d5)][_0x1a0cbc(0x19c)]=_0x1a0cbc(0x1a4),lucide[_0x1a0cbc(0x22c)]();}window[_0x5bd211(0x1fb)]=async function(){const _0x382f75=_0x5bd211;showLoader();if(!currentReservedTicket){showNotification(_0x382f75(0x1a5),_0x382f75(0x249)),hideLoader();return;}try{const _0x25ebf8=ref(db,_0x382f75(0x23c));await push(_0x25ebf8,{...currentReservedTicket,'soldAt':Date[_0x382f75(0x233)](),'vendorId':currentVendorId});const _0x35baec=ref(db,_0x382f75(0x25a)+currentVendorId);await push(_0x35baec,{...currentReservedTicket,'soldAt':Date[_0x382f75(0x233)]()}),showNotification('Succès','Ticket\x20vendu\x20avec\x20succès!'),currentReservedTicket=null,hideNotification(),await syncTickets(),hideLoader();}catch(_0x1b8532){console[_0x382f75(0x1ca)]('Erreur\x20de\x20confirmation:',_0x1b8532),showNotification(_0x382f75(0x1a5),_0x382f75(0x1fe)),hideLoader();}},window[_0x5bd211(0x1cc)]=function(){currentReservedTicket=null,hideNotification();};function showNotification(_0x5a2f4d,_0x599261){const _0x3163a7=_0x5bd211,_0x2b86eb=document[_0x3163a7(0x1b7)]('notification'),_0x125c4d=document[_0x3163a7(0x1b7)]('notification-title'),_0x468089=document['getElementById'](_0x3163a7(0x1a3)),_0x4beee4=document[_0x3163a7(0x1b7)](_0x3163a7(0x1eb)),_0x9548a2=document[_0x3163a7(0x1b7)]('ticket-actions');_0x125c4d[_0x3163a7(0x22d)]=_0x5a2f4d,_0x468089[_0x3163a7(0x1ab)]=_0x599261,_0x5a2f4d==='Succès'||_0x5a2f4d==='Erreur'?(_0x4beee4['style']['display']=_0x3163a7(0x206),_0x9548a2[_0x3163a7(0x1d5)][_0x3163a7(0x19c)]=_0x3163a7(0x206)):(_0x4beee4[_0x3163a7(0x1d5)][_0x3163a7(0x19c)]=_0x3163a7(0x24f),_0x9548a2[_0x3163a7(0x1d5)][_0x3163a7(0x19c)]='none'),_0x2b86eb[_0x3163a7(0x1d5)]['display']=_0x3163a7(0x1a4);}window[_0x5bd211(0x1f6)]=function(){const _0x21c88d=_0x5bd211;document['getElementById']('notification')['style'][_0x21c88d(0x19c)]=_0x21c88d(0x206);};async function loadHistory(){const _0x1eb091=_0x5bd211;showLoader();try{const _0x5c7a06=ref(db,_0x1eb091(0x25a)+currentVendorId),_0x462459=await get(_0x5c7a06);let _0xb8d6da=[];_0x462459[_0x1eb091(0x201)]()&&(_0xb8d6da=Object['entries'](_0x462459[_0x1eb091(0x1bc)]())[_0x1eb091(0x216)](([_0x223d8a,_0x5a3c09])=>({'id':_0x223d8a,..._0x5a3c09}))),filterHistory(_0xb8d6da),hideLoader();}catch(_0x4829d2){console[_0x1eb091(0x1ca)](_0x1eb091(0x199),_0x4829d2),showNotification(_0x1eb091(0x1a5),'Impossible\x20de\x20charger\x20l\x27historique'),hideLoader();}}function filterHistory(_0x41d874){const _0x1083c5=_0x5bd211,_0x256c26=document[_0x1083c5(0x1b7)](_0x1083c5(0x21f))[_0x1083c5(0x220)],_0x585fd2=new Date(),_0x3f9ba8={'today':new Date(_0x585fd2[_0x1083c5(0x1e0)](0x0,0x0,0x0,0x0)),'week':new Date(_0x585fd2[_0x1083c5(0x22f)](_0x585fd2[_0x1083c5(0x1fc)]()-_0x585fd2[_0x1083c5(0x1c4)]())),'month':new Date(_0x585fd2[_0x1083c5(0x22f)](0x1)),'all':new Date(0x0)};let _0x4fa00f=_0x41d874;_0x256c26!==_0x1083c5(0x1e6)&&(_0x4fa00f=_0x41d874['filter'](_0x3ad6d7=>new Date(_0x3ad6d7[_0x1083c5(0x248)])>=_0x3f9ba8[_0x256c26])),updateStats(_0x4fa00f),updateHistoryTable(_0x4fa00f);}window[_0x5bd211(0x195)]=function(){const _0x986394=_0x5bd211,_0x158dcb=new Date(document[_0x986394(0x1b7)](_0x986394(0x19e))[_0x986394(0x220)]),_0x4d3320=new Date(document[_0x986394(0x1b7)](_0x986394(0x1ef))[_0x986394(0x220)]);_0x4d3320[_0x986394(0x1e0)](0x17,0x3b,0x3b);if(isNaN(_0x158dcb[_0x986394(0x1d4)]())||isNaN(_0x4d3320[_0x986394(0x1d4)]())){showNotification(_0x986394(0x1a5),_0x986394(0x21b));return;}const _0x508024=ref(db,'VendorsHistory/'+currentVendorId);get(_0x508024)[_0x986394(0x225)](_0x344266=>{const _0xa6c76f=_0x986394;let _0x3c5643=[];_0x344266[_0xa6c76f(0x201)]()&&(_0x3c5643=Object[_0xa6c76f(0x1ac)](_0x344266[_0xa6c76f(0x1bc)]())['map'](([_0x4eb5d6,_0xfd6b97])=>({'id':_0x4eb5d6,..._0xfd6b97})));const _0x262bfa=_0x3c5643[_0xa6c76f(0x222)](_0x2c0e5e=>{const _0x38aa1e=_0xa6c76f,_0x2336d7=new Date(_0x2c0e5e[_0x38aa1e(0x248)]);return _0x2336d7>=_0x158dcb&&_0x2336d7<=_0x4d3320;});updateStats(_0x262bfa),updateHistoryTable(_0x262bfa);});};function updateStats(_0x467954){const _0x505cab=_0x5bd211,_0xc48192=_0x467954['length'],_0x46e929=_0x467954[_0x505cab(0x1c7)]((_0x5c0072,_0x31372d)=>_0x5c0072+parseFloat(_0x31372d[_0x505cab(0x23d)]),0x0),_0x5208aa=_0x467954[_0x505cab(0x1c7)]((_0x36bae0,_0x3a75dd)=>{const _0x55e3ff=_0x505cab;return _0x36bae0[_0x3a75dd['category']]=(_0x36bae0[_0x3a75dd[_0x55e3ff(0x1a8)]]||0x0)+0x1,_0x36bae0;},{}),_0x9374ca=Object[_0x505cab(0x1ac)](_0x5208aa)[_0x505cab(0x1b6)]((_0x3c28e6,_0x4cac66)=>_0x4cac66[0x1]-_0x3c28e6[0x1])[0x0]?.[0x0]||'-',_0x779cd2=_0x467954[_0x505cab(0x229)]>0x0?Math[_0x505cab(0x1a7)](0x1,Math[_0x505cab(0x209)]((Date[_0x505cab(0x233)]()-Math[_0x505cab(0x207)](..._0x467954[_0x505cab(0x216)](_0xd4062c=>_0xd4062c['soldAt'])))/(0x3e8*0x3c*0x3c*0x18))):0x1,_0x49a9ee=(_0xc48192/_0x779cd2)[_0x505cab(0x1db)](0x1);document[_0x505cab(0x1b7)]('totalTickets')[_0x505cab(0x22d)]=_0xc48192,document[_0x505cab(0x1b7)](_0x505cab(0x1f4))[_0x505cab(0x22d)]=_0x46e929[_0x505cab(0x205)]()+_0x505cab(0x1e3),document['getElementById'](_0x505cab(0x1b8))[_0x505cab(0x22d)]=_0x9374ca,document['getElementById'](_0x505cab(0x221))[_0x505cab(0x22d)]=_0x49a9ee;}function _0xb293(_0x397203,_0x54db5d){const _0x581ca4=_0x581c();return _0xb293=function(_0xb29373,_0x1bf2c2){_0xb29373=_0xb29373-0x18e;let _0x3535bb=_0x581ca4[_0xb29373];return _0x3535bb;},_0xb293(_0x397203,_0x54db5d);}function updateHistoryTable(_0x4e065f){const _0xcde552=_0x5bd211,_0x3412eb=document[_0xcde552(0x1b7)](_0xcde552(0x1f0));_0x3412eb[_0xcde552(0x1ab)]=_0x4e065f[_0xcde552(0x1b6)]((_0x754256,_0x3dd255)=>_0x3dd255[_0xcde552(0x248)]-_0x754256['soldAt'])[_0xcde552(0x216)](_0x40dddc=>_0xcde552(0x20b)+_0x40dddc['id']+_0xcde552(0x1bb)+new Date(_0x40dddc['soldAt'])[_0xcde552(0x205)]()+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>'+_0x40dddc['category']+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>'+_0x40dddc[_0xcde552(0x1e7)]+_0xcde552(0x1dc)+_0x40dddc[_0xcde552(0x23d)]+_0xcde552(0x1b1))['join']('');}window[_0x5bd211(0x238)]=async function(_0x2e2ed9){const _0x8fafb2=_0x5bd211;showLoader();try{const _0x584b25=ref(db,'VendorsHistory/'+currentVendorId+'/'+_0x2e2ed9),_0x32c00c=await get(_0x584b25);if(_0x32c00c[_0x8fafb2(0x201)]()){const _0x1fa25f=_0x32c00c['val']();window[_0x8fafb2(0x232)](),showTicketDetails(_0x1fa25f),hideLoader();}else showNotification('Erreur',_0x8fafb2(0x231)),hideLoader();}catch(_0x4fed45){console[_0x8fafb2(0x1ca)]('Erreur\x20lors\x20de\x20la\x20récupération\x20du\x20ticket:',_0x4fed45),showNotification(_0x8fafb2(0x1a5),'Impossible\x20de\x20récupérer\x20les\x20détails\x20du\x20ticket'),hideLoader();}},window[_0x5bd211(0x228)]=function(){const _0x87a0c3=_0x5bd211,_0x37f3e3=document['getElementById'](_0x87a0c3(0x1ce)),_0xb41eff=_0x37f3e3[_0x87a0c3(0x1d5)][_0x87a0c3(0x19c)]===_0x87a0c3(0x1a4);_0x37f3e3['style'][_0x87a0c3(0x19c)]=_0xb41eff?_0x87a0c3(0x206):'block',!_0xb41eff&&loadHistory();},window[_0x5bd211(0x232)]=function(){const _0x100983=_0x5bd211;document['getElementById'](_0x100983(0x1ce))[_0x100983(0x1d5)][_0x100983(0x19c)]='none';},window[_0x5bd211(0x1a1)]=function(){loadHistory();};function listenForNewMessages(){const _0x570c2a=_0x5bd211,_0x263e5d=ref(db,_0x570c2a(0x22b)+currentVendorId+_0x570c2a(0x259));onChildAdded(_0x263e5d,_0x3e240a=>{const _0x45f460=_0x570c2a,_0x485c08=_0x3e240a[_0x45f460(0x1bc)]();displayNewMessage(_0x485c08);});}function displayNewMessage(_0xf23138){const _0x19b251=_0x5bd211,_0x5e878a=document[_0x19b251(0x1b7)](_0x19b251(0x237)),_0x97ea3e=document[_0x19b251(0x239)](_0x19b251(0x20f));_0x97ea3e['classList']['add'](_0x19b251(0x255)),_0x97ea3e['innerHTML']=_0x19b251(0x24d)+_0xf23138[_0x19b251(0x1d0)]+_0x19b251(0x213)+new Date(_0xf23138[_0x19b251(0x1c3)])[_0x19b251(0x205)]()+_0x19b251(0x1c0),_0x5e878a[_0x19b251(0x236)](_0x97ea3e),_0x5e878a[_0x19b251(0x1c1)]=_0x5e878a[_0x19b251(0x22a)];}window['shareTicket']=function(){const _0x45cbee=_0x5bd211,_0x2fdaad=document[_0x45cbee(0x1b7)]('notification-message')[_0x45cbee(0x224)];navigator[_0x45cbee(0x203)]?navigator[_0x45cbee(0x203)]({'title':_0x45cbee(0x1be),'text':_0x2fdaad})[_0x45cbee(0x225)](()=>console[_0x45cbee(0x1c2)]('Partage\x20réussi'))[_0x45cbee(0x19b)](_0x3ffc2b=>console[_0x45cbee(0x1ca)]('Erreur\x20lors\x20du\x20partage:',_0x3ffc2b)):alert('Le\x20partage\x20n\x27est\x20pas\x20supporté\x20sur\x20votre\x20navigateur.\x20Veuillez\x20copier\x20manuellement\x20les\x20détails\x20du\x20ticket.');},window[_0x5bd211(0x23e)]=function(){const _0x4d0af6=_0x5bd211,_0x189f5c=document['getElementById'](_0x4d0af6(0x1a3))['innerText'];navigator[_0x4d0af6(0x219)][_0x4d0af6(0x20a)](_0x189f5c)['then'](()=>{const _0x397e6f=_0x4d0af6;showNotification('Succès',_0x397e6f(0x251));})[_0x4d0af6(0x19b)](_0x47f1f1=>{const _0x569c63=_0x4d0af6;console['error']('Erreur\x20lors\x20de\x20la\x20copie:',_0x47f1f1),showNotification(_0x569c63(0x1a5),'Impossible\x20de\x20copier\x20le\x20ticket');});},window[_0x5bd211(0x1a9)]=async function(){const _0x251855=_0x5bd211;showLoader();const _0x11e768=document['getElementById'](_0x251855(0x1a3)),_0xee22aa=new jsPDF(),_0x82b7df=await html2canvas(_0x11e768),_0x14d575=_0x82b7df[_0x251855(0x21a)](_0x251855(0x200));_0xee22aa[_0x251855(0x1d2)](_0x14d575,_0x251855(0x1ba),0xa,0xa,0xbe,0x0),_0xee22aa[_0x251855(0x223)](_0x251855(0x253)),hideLoader();},window[_0x5bd211(0x235)]=function(){const _0xd33114=_0x5bd211;window[_0xd33114(0x198)]();},window['exportToPDFHistory']=function(){const _0x148efd=_0x5bd211,{jsPDF:_0x8f888c}=window['jspdf'],_0x3a5c38=new _0x8f888c(),_0x3683f8=document[_0x148efd(0x1b7)]('historyTableBody'),_0x39658d={'fillColor':[0x2a,0x3a,0x6c],'textColor':[0xff,0xff,0xff],'fontStyle':_0x148efd(0x1e5),'halign':_0x148efd(0x1d9)},_0x8e2324={'halign':_0x148efd(0x190)},_0x1f662e={'theme':'grid','headStyles':_0x39658d,'bodyStyles':_0x8e2324,'margin':{'top':0x14},'startY':0x1e,'didDrawPage':function(_0xacfa50){const _0x27c9f2=_0x148efd;_0x3a5c38['text'](_0x27c9f2(0x1f7),0xe,0xf);const _0x3c70b1='Page\x20'+_0x3a5c38['internal']['getNumberOfPages']();_0x3a5c38[_0x27c9f2(0x1af)](0xa);const _0x243e7d=_0x3a5c38[_0x27c9f2(0x24b)][_0x27c9f2(0x19f)],_0x18c3c6=_0x243e7d[_0x27c9f2(0x1fd)]?_0x243e7d[_0x27c9f2(0x1fd)]:_0x243e7d['getHeight']();_0x3a5c38[_0x27c9f2(0x1d8)](_0x3c70b1,_0xacfa50[_0x27c9f2(0x1e8)][_0x27c9f2(0x1ed)][_0x27c9f2(0x190)],_0x18c3c6-0xa),_0x3a5c38[_0x27c9f2(0x1d8)](new Date()['toLocaleString'](),_0x243e7d['width']-_0xacfa50['settings'][_0x27c9f2(0x1ed)][_0x27c9f2(0x1b2)]-0x28,_0x18c3c6-0xa);}};_0x3a5c38[_0x148efd(0x247)]({'html':'#historyTableBody',..._0x1f662e}),_0x3a5c38[_0x148efd(0x223)](_0x148efd(0x1d1));},window['exportToExcelHistory']=function(){const _0x7306b1=_0x5bd211,_0x2a86a3=XLSX[_0x7306b1(0x194)][_0x7306b1(0x254)](document['getElementById'](_0x7306b1(0x1f0)),{'sheet':_0x7306b1(0x226)}),_0x5ac222=XLSX[_0x7306b1(0x23b)](_0x2a86a3,{'bookType':'xlsx','type':'binary'});function _0x5881c9(_0x292132){const _0x44006f=_0x7306b1,_0x47a083=new ArrayBuffer(_0x292132[_0x44006f(0x229)]),_0x59fb2e=new Uint8Array(_0x47a083);for(let _0x38404c=0x0;_0x38404c<_0x292132[_0x44006f(0x229)];_0x38404c++)_0x59fb2e[_0x38404c]=_0x292132['charCodeAt'](_0x38404c)&0xff;return _0x47a083;}saveAs(new Blob([_0x5881c9(_0x5ac222)],{'type':'application/octet-stream'}),_0x7306b1(0x1c6));};function showLoader(){const _0x3faa52=_0x5bd211;document['getElementById'](_0x3faa52(0x25c))['style']['display']=_0x3faa52(0x1a4);}function hideLoader(){const _0x36d049=_0x5bd211;document[_0x36d049(0x1b7)](_0x36d049(0x25c))[_0x36d049(0x1d5)]['display']=_0x36d049(0x206);}function showPageLoader(){const _0x566e16=_0x5bd211;document[_0x566e16(0x1b7)](_0x566e16(0x191))[_0x566e16(0x1d5)][_0x566e16(0x19c)]=_0x566e16(0x24f);}function hidePageLoader(){const _0x16441a=_0x5bd211;document[_0x16441a(0x1b7)](_0x16441a(0x191))[_0x16441a(0x1d5)][_0x16441a(0x19c)]=_0x16441a(0x206);}function showSubscriptionRequiredModal(){const _0x34c296=_0x5bd211;subscriptionRequiredModal[_0x34c296(0x1d5)][_0x34c296(0x19c)]=_0x34c296(0x24f);}function _0x581c(){const _0x58f6f2=['text','center','DOMContentLoaded','toFixed','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-sell\x22\x20onclick=\x22window.confirmSale()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Confirmer\x20la\x20vente\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-cancel\x22\x20onclick=\x22window.cancelSale()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Annuler\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','index.html','TicketsTotal','setHours','expired','.loading-message','\x20FCFA','submit','bold','all','user','settings','updatedData','password','notification-buttons','G-4Q0CVX4CZQ','margin','contains','endDate','historyTableBody','Aucun\x20ticket\x20à\x20vendre','addEventListener','initTicketSale','totalRevenue','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Catégorie</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Prix\x20(FCFA)</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Restants</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Action</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','hideNotification','Historique\x20des\x20ventes','autocompleteSuggestions','prix','Erreur\x20lors\x20de\x20l\x27initialisation\x20:','confirmSale','getDate','height','Erreur\x20lors\x20de\x20la\x20confirmation\x20de\x20la\x20vente','target','image/png','exists','.rates-section\x20table','share','redirectToSubscription','toLocaleString','none','min','jsPDF','ceil','writeText','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20onclick=\x22window.showTicketDetailsFromHistory(\x27','4133778BRxoDn','TicketsTotal/','notification','div','motDePasse','Une\x20erreur\x20est\x20survenue\x20lors\x20de\x20l\x27initialisation.','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Voulez-vous\x20vendre\x20ce\x20ticket\x20?</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Catégorie:</strong>\x20','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22timestamp\x22>','confirmation-buttons','Abonnement\x20actif','map','removeItem','active','clipboard','toDataURL','Veuillez\x20sélectionner\x20une\x20date\x20de\x20début\x20et\x20une\x20date\x20de\x20fin.','Erreur:','ticket-actions','3KiwCDx','periodFilter','value','avgDaily','filter','save','innerText','then','Ventes','usernameTimestamp','toggleHistory','length','scrollHeight','Vendors/','createIcons','textContent','loginSection','setDate','jspdf','Ticket\x20introuvable\x20dans\x20l\x27historique','closeHistory','now','752702vwoVeJ','printHistory','appendChild','messagesContainer','showTicketDetailsFromHistory','createElement','1:1086286151179:web:32f80a34ae57d07278110e','write','TicketsVendus','price','copyTicket','7320803hCjVvv','Ticket\x20vendu\x20avec\x20succès','input','setItem','status','getItem','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement.','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td><button\x20onclick=\x22window.initTicketSale(\x27','autoTable','soldAt','Aucun\x20ticket\x20en\x20cours\x20de\x20vente','Plus\x20de\x20tickets\x20disponibles','internal','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Mot\x20de\x20passe:</strong>\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>','checked','flex','Vérification\x20de\x20l\x27abonnement...','Ticket\x20copié\x20dans\x20le\x20presse-papiers!','4798935QpqCFi','ticket.pdf','table_to_book','message','slice','3952360XjChWB','admin/subscription','/messages','VendorsHistory/','table','loaderWrapper','koda-78825','update','left','pageLoaderWrapper','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement','loginError','utils','filterHistoryByDateRange','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Prix:</strong>\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','print','Erreur\x20lors\x20du\x20chargement\x20de\x20l\x27historique:','396UHNrEQ','catch','display','koda-78825.firebaseapp.com','startDate','pageSize','Impossible\x20de\x20finaliser\x20la\x20vente','filterHistory','forEach','notification-message','block','Erreur','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Catégorie:</strong>\x20','max','category','exportToPDF','Aucun\x20ticket\x20disponible.','innerHTML','entries','Impossible\x20de\x20récupérer\x20le\x20ticket','Aucun\x20vendeur\x20trouvé.','setFontSize','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Nom\x20d\x27utilisateur:</strong>\x20','\x20FCFA</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td><i\x20class=\x22fa-solid\x20fa-arrow-right\x22></i></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','right','Pas\x20d\x27abonnement\x20actif','querySelector','username','sort','getElementById','topCategory','utilisateur','PNG','\x27)\x22\x20style=\x22cursor:\x20pointer;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','val','Erreur\x20de\x20synchronisation:','Détails\x20du\x20Ticket','https://koda-78825-default-rtdb.firebaseio.com','</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','scrollTop','log','timestamp','getDay','\x20FCFA</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','historique_ventes.xlsx','reduce','insertRow','toLowerCase','error','location','cancelSale','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement\x20:','historySection','1005408BViEFw','content','historique_ventes.pdf','addImage','Confirmation\x20de\x20vente','getTime','style','7167860wQXrlh','notification-title'];_0x581c=function(){return _0x58f6f2;};return _0x581c();}function hideSubscriptionRequiredModal(){const _0x4e6955=_0x5bd211;subscriptionRequiredModal[_0x4e6955(0x1d5)][_0x4e6955(0x19c)]=_0x4e6955(0x206);}function redirectToSubscription(){const _0x5323ae=_0x5bd211;window[_0x5323ae(0x1cb)]['href']=_0x5323ae(0x1de);}async function checkSubscriptionStatus(){const _0x24d440=_0x5bd211,_0x144a35=document['getElementById']('pageLoaderMessage');_0x144a35['textContent']=_0x24d440(0x250);try{const _0xb123c8=await get(adminRef),_0x2cbfeb=_0xb123c8[_0x24d440(0x1bc)](),_0x3c71e8=new Date();if(_0x2cbfeb&&_0x2cbfeb[_0x24d440(0x243)]===_0x24d440(0x218)){const _0x63e2ff=new Date(_0x2cbfeb['endDate']);_0x63e2ff<_0x3c71e8?(_0x144a35['textContent']='Abonnement\x20expiré',showSubscriptionRequiredModal(),await adminRef[_0x24d440(0x18f)]({'status':_0x24d440(0x1e1)})):_0x144a35['textContent']=_0x24d440(0x215);}else _0x144a35[_0x24d440(0x22d)]=_0x24d440(0x1b3),showSubscriptionRequiredModal();}catch(_0x132793){console['error'](_0x24d440(0x1cd),_0x132793),_0x144a35[_0x24d440(0x22d)]=_0x24d440(0x192),showNotification('Erreur',_0x24d440(0x245));}}document['addEventListener'](_0x5bd211(0x1da),()=>{const _0xc35e7e=_0x5bd211;checkSubscriptionStatus()[_0xc35e7e(0x225)](()=>{const _0x1d3364=_0xc35e7e;fetchVendors(),lucide[_0x1d3364(0x22c)](),hidePageLoader();})['catch'](_0x28004e=>{const _0x439ceb=_0xc35e7e;console['error'](_0x439ceb(0x1fa),_0x28004e),showNotification(_0x439ceb(0x1a5),_0x439ceb(0x211)),hidePageLoader();});}),window[_0x5bd211(0x204)]=redirectToSubscription,window['hideSubscriptionRequiredModal']=redirectToSubscription;
+    </script>
+</body>
+</html>

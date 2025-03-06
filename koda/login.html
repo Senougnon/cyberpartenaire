@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion Administrateur</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --background-color: #ecf0f1;
+            --text-color: #34495e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Connexion Administrateur</h1>
+        <form id="loginForm" onsubmit="return login(event)">
+            <div class="input-group">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">Se connecter</button>
+        </form>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <script>
+const _0x39c78e=_0x355e;(function(_0x48e23d,_0xf401fc){const _0x1c1608=_0x355e,_0x57927b=_0x48e23d();while(!![]){try{const _0x26043c=parseInt(_0x1c1608(0x1e0))/0x1*(-parseInt(_0x1c1608(0x1de))/0x2)+parseInt(_0x1c1608(0x1f7))/0x3*(-parseInt(_0x1c1608(0x1ef))/0x4)+parseInt(_0x1c1608(0x1f4))/0x5+-parseInt(_0x1c1608(0x1e1))/0x6*(-parseInt(_0x1c1608(0x1e9))/0x7)+-parseInt(_0x1c1608(0x1e7))/0x8+parseInt(_0x1c1608(0x1f2))/0x9*(parseInt(_0x1c1608(0x1d6))/0xa)+-parseInt(_0x1c1608(0x1e2))/0xb;if(_0x26043c===_0xf401fc)break;else _0x57927b['push'](_0x57927b['shift']());}catch(_0xcecdd1){_0x57927b['push'](_0x57927b['shift']());}}}(_0x3812,0x8279e));const firebaseConfig={'apiKey':_0x39c78e(0x1d3),'authDomain':'koda-78825.firebaseapp.com','databaseURL':_0x39c78e(0x1d5),'projectId':_0x39c78e(0x1e6),'storageBucket':'koda-78825.firebasestorage.app','messagingSenderId':_0x39c78e(0x1d7),'appId':_0x39c78e(0x1f3),'measurementId':_0x39c78e(0x1f1)};function _0x3812(){const _0x237594=['error','val','288854sDeOXb','admin/subscription','5zdSuYD','1698gWObzv','1042316NsvWlo','values','textContent','Erreur\x20de\x20connexion:','koda-78825','4336248NSaseJ','getElementById','23478SDiqvc','once','style','endDate','display','true','4ecGEMh','setItem','G-4Q0CVX4CZQ','954felezB','1:1086286151179:web:32f80a34ae57d07278110e','2937985zDadJv','password','find','1496223fjRJrv','ref','block','username','value','AIzaSyDJAR-cxAyV0nbksle0bc1nYp_xZTQhW1c','a3.html','https://koda-78825-default-rtdb.firebaseio.com','80690BFArRi','1086286151179','href','location','index.html','database'];_0x3812=function(){return _0x237594;};return _0x3812();}function _0x355e(_0x11993c,_0x513533){const _0x381219=_0x3812();return _0x355e=function(_0x355ed8,_0x1413d1){_0x355ed8=_0x355ed8-0x1d0;let _0x431269=_0x381219[_0x355ed8];return _0x431269;},_0x355e(_0x11993c,_0x513533);}firebase['initializeApp'](firebaseConfig);const database=firebase[_0x39c78e(0x1db)]();async function login(_0xc754a3){const _0x428e33=_0x39c78e;_0xc754a3['preventDefault']();const _0x3b7857=document[_0x428e33(0x1e8)](_0x428e33(0x1d1))[_0x428e33(0x1d2)],_0x5c1009=document[_0x428e33(0x1e8)](_0x428e33(0x1f5))[_0x428e33(0x1d2)],_0x2a32bd=document[_0x428e33(0x1e8)]('errorMessage');try{const _0x2653c9=database[_0x428e33(0x1f8)]('admins'),_0x3ed3fa=await _0x2653c9[_0x428e33(0x1ea)](_0x428e33(0x1d2)),_0x221e42=_0x3ed3fa['val'](),_0x2a6085=Object[_0x428e33(0x1e3)](_0x221e42)[_0x428e33(0x1f6)](_0x8d473f=>_0x8d473f['username']===_0x3b7857&&_0x8d473f['password']===_0x5c1009);if(_0x2a6085){const _0x5a1ba7=database[_0x428e33(0x1f8)](_0x428e33(0x1df)),_0x674826=await _0x5a1ba7[_0x428e33(0x1ea)]('value'),_0x47c18f=_0x674826[_0x428e33(0x1dd)]();_0x47c18f&&_0x47c18f['status']==='active'&&new Date(_0x47c18f[_0x428e33(0x1ec)])>new Date()?(sessionStorage[_0x428e33(0x1f0)]('isLoggedIn',_0x428e33(0x1ee)),window[_0x428e33(0x1d9)][_0x428e33(0x1d8)]=_0x428e33(0x1d4)):(_0x2a32bd['textContent']='Votre\x20abonnement\x20n\x27est\x20pas\x20actif.\x20Veuillez\x20vous\x20abonner.',_0x2a32bd[_0x428e33(0x1eb)][_0x428e33(0x1ed)]=_0x428e33(0x1d0),setTimeout(()=>{const _0x23d443=_0x428e33;window[_0x23d443(0x1d9)][_0x23d443(0x1d8)]=_0x23d443(0x1da);},0xbb8));}else _0x2a32bd[_0x428e33(0x1e4)]='Nom\x20d\x27utilisateur\x20ou\x20mot\x20de\x20passe\x20incorrect',_0x2a32bd[_0x428e33(0x1eb)][_0x428e33(0x1ed)]=_0x428e33(0x1d0);}catch(_0x1bc868){console[_0x428e33(0x1dc)](_0x428e33(0x1e5),_0x1bc868),_0x2a32bd[_0x428e33(0x1e4)]='Une\x20erreur\x20est\x20survenue.\x20Veuillez\x20réessayer.',_0x2a32bd['style'][_0x428e33(0x1ed)]=_0x428e33(0x1d0);}}
+    </script>
+</body>
+</html>
