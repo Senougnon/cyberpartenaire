@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vente Tickets Cyber Campus</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        /* ... (Styles CSS - Pas de modifications ici) ... */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg,  #424242, #073018, #553a01);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #fff;
+            overflow-x: hidden;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        section:hover{
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+            margin-top: 16px;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        td{
+            transition: background-color 0.3s ease;
+        }
+        tr:hover td{
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            touch-action: manipulation;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+            color: #1a2a6c;
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .notification h3 {
+            margin-bottom: 16px;
+            color: #1a2a6c;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .ticket-details {
+            margin: 16px 0;
+            font-size: 0.95rem;
+        }
+
+        .ticket-details p {
+            margin: 8px 0;
+            word-break: break-word;
+        }
+
+        .action-icons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .action-icon {
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+        }
+
+        .action-icon:active {
+            transform: scale(0.9);
+        }
+
+        .icon-share { color: #4CAF50; }
+        .icon-copy { color: #2196F3; }
+        .icon-pdf { color: #f44336; }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sell {
+            background-color: #4CAF50;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-cancel {
+            background-color: #f44336;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .close-icon {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            cursor: pointer;
+            font-size: 24px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            display: none;
+            z-index: 1001;
+            text-align: center;
+            max-width: 200px;
+            left: 50% !important;
+            transform: translateX(-50%);
+            bottom: 24px;
+        }
+        .history-section {
+            display: none;
+            background: rgba(26, 42, 108, 0.95); /* Fond plus opaque avec une teinte bleue foncée */
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .history-section:hover{
+            transform: translate(-50%, -50%) translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Amélioration du style de l'en-tête de l'historique pour plus de lisibilité */
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            background: inherit;
+            padding: 10px 0;
+            z-index: 1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Amélioration de la lisibilité des cartes de statistiques */
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover{
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card h4 {
+            color: #fdbb2d;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .toggle-history {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #fdbb2d;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .toggle-history i{
+            transition: transform 0.3s ease;
+        }
+        .toggle-history:hover{
+            transform: scale(1.1);
+        }
+        .toggle-history:hover i{
+            transform: rotate(180deg);
+        }
+
+        .toggle-history:active {
+            transform: scale(0.95);
+        }
+        .export-buttons {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .export-buttons button {
+            margin: 0 10px;
+        }
+
+        .date-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .date-filter input[type="date"] {
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+        .date-filter button{
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+        .date-filter select {
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 16px;
+            background-color: rgba(0, 0, 0, 0.5);
+            font-size: 0.9rem;
+        }
+
+        /* Media Queries */
+        @media (max-width: 480px) {
+            body {
+                font-size: 14px;
+            }
+
+            .container {
+                padding: 12px;
+            }
+
+            section {
+                padding: 12px;
+                margin: 12px 0;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 8px 6px;
+            }
+
+            td:last-child {
+                text-align: right;
+            }
+
+            button {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .notification {
+                padding: 20px 16px;
+                width: 95%;
+            }
+
+            .action-icons {
+                gap: 16px;
+            }
+
+            .action-icon {
+                width: 40px;
+                height: 40px;
+                padding: 10px;
+            }
+
+            .buttons button {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .close-icon {
+                top: 8px;
+                right: 8px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .history-table {
+                font-size: 0.8rem;
+            }
+
+            .date-filter {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .buttons {
+                flex-direction: column;
+            }
+
+            .action-icons {
+                gap: 12px;
+            }
+
+            .action-icon {
+                width: 36px;
+                height: 36px;
+            }
+        }
+
+        .login-section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .login-section h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .login-section input[type="text"],
+        .login-section input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .login-section button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .login-section button:active {
+            transform: scale(0.95);
+        }
+
+        .error-message {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .messages-section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            max-height: 300px; /* Hauteur maximale pour la section des messages */
+            overflow-y: auto; /* Permettre le défilement vertical si le contenu dépasse la hauteur maximale */
+        }
+
+        .messages-section h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .message {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .message .timestamp {
+            font-size: 0.7rem;
+            color: #ccc;
+            margin-top: 5px;
+        }
+
+        /* Styles pour l'autocomplétion */
+        .autocomplete-container {
+            position: relative;
+        }
+
+        .autocomplete-suggestions {
+            position: absolute;
+            border: 1px solid #ccc;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            z-index: 100;
+            background-color: white;
+            width: 100%; /* Assurez-vous que la liste a la même largeur que le champ de saisie */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Ombre pour un effet visuel */
+        }
+
+        .autocomplete-suggestions li {
+            padding: 5px;
+            cursor: pointer;
+            color: #000;
+        }
+
+        .autocomplete-suggestions li:hover {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+        }
+        .loader-wrapper {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+        }
+
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .page-loader-wrapper {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1002;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .page-loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        .loader-message {
+            color: white;
+            margin-top: 16px;
+            font-size: 1rem;
+            text-align: center;
+            max-width: 80%;
+        }
+        .subscription-required {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .subscription-required-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .subscription-required-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .subscription-required-content p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .subscription-required-content button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0 10px;
+        }
+
+        .subscription-required-content button:hover {
+            background-color: #e6a727;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="page-loader-wrapper" id="pageLoaderWrapper">
+        <div class="page-loader"></div>
+        <div class="loader-message" id="pageLoaderMessage">Initialisation...</div>
+    </div>
+    <div class="loader-wrapper" id="loaderWrapper">
+        <div class="loader"></div>
+    </div>
+    <section class="login-section" id="loginSection">
+        <h2>Connexion Partenaire</h2>
+        <form id="loginForm">
+            <div class="autocomplete-container">
+                <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+                <ul class="autocomplete-suggestions" id="autocompleteSuggestions" style="display: none;"></ul>
+            </div>
+            <input type="password" id="password" placeholder="Mot de passe" required>
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <input type="checkbox" id="rememberMe">
+                <label for="rememberMe" style="color: white; margin-left: 5px;">Se souvenir de moi (24h)</label>
+            </div>
+            <button type="submit">Se connecter</button>
+        </form>
+        <div class="error-message" id="loginError" style="display: none; color: red;"></div>
+    </section>
+
+    <div class="container">
+        <section class="rates-section" style="display: none;">
+            <h2>Vente de tickets WiFi</h2>
+            <div class="loading-message">Chargement des tickets...</div>
+            <table style="display: none;"></table>
+        </section>
+    </div>
+
+    <div class="notification" id="notification">
+        <span class="close-icon" onclick="hideNotification()">×</span>
+        <h3 id="notification-title">Confirmation de vente</h3>
+        <div class="ticket-details" id="notification-message"></div>
+        <div class="buttons" id="confirmation-buttons">
+            <button class="btn-sell" onclick="window.proceedWithSale()">Confirmer</button>
+            <button class="btn-cancel" onclick="hideNotification()">Annuler</button>
+        </div>
+        <div class="action-icons" id="ticket-actions" style="display: none;">
+            <div class="action-icon icon-share" onclick="shareTicket()" title="Partager">
+                <i data-lucide="share-2"></i>
+            </div>
+            <div class="action-icon icon-pdf" onclick="exportToPDF()" title="Exporter en PDF">
+                <i data-lucide="file-text"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="toggle-history" onclick="toggleHistory()">
+        <i data-lucide="history"></i>
+    </div>
+
+    <div class="history-section" id="historySection" style="display: none;">
+        <div class="history-header">
+            <h2>Historique des ventes</h2>
+            <button onclick="closeHistory()">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+
+        <div class="date-filter">
+            <select id="periodFilter" onchange="filterHistory()">
+                <option value="today">Aujourd'hui</option>
+                <option value="week">Cette semaine</option>
+                <option value="month">Ce mois</option>
+                <option value="all">Tout l'historique</option>
+            </select>
+            <input type="date" id="startDate">
+            <input type="date" id="endDate">
+            <button onclick="filterHistoryByDateRange()">Filtrer par date</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4>Tickets vendus</h4>
+                <div id="totalTickets" class="value">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Chiffre d'affaires</h4>
+                <div id="totalRevenue" class="value">0 FCFA</div>
+            </div>
+            <div class="stat-card">
+                <h4>Ticket le plus vendu</h4>
+                <div id="topCategory" class="value">-</div>
+            </div>
+            <div class="stat-card">
+                <h4>Moyenne par jour</h4>
+                <div id="avgDaily" class="value">0</div>
+            </div>
+        </div>
+        <div class="export-buttons">
+            <button onclick="printHistory()"><i data-lucide="printer"></i> Imprimer</button>
+            <button onclick="exportToPDFHistory()"><i data-lucide="file-down"></i> Exporter en PDF</button>
+        </div>
+
+        <div class="history-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Catégorie</th>
+                        <th>Utilisateur</th>
+                        <th>Prix</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <section class="messages-section" id="messagesSection" style="display: none;">
+        <h2>Messages Reçus</h2>
+        <div id="messagesContainer">
+            <!-- Les messages seront ajoutés ici -->
+        </div>
+    </section>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <footer>
+        <div class="anitext">PROPULSE PAR EVISIONS</div>
+    </footer>
+
+    <div id="subscriptionRequiredModal" class="subscription-required" style="display: none;">
+        <div class="subscription-required-content">
+            <h2>Abonnement Requis</h2>
+            <p>Un abonnement actif est nécessaire pour accéder à cette fonctionnalité.</p>
+            <button onclick="redirectToSubscription()">S'abonner</button>
+            <button onclick="hideSubscriptionRequiredModal()">Fermer</button>
+        </div>
+    </div>
+
+    <script type="module">
+ const _0x4c07a4=_0x783a;(function(_0x3042bd,_0x3db4b2){const _0x1a245b=_0x783a,_0x5f13e3=_0x3042bd();while(!![]){try{const _0x11a1b7=-parseInt(_0x1a245b(0x218))/0x1+-parseInt(_0x1a245b(0x215))/0x2+parseInt(_0x1a245b(0x18f))/0x3*(-parseInt(_0x1a245b(0x1cf))/0x4)+parseInt(_0x1a245b(0x1f7))/0x5+parseInt(_0x1a245b(0x1c1))/0x6+parseInt(_0x1a245b(0x1a3))/0x7+-parseInt(_0x1a245b(0x173))/0x8*(-parseInt(_0x1a245b(0x1e1))/0x9);if(_0x11a1b7===_0x3db4b2)break;else _0x5f13e3['push'](_0x5f13e3['shift']());}catch(_0x4263c3){_0x5f13e3['push'](_0x5f13e3['shift']());}}}(_0x25bd,0xcf68f));import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';import{getDatabase,ref,get,set,push,remove,onChildAdded}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';const firebaseConfig={'apiKey':_0x4c07a4(0x1c2),'authDomain':_0x4c07a4(0x181),'databaseURL':_0x4c07a4(0x1a4),'projectId':_0x4c07a4(0x1cc),'storageBucket':_0x4c07a4(0x20e),'messagingSenderId':'671203292972','appId':_0x4c07a4(0x1ac),'measurementId':_0x4c07a4(0x17f)},app=initializeApp(firebaseConfig),db=getDatabase(app),adminRef=ref(db,_0x4c07a4(0x226));let ticketToSell=null,localTickets={},currentReservedTicket=null,currentVendorId='',vendors={},availableUsernames=[];window[_0x4c07a4(0x1fb)]=window[_0x4c07a4(0x1d3)][_0x4c07a4(0x1fb)];async function fetchVendors(){const _0x1f6580=_0x4c07a4;try{const _0x12c43a=ref(db,_0x1f6580(0x163)),_0xb0a201=await get(_0x12c43a);_0xb0a201['exists']()?(vendors=_0xb0a201[_0x1f6580(0x20f)](),availableUsernames=Object[_0x1f6580(0x196)](vendors)):console[_0x1f6580(0x207)](_0x1f6580(0x180));}catch(_0x12fc16){console[_0x1f6580(0x1e7)](_0x1f6580(0x17c),_0x12fc16);}}const usernameInput=document[_0x4c07a4(0x1d8)](_0x4c07a4(0x17e)),passwordInput=document[_0x4c07a4(0x1d8)](_0x4c07a4(0x1bd)),suggestionsList=document[_0x4c07a4(0x1d8)](_0x4c07a4(0x199));usernameInput[_0x4c07a4(0x1ca)](_0x4c07a4(0x188),()=>{const _0xc53a38=_0x4c07a4,_0x464f18=usernameInput[_0xc53a38(0x206)]['toLowerCase'](),_0x225f4e=availableUsernames[_0xc53a38(0x22e)](_0x34a67d=>_0x34a67d[_0xc53a38(0x1e2)]()[_0xc53a38(0x18c)](_0x464f18));suggestionsList[_0xc53a38(0x183)]='';if(_0x464f18[_0xc53a38(0x1ae)]===0x0||_0x225f4e[_0xc53a38(0x1ae)]===0x0){suggestionsList['style'][_0xc53a38(0x1da)]=_0xc53a38(0x1ff);return;}_0x225f4e['forEach'](_0x533364=>{const _0x1f58a9=_0xc53a38,_0x30ccf1=document[_0x1f58a9(0x195)]('li');_0x30ccf1[_0x1f58a9(0x1db)]=_0x533364,_0x30ccf1[_0x1f58a9(0x1ca)]('click',()=>{const _0x4e58df=_0x1f58a9;usernameInput[_0x4e58df(0x206)]=_0x533364,suggestionsList[_0x4e58df(0x183)]='',suggestionsList[_0x4e58df(0x1c7)][_0x4e58df(0x1da)]=_0x4e58df(0x1ff);}),suggestionsList[_0x1f58a9(0x228)](_0x30ccf1);}),suggestionsList[_0xc53a38(0x1c7)][_0xc53a38(0x1da)]='block';}),document[_0x4c07a4(0x1ca)](_0x4c07a4(0x198),_0x440bb3=>{const _0x5eb636=_0x4c07a4;!usernameInput[_0x5eb636(0x1ed)](_0x440bb3[_0x5eb636(0x194)])&&!suggestionsList['contains'](_0x440bb3[_0x5eb636(0x194)])&&(suggestionsList[_0x5eb636(0x1c7)][_0x5eb636(0x1da)]='none');});const rememberMeCheckbox=document[_0x4c07a4(0x1d8)]('rememberMe'),storedUsername=localStorage[_0x4c07a4(0x1d7)](_0x4c07a4(0x17e)),storedPassword=localStorage[_0x4c07a4(0x1d7)](_0x4c07a4(0x1bd)),storedTimestamp=localStorage[_0x4c07a4(0x1d7)]('usernameTimestamp'),now=Date['now'](),twentyFourHours=0x18*0x3c*0x3c*0x3e8;storedUsername&&storedPassword&&storedTimestamp&&now-storedTimestamp<twentyFourHours&&(usernameInput[_0x4c07a4(0x206)]=storedUsername,passwordInput[_0x4c07a4(0x206)]=storedPassword,rememberMeCheckbox[_0x4c07a4(0x18a)]=!![]);const loginForm=document[_0x4c07a4(0x1d8)](_0x4c07a4(0x1b9)),loginError=document[_0x4c07a4(0x1d8)](_0x4c07a4(0x1aa)),ratesSection=document[_0x4c07a4(0x18b)](_0x4c07a4(0x1a0)),historySection=document[_0x4c07a4(0x1d8)](_0x4c07a4(0x200)),loginSection=document[_0x4c07a4(0x1d8)](_0x4c07a4(0x1df)),messagesSection=document['getElementById'](_0x4c07a4(0x1ee));loginForm[_0x4c07a4(0x1ca)]('submit',async _0x20448d=>{const _0x42ceb6=_0x4c07a4;_0x20448d[_0x42ceb6(0x20d)](),showLoader();const _0x4a4827=usernameInput[_0x42ceb6(0x206)],_0x2a399c=passwordInput[_0x42ceb6(0x206)];vendors[_0x4a4827]&&vendors[_0x4a4827][_0x42ceb6(0x1bd)]===_0x2a399c?(loginError[_0x42ceb6(0x1c7)][_0x42ceb6(0x1da)]=_0x42ceb6(0x1ff),ratesSection[_0x42ceb6(0x1c7)]['display']=_0x42ceb6(0x1d5),historySection[_0x42ceb6(0x1c7)]['display']=_0x42ceb6(0x1ff),loginSection[_0x42ceb6(0x1c7)][_0x42ceb6(0x1da)]=_0x42ceb6(0x1ff),messagesSection[_0x42ceb6(0x1c7)][_0x42ceb6(0x1da)]=_0x42ceb6(0x1d5),currentVendorId=_0x4a4827,rememberMeCheckbox['checked']?(localStorage[_0x42ceb6(0x1d2)](_0x42ceb6(0x17e),_0x4a4827),localStorage[_0x42ceb6(0x1d2)]('password',_0x2a399c),localStorage[_0x42ceb6(0x1d2)](_0x42ceb6(0x19b),Date[_0x42ceb6(0x17b)]())):(localStorage[_0x42ceb6(0x217)]('username'),localStorage[_0x42ceb6(0x217)](_0x42ceb6(0x1bd)),localStorage[_0x42ceb6(0x217)]('usernameTimestamp')),await syncTickets(),loadHistory(),listenForNewMessages(),lucide[_0x42ceb6(0x1d6)](),hideLoader()):(loginError['style'][_0x42ceb6(0x1da)]=_0x42ceb6(0x1d5),loginError['textContent']='Nom\x20d\x27utilisateur\x20ou\x20mot\x20de\x20passe\x20incorrect.',hideLoader());});async function syncTickets(){const _0x363897=_0x4c07a4;try{const _0x6b2cf6=document[_0x363897(0x18b)]('.loading-message'),_0xb1bba2=document[_0x363897(0x18b)](_0x363897(0x221));_0x6b2cf6[_0x363897(0x1c7)][_0x363897(0x1da)]=_0x363897(0x1d5),_0xb1bba2[_0x363897(0x1c7)][_0x363897(0x1da)]=_0x363897(0x1ff);const _0x5165f7=ref(db,'TicketsTotal'),_0xdd0c7a=await get(_0x5165f7);_0xdd0c7a[_0x363897(0x1ab)]()?(localTickets=_0xdd0c7a[_0x363897(0x20f)](),createTicketTable(),_0x6b2cf6[_0x363897(0x1c7)][_0x363897(0x1da)]=_0x363897(0x1ff),_0xb1bba2[_0x363897(0x1c7)][_0x363897(0x1da)]=_0x363897(0x19f)):_0x6b2cf6['textContent']='Aucun\x20ticket\x20disponible.';}catch(_0x135166){console[_0x363897(0x1e7)](_0x363897(0x16d),_0x135166),loadingMessage[_0x363897(0x1db)]=_0x363897(0x1d9);}}async function createTicketTable(){const _0x308518=_0x4c07a4,_0x1d4b05=document['querySelector']('.rates-section\x20table');_0x1d4b05['innerHTML']=_0x308518(0x1e6);for(const [_0x59e89a,_0x48a0d3]of Object[_0x308518(0x20c)](localTickets)){const _0x5cdf3c=_0x48a0d3['utilisateur']?_0x48a0d3[_0x308518(0x22c)]['length']:0x0;if(_0x5cdf3c>0x0){const _0x19dc9d=_0x48a0d3[_0x308518(0x21b)][0x0],_0x2f202e=_0x1d4b05[_0x308518(0x1cb)]();_0x2f202e[_0x308518(0x183)]=_0x308518(0x205)+_0x59e89a+_0x308518(0x1b6)+_0x19dc9d+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>'+_0x5cdf3c+_0x308518(0x1a2)+_0x59e89a+'\x27)\x22>Vendre</button></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20';}}document[_0x308518(0x18b)](_0x308518(0x231))[_0x308518(0x1c7)][_0x308518(0x1da)]=_0x308518(0x1ff),_0x1d4b05[_0x308518(0x1c7)][_0x308518(0x1da)]=_0x308518(0x19f);}window[_0x4c07a4(0x1f0)]=async function(_0x4a7a8b){const _0x54b803=_0x4c07a4;showLoader();try{const _0x402fcb=ref(db,_0x54b803(0x1eb)+_0x4a7a8b),_0x3eb519=await get(_0x402fcb);if(_0x3eb519[_0x54b803(0x1ab)]()){const _0x4452ce=_0x3eb519[_0x54b803(0x20f)]();if(!_0x4452ce[_0x54b803(0x22c)]||_0x4452ce['utilisateur']['length']===0x0)throw new Error('Plus\x20de\x20tickets\x20disponibles');ticketToSell={'category':_0x4a7a8b,'user':_0x4452ce['utilisateur'][0x0],'password':_0x4452ce[_0x54b803(0x201)][0x0],'price':_0x4452ce['prix'][0x0],'updatedData':{..._0x4452ce,'utilisateur':_0x4452ce[_0x54b803(0x22c)][_0x54b803(0x16a)](0x1),'motDePasse':_0x4452ce['motDePasse']['slice'](0x1),'prix':_0x4452ce['prix']['slice'](0x1)}},showConfirmation(ticketToSell),hideLoader();}}catch(_0x597ce2){console['error'](_0x54b803(0x192),_0x597ce2),showNotification(_0x54b803(0x19c),_0x54b803(0x1b1)),hideLoader();}};function showConfirmation(_0x2925b5){const _0x112cb5=_0x4c07a4,_0x41736b=document[_0x112cb5(0x1d8)]('notification'),_0x33a32d=document[_0x112cb5(0x1d8)](_0x112cb5(0x208)),_0x361b0b=document[_0x112cb5(0x1d8)]('ticket-actions'),_0x17d425=document[_0x112cb5(0x1d8)](_0x112cb5(0x232));document[_0x112cb5(0x1d8)]('notification-title')['textContent']=_0x112cb5(0x1f1),_0x33a32d[_0x112cb5(0x183)]=_0x112cb5(0x1a5)+_0x2925b5['category']+_0x112cb5(0x1a8)+_0x2925b5['price']+_0x112cb5(0x1d0),_0x17d425[_0x112cb5(0x1c7)][_0x112cb5(0x1da)]=_0x112cb5(0x1f4),_0x361b0b[_0x112cb5(0x1c7)][_0x112cb5(0x1da)]=_0x112cb5(0x1ff),_0x41736b['style']['display']=_0x112cb5(0x1d5);}function _0x25bd(){const _0x107d4c=['</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td><button\x20onclick=\x22window.initTicketSale(\x27','10433710hiVlyy','https://espoirplus-d68c2-default-rtdb.firebaseio.com','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Voulez-vous\x20vendre\x20ce\x20ticket\x20?</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Catégorie:</strong>\x20','expired','Impossible\x20de\x20récupérer\x20les\x20détails\x20du\x20ticket','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Prix:</strong>\x20','user','loginError','exists','1:671203292972:web:42765e95e987ace1349e89','right','length','cancelSale','TicketsVendus','Impossible\x20de\x20récupérer\x20le\x20ticket','/messages','Impossible\x20de\x20finaliser\x20la\x20vente','Ticket\x20vendu\x20avec\x20succès','bold','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','Ticket\x20vendu\x20avec\x20succès!','share','loginForm','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22timestamp\x22>','toFixed','historique_ventes.xlsx','password','then','VendorsHistory/','\x20FCFA</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td><i\x20class=\x22fa-solid\x20fa-arrow-right\x22></i></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','4003386IxTTqz','AIzaSyCLehOgdz90jvaMrq7oZxx1sxY5WEZI7Oo','content','left','clipboard','reduce','style','notification-title','Erreur\x20lors\x20du\x20partage:','addEventListener','insertRow','espoirplus-d68c2','topCategory','scrollTop','508djLaDx','\x20FCFA</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','binary','setItem','jspdf','Erreur\x20lors\x20du\x20chargement\x20de\x20l\x27historique:','block','createIcons','getItem','getElementById','Erreur\x20de\x20synchronisation\x20des\x20tickets.','display','textContent','printHistory','hideNotification','all','loginSection','writeText','90SCryYs','toLowerCase','notification-buttons','classList','notification','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Catégorie</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Prix\x20(FCFA)</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Restants</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Action</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','error','getDay','location','proceedWithSale','TicketsTotal/','catch','contains','messagesSection','price','initTicketSale','Confirmation\x20de\x20vente','exportToExcelHistory','getDate','flex','pageSize','getHeight','508125gvijSt','totalTickets','soldAt','confirmSale','jsPDF','avgDaily','toLocaleString','setDate','none','historySection','motDePasse','Ticket\x20introuvable\x20dans\x20l\x27historique','map','Pas\x20d\x27abonnement\x20actif','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','value','log','notification-message','</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Mot\x20de\x20passe:</strong>\x20','Erreur\x20lors\x20de\x20l\x27initialisation\x20:','entries','preventDefault','espoirplus-d68c2.firebasestorage.app','val','text','utils','Erreur\x20lors\x20de\x20la\x20confirmation\x20de\x20la\x20vente','showTicketDetailsFromHistory','Page\x20','2400652LjNlVW','Veuillez\x20sélectionner\x20une\x20date\x20de\x20début\x20et\x20une\x20date\x20de\x20fin.','removeItem','384897ckTQCy','\x20FCFA','ticket-actions','prix','settings','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Catégorie:</strong>\x20','pageLoaderWrapper','copyTicket','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement\x20:','.rates-section\x20table','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement','toggleHistory','pageLoaderMessage','filterHistory','admin/subscription','height','appendChild','margin','save','join','utilisateur','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-sell\x22\x20onclick=\x22window.confirmSale()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Confirmer\x20la\x20vente\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-cancel\x22\x20onclick=\x22window.cancelSale()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Annuler\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','filter','Abonnement\x20actif','category','.loading-message','confirmation-buttons','Vendors','href','innerText','message','charCodeAt','#historyTableBody','Ticket\x20copié\x20dans\x20le\x20presse-papiers!','slice','historyTableBody','startDate','Erreur\x20de\x20synchronisation:','Erreur\x20lors\x20de\x20la\x20récupération\x20du\x20ticket:','loaderWrapper','xlsx','DOMContentLoaded','status','1394664yLwYHj','scrollHeight','application/octet-stream','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Nom\x20d\x27utilisateur:</strong>\x20','Vendors/','filterHistoryByDateRange','Vérification\x20de\x20l\x27abonnement...','redirectToSubscription','now','Erreur\x20lors\x20de\x20la\x20récupération\x20des\x20vendeurs:','internal','username','G-BNCZW7CZ4F','Aucun\x20vendeur\x20trouvé.','espoirplus-d68c2.firebaseapp.com','Succès','innerHTML','getTime','autoTable','setHours','periodFilter','input','exportToPDF','checked','querySelector','startsWith','grid','Le\x20partage\x20n\x27est\x20pas\x20supporté\x20sur\x20votre\x20navigateur.\x20Veuillez\x20copier\x20manuellement\x20les\x20détails\x20du\x20ticket.','37038adwFeY','center','closeHistory','Erreur:','print','target','createElement','keys','Erreur\x20lors\x20de\x20la\x20copie:','click','autocompleteSuggestions','update','usernameTimestamp','Erreur','Aucun\x20ticket\x20à\x20vendre','Impossible\x20de\x20charger\x20l\x27historique','table','.rates-section','timestamp'];_0x25bd=function(){return _0x107d4c;};return _0x25bd();}window[_0x4c07a4(0x1ea)]=async function(){const _0x3fe995=_0x4c07a4;showLoader();if(!ticketToSell){showNotification(_0x3fe995(0x19c),_0x3fe995(0x19d)),hideLoader();return;}try{const _0x46b39e=ref(db,_0x3fe995(0x1eb)+ticketToSell[_0x3fe995(0x230)]);await set(_0x46b39e,ticketToSell['updatedData']);const _0x33c217=ref(db,'TicketsVendus');await push(_0x33c217,{'category':ticketToSell[_0x3fe995(0x230)],'user':ticketToSell[_0x3fe995(0x1a9)],'password':ticketToSell[_0x3fe995(0x1bd)],'price':ticketToSell['price'],'soldAt':Date[_0x3fe995(0x17b)](),'vendorId':currentVendorId});const _0x339e4b=ref(db,_0x3fe995(0x1bf)+currentVendorId);await push(_0x339e4b,{'category':ticketToSell['category'],'user':ticketToSell[_0x3fe995(0x1a9)],'password':ticketToSell['password'],'price':ticketToSell[_0x3fe995(0x1ef)],'soldAt':Date[_0x3fe995(0x17b)]()}),showTicketDetails(ticketToSell),await syncTickets(),hideLoader();}catch(_0x1d2f50){console['error']('Erreur\x20lors\x20de\x20la\x20vente:',_0x1d2f50),showNotification(_0x3fe995(0x19c),_0x3fe995(0x1b3)),hideLoader();}ticketToSell=null;};function showTicketDetails(_0xc94948){const _0x569f1e=_0x4c07a4,_0xebf06c=document[_0x569f1e(0x1d8)]('notification'),_0x43a99a=document[_0x569f1e(0x1d8)](_0x569f1e(0x208)),_0x584596=document['getElementById'](_0x569f1e(0x21a)),_0x219137=document[_0x569f1e(0x1d8)](_0x569f1e(0x232));document[_0x569f1e(0x1d8)]('notification-title')['textContent']=_0x569f1e(0x1b4),_0x43a99a[_0x569f1e(0x183)]=_0x569f1e(0x21d)+_0xc94948[_0x569f1e(0x230)]+'</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p><strong>Nom\x20d\x27utilisateur:</strong>\x20'+_0xc94948[_0x569f1e(0x1a9)]+_0x569f1e(0x20a)+_0xc94948['password']+_0x569f1e(0x1a8)+_0xc94948[_0x569f1e(0x1ef)]+'\x20FCFA</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',_0x219137['style'][_0x569f1e(0x1da)]='none',_0x584596['style']['display']=_0x569f1e(0x1f4),_0xebf06c[_0x569f1e(0x1c7)][_0x569f1e(0x1da)]=_0x569f1e(0x1d5),lucide[_0x569f1e(0x1d6)]();}function showSaleConfirmation(_0x1bdd5d){const _0x5326d6=_0x4c07a4,_0x9df259=document[_0x5326d6(0x1d8)](_0x5326d6(0x1e5)),_0x22394c=document[_0x5326d6(0x1d8)](_0x5326d6(0x208)),_0x1e4455=document[_0x5326d6(0x1d8)](_0x5326d6(0x1e3));_0x22394c[_0x5326d6(0x183)]=_0x5326d6(0x21d)+_0x1bdd5d[_0x5326d6(0x230)]+_0x5326d6(0x176)+_0x1bdd5d[_0x5326d6(0x1a9)]+_0x5326d6(0x20a)+_0x1bdd5d[_0x5326d6(0x1bd)]+_0x5326d6(0x1a8)+_0x1bdd5d[_0x5326d6(0x1ef)]+'\x20FCFA</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',_0x1e4455[_0x5326d6(0x183)]=_0x5326d6(0x22d),_0x9df259['style'][_0x5326d6(0x1da)]=_0x5326d6(0x1d5),lucide[_0x5326d6(0x1d6)]();}window[_0x4c07a4(0x1fa)]=async function(){const _0x2dd6a2=_0x4c07a4;showLoader();if(!currentReservedTicket){showNotification('Erreur','Aucun\x20ticket\x20en\x20cours\x20de\x20vente'),hideLoader();return;}try{const _0x5df18b=ref(db,_0x2dd6a2(0x1b0));await push(_0x5df18b,{...currentReservedTicket,'soldAt':Date[_0x2dd6a2(0x17b)](),'vendorId':currentVendorId});const _0x52a9f1=ref(db,_0x2dd6a2(0x1bf)+currentVendorId);await push(_0x52a9f1,{...currentReservedTicket,'soldAt':Date[_0x2dd6a2(0x17b)]()}),showNotification(_0x2dd6a2(0x182),_0x2dd6a2(0x1b7)),currentReservedTicket=null,hideNotification(),await syncTickets(),hideLoader();}catch(_0x158a92){console['error']('Erreur\x20de\x20confirmation:',_0x158a92),showNotification(_0x2dd6a2(0x19c),_0x2dd6a2(0x212)),hideLoader();}},window[_0x4c07a4(0x1af)]=function(){currentReservedTicket=null,hideNotification();};function showNotification(_0x153eab,_0x3ad803){const _0x2120e8=_0x4c07a4,_0x47640d=document['getElementById']('notification'),_0x38cc1d=document[_0x2120e8(0x1d8)](_0x2120e8(0x1c8)),_0x2e590a=document[_0x2120e8(0x1d8)](_0x2120e8(0x208)),_0x1487d5=document[_0x2120e8(0x1d8)](_0x2120e8(0x1e3)),_0x57fd51=document[_0x2120e8(0x1d8)](_0x2120e8(0x21a));_0x38cc1d[_0x2120e8(0x1db)]=_0x153eab,_0x2e590a[_0x2120e8(0x183)]=_0x3ad803,_0x153eab===_0x2120e8(0x182)||_0x153eab===_0x2120e8(0x19c)?(_0x1487d5['style']['display']='none',_0x57fd51[_0x2120e8(0x1c7)][_0x2120e8(0x1da)]=_0x2120e8(0x1ff)):(_0x1487d5['style'][_0x2120e8(0x1da)]=_0x2120e8(0x1f4),_0x57fd51['style'][_0x2120e8(0x1da)]=_0x2120e8(0x1ff)),_0x47640d[_0x2120e8(0x1c7)][_0x2120e8(0x1da)]=_0x2120e8(0x1d5);}window[_0x4c07a4(0x1dd)]=function(){const _0x31b92d=_0x4c07a4;document[_0x31b92d(0x1d8)](_0x31b92d(0x1e5))['style'][_0x31b92d(0x1da)]=_0x31b92d(0x1ff);};async function loadHistory(){const _0x559658=_0x4c07a4;showLoader();try{const _0x3921e3=ref(db,_0x559658(0x1bf)+currentVendorId),_0x1c4556=await get(_0x3921e3);let _0x46146c=[];_0x1c4556[_0x559658(0x1ab)]()&&(_0x46146c=Object['entries'](_0x1c4556[_0x559658(0x20f)]())[_0x559658(0x203)](([_0xa8d268,_0x44ac4e])=>({'id':_0xa8d268,..._0x44ac4e}))),filterHistory(_0x46146c),hideLoader();}catch(_0x125e4c){console[_0x559658(0x1e7)](_0x559658(0x1d4),_0x125e4c),showNotification(_0x559658(0x19c),_0x559658(0x19e)),hideLoader();}}function filterHistory(_0x3994af){const _0x5c0afd=_0x4c07a4,_0x64b2e9=document['getElementById'](_0x5c0afd(0x187))['value'],_0x1fdb9b=new Date(),_0x2a880e={'today':new Date(_0x1fdb9b['setHours'](0x0,0x0,0x0,0x0)),'week':new Date(_0x1fdb9b[_0x5c0afd(0x1fe)](_0x1fdb9b[_0x5c0afd(0x1f3)]()-_0x1fdb9b[_0x5c0afd(0x1e8)]())),'month':new Date(_0x1fdb9b[_0x5c0afd(0x1fe)](0x1)),'all':new Date(0x0)};let _0x228271=_0x3994af;_0x64b2e9!==_0x5c0afd(0x1de)&&(_0x228271=_0x3994af[_0x5c0afd(0x22e)](_0x47e34b=>new Date(_0x47e34b[_0x5c0afd(0x1f9)])>=_0x2a880e[_0x64b2e9])),updateStats(_0x228271),updateHistoryTable(_0x228271);}window[_0x4c07a4(0x178)]=function(){const _0xa7dfb6=_0x4c07a4,_0x33008b=new Date(document[_0xa7dfb6(0x1d8)](_0xa7dfb6(0x16c))[_0xa7dfb6(0x206)]),_0x5c84b9=new Date(document['getElementById']('endDate')[_0xa7dfb6(0x206)]);_0x5c84b9[_0xa7dfb6(0x186)](0x17,0x3b,0x3b);if(isNaN(_0x33008b[_0xa7dfb6(0x184)]())||isNaN(_0x5c84b9[_0xa7dfb6(0x184)]())){showNotification(_0xa7dfb6(0x19c),_0xa7dfb6(0x216));return;}const _0x2c419f=ref(db,_0xa7dfb6(0x1bf)+currentVendorId);get(_0x2c419f)[_0xa7dfb6(0x1be)](_0x1da76a=>{const _0x1cf132=_0xa7dfb6;let _0x576387=[];_0x1da76a[_0x1cf132(0x1ab)]()&&(_0x576387=Object['entries'](_0x1da76a[_0x1cf132(0x20f)]())[_0x1cf132(0x203)](([_0x1ab447,_0xbfa0c8])=>({'id':_0x1ab447,..._0xbfa0c8})));const _0xd4c195=_0x576387[_0x1cf132(0x22e)](_0x2bd56c=>{const _0x6118dc=_0x1cf132,_0x440247=new Date(_0x2bd56c[_0x6118dc(0x1f9)]);return _0x440247>=_0x33008b&&_0x440247<=_0x5c84b9;});updateStats(_0xd4c195),updateHistoryTable(_0xd4c195);});};function updateStats(_0x1aafad){const _0x44fd7a=_0x4c07a4,_0x3ee7f2=_0x1aafad['length'],_0x44995e=_0x1aafad[_0x44fd7a(0x1c6)]((_0x37bf81,_0x1016a3)=>_0x37bf81+parseFloat(_0x1016a3[_0x44fd7a(0x1ef)]),0x0),_0x47d4ec=_0x1aafad[_0x44fd7a(0x1c6)]((_0xb2337,_0x4c70af)=>{const _0x2bed11=_0x44fd7a;return _0xb2337[_0x4c70af[_0x2bed11(0x230)]]=(_0xb2337[_0x4c70af[_0x2bed11(0x230)]]||0x0)+0x1,_0xb2337;},{}),_0x1c40b4=Object['entries'](_0x47d4ec)['sort']((_0x5cc2f9,_0x284627)=>_0x284627[0x1]-_0x5cc2f9[0x1])[0x0]?.[0x0]||'-',_0x1560d6=_0x1aafad['length']>0x0?Math['max'](0x1,Math['ceil']((Date['now']()-Math['min'](..._0x1aafad[_0x44fd7a(0x203)](_0x9d64ad=>_0x9d64ad['soldAt'])))/(0x3e8*0x3c*0x3c*0x18))):0x1,_0x477816=(_0x3ee7f2/_0x1560d6)[_0x44fd7a(0x1bb)](0x1);document[_0x44fd7a(0x1d8)](_0x44fd7a(0x1f8))[_0x44fd7a(0x1db)]=_0x3ee7f2,document[_0x44fd7a(0x1d8)]('totalRevenue')['textContent']=_0x44995e[_0x44fd7a(0x1fd)]()+_0x44fd7a(0x219),document['getElementById'](_0x44fd7a(0x1cd))[_0x44fd7a(0x1db)]=_0x1c40b4,document[_0x44fd7a(0x1d8)](_0x44fd7a(0x1fc))[_0x44fd7a(0x1db)]=_0x477816;}function updateHistoryTable(_0xc7ac05){const _0x4cbd8b=_0x4c07a4,_0x529e5c=document['getElementById'](_0x4cbd8b(0x16b));_0x529e5c[_0x4cbd8b(0x183)]=_0xc7ac05['sort']((_0x47bbd1,_0x54d7e4)=>_0x54d7e4[_0x4cbd8b(0x1f9)]-_0x47bbd1['soldAt'])[_0x4cbd8b(0x203)](_0x2b0f02=>'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20onclick=\x22window.showTicketDetailsFromHistory(\x27'+_0x2b0f02['id']+'\x27)\x22\x20style=\x22cursor:\x20pointer;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>'+new Date(_0x2b0f02['soldAt'])[_0x4cbd8b(0x1fd)]()+_0x4cbd8b(0x1b6)+_0x2b0f02[_0x4cbd8b(0x230)]+_0x4cbd8b(0x1b6)+_0x2b0f02[_0x4cbd8b(0x1a9)]+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>'+_0x2b0f02[_0x4cbd8b(0x1ef)]+_0x4cbd8b(0x1c0))[_0x4cbd8b(0x22b)]('');}window[_0x4c07a4(0x213)]=async function(_0x4edbab){const _0x1bc692=_0x4c07a4;showLoader();try{const _0x3c0fb6=ref(db,'VendorsHistory/'+currentVendorId+'/'+_0x4edbab),_0x5da6fe=await get(_0x3c0fb6);if(_0x5da6fe['exists']()){const _0x47e60d=_0x5da6fe[_0x1bc692(0x20f)]();window[_0x1bc692(0x191)](),showTicketDetails(_0x47e60d),hideLoader();}else showNotification(_0x1bc692(0x19c),_0x1bc692(0x202)),hideLoader();}catch(_0x2dec88){console[_0x1bc692(0x1e7)](_0x1bc692(0x16e),_0x2dec88),showNotification('Erreur',_0x1bc692(0x1a7)),hideLoader();}},window[_0x4c07a4(0x223)]=function(){const _0x4c4f2d=_0x4c07a4,_0x128227=document[_0x4c4f2d(0x1d8)](_0x4c4f2d(0x200)),_0x659747=_0x128227[_0x4c4f2d(0x1c7)][_0x4c4f2d(0x1da)]===_0x4c4f2d(0x1d5);_0x128227[_0x4c4f2d(0x1c7)]['display']=_0x659747?_0x4c4f2d(0x1ff):_0x4c4f2d(0x1d5),!_0x659747&&loadHistory();},window['closeHistory']=function(){const _0x475457=_0x4c07a4;document['getElementById']('historySection')[_0x475457(0x1c7)][_0x475457(0x1da)]=_0x475457(0x1ff);},window[_0x4c07a4(0x225)]=function(){loadHistory();};function listenForNewMessages(){const _0x6da261=_0x4c07a4,_0x27b1af=ref(db,_0x6da261(0x177)+currentVendorId+_0x6da261(0x1b2));onChildAdded(_0x27b1af,_0x52398b=>{const _0x2432c5=_0x6da261,_0x16749d=_0x52398b[_0x2432c5(0x20f)]();displayNewMessage(_0x16749d);});}function displayNewMessage(_0x5e55ca){const _0x5f4873=_0x4c07a4,_0x1f1795=document[_0x5f4873(0x1d8)]('messagesContainer'),_0x20e88e=document[_0x5f4873(0x195)]('div');_0x20e88e[_0x5f4873(0x1e4)]['add'](_0x5f4873(0x166)),_0x20e88e[_0x5f4873(0x183)]='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>'+_0x5e55ca[_0x5f4873(0x1c3)]+_0x5f4873(0x1ba)+new Date(_0x5e55ca[_0x5f4873(0x1a1)])[_0x5f4873(0x1fd)]()+_0x5f4873(0x209),_0x1f1795[_0x5f4873(0x228)](_0x20e88e),_0x1f1795[_0x5f4873(0x1ce)]=_0x1f1795[_0x5f4873(0x174)];}window['shareTicket']=function(){const _0x52dd5a=_0x4c07a4,_0x2533f2=document['getElementById'](_0x52dd5a(0x208))[_0x52dd5a(0x165)];navigator[_0x52dd5a(0x1b8)]?navigator[_0x52dd5a(0x1b8)]({'title':'Détails\x20du\x20Ticket','text':_0x2533f2})[_0x52dd5a(0x1be)](()=>console[_0x52dd5a(0x207)]('Partage\x20réussi'))['catch'](_0x276511=>console[_0x52dd5a(0x1e7)](_0x52dd5a(0x1c9),_0x276511)):alert(_0x52dd5a(0x18e));},window[_0x4c07a4(0x21f)]=function(){const _0x4ee497=_0x4c07a4,_0x2d912d=document['getElementById'](_0x4ee497(0x208))[_0x4ee497(0x165)];navigator[_0x4ee497(0x1c5)][_0x4ee497(0x1e0)](_0x2d912d)[_0x4ee497(0x1be)](()=>{const _0x56a723=_0x4ee497;showNotification(_0x56a723(0x182),_0x56a723(0x169));})[_0x4ee497(0x1ec)](_0x1b09bf=>{const _0x4e0853=_0x4ee497;console[_0x4e0853(0x1e7)](_0x4e0853(0x197),_0x1b09bf),showNotification(_0x4e0853(0x19c),'Impossible\x20de\x20copier\x20le\x20ticket');});},window[_0x4c07a4(0x189)]=async function(){const _0x1aeb2c=_0x4c07a4;showLoader();const _0x29ec05=document[_0x1aeb2c(0x1d8)]('notification-message'),_0x5442cd=new jsPDF(),_0x57451d=await html2canvas(_0x29ec05),_0x5487a7=_0x57451d['toDataURL']('image/png');_0x5442cd['addImage'](_0x5487a7,'PNG',0xa,0xa,0xbe,0x0),_0x5442cd[_0x1aeb2c(0x22a)]('ticket.pdf'),hideLoader();},window[_0x4c07a4(0x1dc)]=function(){const _0x15cce5=_0x4c07a4;window[_0x15cce5(0x193)]();},window['exportToPDFHistory']=function(){const _0x1ac08f=_0x4c07a4,{jsPDF:_0x2f1b55}=window['jspdf'],_0x3796c1=new _0x2f1b55(),_0x3a460b=document['getElementById']('historyTableBody'),_0x4b8970={'fillColor':[0x2a,0x3a,0x6c],'textColor':[0xff,0xff,0xff],'fontStyle':_0x1ac08f(0x1b5),'halign':_0x1ac08f(0x190)},_0x3bd892={'halign':_0x1ac08f(0x1c4)},_0x26f888={'theme':_0x1ac08f(0x18d),'headStyles':_0x4b8970,'bodyStyles':_0x3bd892,'margin':{'top':0x14},'startY':0x1e,'didDrawPage':function(_0x5bff86){const _0xb8f923=_0x1ac08f;_0x3796c1['text']('Historique\x20des\x20ventes',0xe,0xf);const _0x488df1=_0xb8f923(0x214)+_0x3796c1[_0xb8f923(0x17d)]['getNumberOfPages']();_0x3796c1['setFontSize'](0xa);const _0x144f68=_0x3796c1['internal'][_0xb8f923(0x1f5)],_0x42ae74=_0x144f68['height']?_0x144f68[_0xb8f923(0x227)]:_0x144f68[_0xb8f923(0x1f6)]();_0x3796c1[_0xb8f923(0x210)](_0x488df1,_0x5bff86[_0xb8f923(0x21c)][_0xb8f923(0x229)][_0xb8f923(0x1c4)],_0x42ae74-0xa),_0x3796c1['text'](new Date()[_0xb8f923(0x1fd)](),_0x144f68['width']-_0x5bff86['settings'][_0xb8f923(0x229)][_0xb8f923(0x1ad)]-0x28,_0x42ae74-0xa);}};_0x3796c1[_0x1ac08f(0x185)]({'html':_0x1ac08f(0x168),..._0x26f888}),_0x3796c1[_0x1ac08f(0x22a)]('historique_ventes.pdf');},window[_0x4c07a4(0x1f2)]=function(){const _0xb74eee=_0x4c07a4,_0x3060ad=XLSX[_0xb74eee(0x211)]['table_to_book'](document[_0xb74eee(0x1d8)](_0xb74eee(0x16b)),{'sheet':'Ventes'}),_0x2c009e=XLSX['write'](_0x3060ad,{'bookType':_0xb74eee(0x170),'type':_0xb74eee(0x1d1)});function _0x1fd73d(_0xf7fd67){const _0x1ee066=_0xb74eee,_0x45e028=new ArrayBuffer(_0xf7fd67[_0x1ee066(0x1ae)]),_0x5124be=new Uint8Array(_0x45e028);for(let _0x174bd1=0x0;_0x174bd1<_0xf7fd67[_0x1ee066(0x1ae)];_0x174bd1++)_0x5124be[_0x174bd1]=_0xf7fd67[_0x1ee066(0x167)](_0x174bd1)&0xff;return _0x45e028;}saveAs(new Blob([_0x1fd73d(_0x2c009e)],{'type':_0xb74eee(0x175)}),_0xb74eee(0x1bc));};function showLoader(){const _0x44cd04=_0x4c07a4;document['getElementById'](_0x44cd04(0x16f))[_0x44cd04(0x1c7)][_0x44cd04(0x1da)]='block';}function hideLoader(){const _0x5d88dd=_0x4c07a4;document[_0x5d88dd(0x1d8)]('loaderWrapper')[_0x5d88dd(0x1c7)][_0x5d88dd(0x1da)]='none';}function showPageLoader(){const _0x221faf=_0x4c07a4;document[_0x221faf(0x1d8)](_0x221faf(0x21e))[_0x221faf(0x1c7)][_0x221faf(0x1da)]=_0x221faf(0x1f4);}function hidePageLoader(){const _0x1d2789=_0x4c07a4;document['getElementById'](_0x1d2789(0x21e))['style'][_0x1d2789(0x1da)]='none';}function _0x783a(_0x18d05b,_0x9bce68){const _0x25bdf0=_0x25bd();return _0x783a=function(_0x783ac3,_0x75f00f){_0x783ac3=_0x783ac3-0x163;let _0x566433=_0x25bdf0[_0x783ac3];return _0x566433;},_0x783a(_0x18d05b,_0x9bce68);}function showSubscriptionRequiredModal(){const _0xcd6aca=_0x4c07a4;subscriptionRequiredModal[_0xcd6aca(0x1c7)]['display']=_0xcd6aca(0x1f4);}function hideSubscriptionRequiredModal(){const _0x3f87d7=_0x4c07a4;subscriptionRequiredModal[_0x3f87d7(0x1c7)][_0x3f87d7(0x1da)]=_0x3f87d7(0x1ff);}function redirectToSubscription(){const _0x392f90=_0x4c07a4;window[_0x392f90(0x1e9)][_0x392f90(0x164)]='index.html';}async function checkSubscriptionStatus(){const _0x1ed0fe=_0x4c07a4,_0x557732=document[_0x1ed0fe(0x1d8)](_0x1ed0fe(0x224));_0x557732[_0x1ed0fe(0x1db)]=_0x1ed0fe(0x179);try{const _0x3f012a=await get(adminRef),_0x3fe4de=_0x3f012a['val'](),_0x2769e6=new Date();if(_0x3fe4de&&_0x3fe4de[_0x1ed0fe(0x172)]==='active'){const _0x91773=new Date(_0x3fe4de['endDate']);_0x91773<_0x2769e6?(_0x557732['textContent']='Abonnement\x20expiré',showSubscriptionRequiredModal(),await adminRef[_0x1ed0fe(0x19a)]({'status':_0x1ed0fe(0x1a6)})):_0x557732[_0x1ed0fe(0x1db)]=_0x1ed0fe(0x22f);}else _0x557732[_0x1ed0fe(0x1db)]=_0x1ed0fe(0x204),showSubscriptionRequiredModal();}catch(_0x264a03){console[_0x1ed0fe(0x1e7)](_0x1ed0fe(0x220),_0x264a03),_0x557732[_0x1ed0fe(0x1db)]=_0x1ed0fe(0x222),showNotification(_0x1ed0fe(0x19c),'Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement.');}}document['addEventListener'](_0x4c07a4(0x171),()=>{const _0x2d6f36=_0x4c07a4;checkSubscriptionStatus()['then'](()=>{const _0x3be29a=_0x783a;fetchVendors(),lucide[_0x3be29a(0x1d6)](),hidePageLoader();})[_0x2d6f36(0x1ec)](_0x47d137=>{const _0x32592e=_0x2d6f36;console[_0x32592e(0x1e7)](_0x32592e(0x20b),_0x47d137),showNotification('Erreur','Une\x20erreur\x20est\x20survenue\x20lors\x20de\x20l\x27initialisation.'),hidePageLoader();});}),window[_0x4c07a4(0x17a)]=redirectToSubscription,window['hideSubscriptionRequiredModal']=redirectToSubscription;
+    </script>
+</body>
+</html>
