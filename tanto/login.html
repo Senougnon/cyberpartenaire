@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion Administrateur</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --background-color: #ecf0f1;
+            --text-color: #34495e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Connexion Administrateur</h1>
+        <form id="loginForm" onsubmit="return login(event)">
+            <div class="input-group">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">Se connecter</button>
+        </form>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <script>
+function _0x10cb(){const _0x5330f3=['index.html','preventDefault','style','wifi-zone-tanto','ref','AIzaSyDg4IhUtLPJZTJE9ZIvbfB6Td9hNVmLTT0','5989293ptmFWl','initializeApp','1257714uWbZLJ','5741024aMEVUv','username','1:244600435822:web:574f154301e4d852d1627f','val','2578422Vsjzto','once','display','href','value','a3.html','isLoggedIn','Nom\x20d\x27utilisateur\x20ou\x20mot\x20de\x20passe\x20incorrect','Votre\x20abonnement\x20n\x27est\x20pas\x20actif.\x20Veuillez\x20vous\x20abonner.','error','7uOPzZr','8193Drwiyg','1292sXhfWl','database','textContent','5852750WjmnVC','password','wifi-zone-tanto.firebaseapp.com','Une\x20erreur\x20est\x20survenue.\x20Veuillez\x20réessayer.','true','admin/subscription','2546782smafYY','values','status','getElementById','block','admins'];_0x10cb=function(){return _0x5330f3;};return _0x10cb();}const _0x3aa885=_0x1f02;(function(_0x3cbc14,_0x5ceca8){const _0x20652b=_0x1f02,_0x2fea48=_0x3cbc14();while(!![]){try{const _0x582743=-parseInt(_0x20652b(0x96))/0x1+parseInt(_0x20652b(0x88))/0x2+parseInt(_0x20652b(0x7e))/0x3*(parseInt(_0x20652b(0x7f))/0x4)+-parseInt(_0x20652b(0x82))/0x5+-parseInt(_0x20652b(0x73))/0x6*(parseInt(_0x20652b(0x7d))/0x7)+parseInt(_0x20652b(0x97))/0x8+parseInt(_0x20652b(0x94))/0x9;if(_0x582743===_0x5ceca8)break;else _0x2fea48['push'](_0x2fea48['shift']());}catch(_0x34a813){_0x2fea48['push'](_0x2fea48['shift']());}}}(_0x10cb,0xa62a0));const firebaseConfig={'apiKey':_0x3aa885(0x93),'authDomain':_0x3aa885(0x84),'databaseURL':'https://wifi-zone-tanto-default-rtdb.firebaseio.com','projectId':_0x3aa885(0x91),'storageBucket':'wifi-zone-tanto.firebasestorage.app','messagingSenderId':'244600435822','appId':_0x3aa885(0x99),'measurementId':'G-V9RB51B16P'};firebase[_0x3aa885(0x95)](firebaseConfig);function _0x1f02(_0x185e85,_0x4812d2){const _0x10cb5c=_0x10cb();return _0x1f02=function(_0x1f021e,_0x592d20){_0x1f021e=_0x1f021e-0x72;let _0x3ed7cf=_0x10cb5c[_0x1f021e];return _0x3ed7cf;},_0x1f02(_0x185e85,_0x4812d2);}const database=firebase[_0x3aa885(0x80)]();async function login(_0x219495){const _0x5658e2=_0x3aa885;_0x219495[_0x5658e2(0x8f)]();const _0x1d98ff=document[_0x5658e2(0x8b)](_0x5658e2(0x98))[_0x5658e2(0x77)],_0x590d31=document[_0x5658e2(0x8b)](_0x5658e2(0x83))['value'],_0x163f70=document[_0x5658e2(0x8b)]('errorMessage');try{const _0x7f7305=database[_0x5658e2(0x92)](_0x5658e2(0x8d)),_0x4a3e89=await _0x7f7305[_0x5658e2(0x74)](_0x5658e2(0x77)),_0x40e740=_0x4a3e89[_0x5658e2(0x72)](),_0x4fb420=Object[_0x5658e2(0x89)](_0x40e740)['find'](_0x5080ed=>_0x5080ed[_0x5658e2(0x98)]===_0x1d98ff&&_0x5080ed[_0x5658e2(0x83)]===_0x590d31);if(_0x4fb420){const _0x560b2f=database[_0x5658e2(0x92)](_0x5658e2(0x87)),_0x135aca=await _0x560b2f['once']('value'),_0x220f11=_0x135aca['val']();_0x220f11&&_0x220f11[_0x5658e2(0x8a)]==='active'&&new Date(_0x220f11['endDate'])>new Date()?(sessionStorage['setItem'](_0x5658e2(0x79),_0x5658e2(0x86)),window['location'][_0x5658e2(0x76)]=_0x5658e2(0x78)):(_0x163f70[_0x5658e2(0x81)]=_0x5658e2(0x7b),_0x163f70[_0x5658e2(0x90)][_0x5658e2(0x75)]='block',setTimeout(()=>{const _0xb5bf09=_0x5658e2;window['location'][_0xb5bf09(0x76)]=_0xb5bf09(0x8e);},0xbb8));}else _0x163f70['textContent']=_0x5658e2(0x7a),_0x163f70[_0x5658e2(0x90)]['display']=_0x5658e2(0x8c);}catch(_0x330923){console[_0x5658e2(0x7c)]('Erreur\x20de\x20connexion:',_0x330923),_0x163f70['textContent']=_0x5658e2(0x85),_0x163f70[_0x5658e2(0x90)]['display']=_0x5658e2(0x8c);}}
+    </script>
+</body>
+</html>
