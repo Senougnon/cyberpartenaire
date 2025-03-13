@@ -7,16 +7,16 @@ const firebaseConfigs = [
         databaseURL: "https://cyber-campus-2706f-default-rtdb.firebaseio.com"
     },
     { // Configuration for Database 2 (e.g., for days ...-...)
-        databaseURL: "https://cyber-campus-2706f-default-rtdb.firebaseio.com"
+        databaseURL: "https://cyber1-9c84f-default-rtdb.firebaseio.com"
     },
     { // Configuration for Database 3 (e.g., for days ...-...)
-        databaseURL: "https://cyber-campus-2706f-default-rtdb.firebaseio.com"
+        databaseURL: "https://cyber2-8ca5c-default-rtdb.firebaseio.com"
     },
     { // Configuration for Database 3 (e.g., for days ...-...)
-        databaseURL: "https://cyber-campus-2706f-default-rtdb.firebaseio.com"
+        databaseURL: "https://cyber3-95820-default-rtdb.firebaseio.com"
     },
     {
-        databaseURL: "https://cyber-campus-2706f-default-rtdb.firebaseio.com"
+  databaseURL: "https://bonjour-75278-default-rtdb.firebaseio.com"
 }
     // Add more configurations as needed, following the same structure
 ];
@@ -41,7 +41,7 @@ async function synchronizeDataIfNeeded(oldIndex, newIndex) {
     const oldDb = getDatabase(initializeApp(firebaseConfigs[oldIndex])); // Initialize app with old config
     const newDb = getDatabase(initializeApp(firebaseConfigs[newIndex])); // Initialize app with new config
 
-    const dataPathsToSync = ['TicketsTotal', 'TicketsVendus', 'TicketsTransit', 'TicketConnecté', 'admin/subscription'];
+    const dataPathsToSync = ['TicketsTotal', 'TicketsVendus', 'TicketsTransit', 'TicketConnecté','Vendors','VendorsHistory','admins','sales','users','admin/subscription'];
 
     for (const path of dataPathsToSync) {
         try {
