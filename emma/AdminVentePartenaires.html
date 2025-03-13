@@ -463,23 +463,17 @@
         </div>
     </div>
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getDatabase, ref, get, remove, set, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+        import { getActiveDatabase } from './firebase-config-manager.js'; // Import getActiveDatabase
+        import { ref, get, remove, set, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-        const firebaseConfig = {
-  apiKey: "AIzaSyB6AUBnK_7Vy2ABWI2JMo3ebG_Sljr8XlY",
-  authDomain: "cyber-campus-2706f.firebaseapp.com",
-  databaseURL: "https://cyber-campus-2706f-default-rtdb.firebaseio.com",
-  projectId: "cyber-campus-2706f",
-  storageBucket: "cyber-campus-2706f.appspot.com",
-  messagingSenderId: "719410601264",
-  appId: "1:719410601264:web:44fd2e3757721866303cf5",
-  measurementId: "G-CEEFJP5LYZ"
-};
+        let db; // Database object will be initialized here
+        let adminRef; // Admin reference
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const adminRef = ref(db, 'admin/subscription');
+        async function initializeDatabase() {
+            db = await getActiveDatabase(); // Get the active database from the module
+            adminRef = ref(db, 'admin/subscription'); // Initialize adminRef after db is available
+            console.log("Database initialized in AdminVentePartenaires.html");
+        }
 
         let allSales = [];
         let vendors = new Set();
@@ -691,7 +685,7 @@
             try {
                 const salesRef = ref(db, 'VendorsHistory');
                 const snapshot = await get(salesRef);
-                
+
                 if (snapshot.exists()) {
                     allSales = [];
                     const data = snapshot.val();
@@ -773,7 +767,7 @@
         function updateStats(sales) {
             const totalSales = sales.reduce((sum, sale) => sum + parseFloat(sale.price), 0);
             const totalTickets = sales.length;
-            
+
             const vendorSales = sales.reduce((acc, sale) => {
                 acc[sale.vendor] = (acc[sale.vendor] || 0) + parseFloat(sale.price);
                 return acc;
@@ -789,7 +783,7 @@
         window.deleteSale = function(vendor, saleId) {
             const modal = document.getElementById('confirmModal');
             document.getElementById('modalMessage').textContent = 'Êtes-vous sûr de vouloir supprimer cette vente ?';
-            
+
             const confirmBtn = document.getElementById('confirmBtn');
             confirmBtn.onclick = async () => {
                 try {
@@ -800,15 +794,15 @@
                     console.error("Erreur lors de la suppression:", error);
                 }
             };
-            
+
             modal.style.display = 'flex';
         };
 
         window.clearVendorHistory = function(vendor) {
             const modal = document.getElementById('confirmModal');
-            document.getElementById('modalMessage').textContent = 
+            document.getElementById('modalMessage').textContent =
                 `Êtes-vous sûr de vouloir effacer tout l'historique de ${vendor} ?`;
-            
+
             const confirmBtn = document.getElementById('confirmBtn');
             confirmBtn.onclick = async () => {
                 try {
@@ -819,7 +813,7 @@
                     console.error("Erreur lors de l'effacement:", error);
                 }
             };
-            
+
             modal.style.display = 'flex';
         };
 
@@ -842,171 +836,6 @@
         function hidePageLoader() {
             document.getElementById('pageLoaderWrapper').style.display = 'none';
         }
-
-        async function processConnectedTickets() {
-            const pageLoaderMessage = document.getElementById('pageLoaderMessage');
-            try {
-                pageLoaderMessage.textContent = "Vérification des tickets connectés...";
-                const connectedTicketsRef = ref(db, 'TicketConnecté');
-                const snapshot = await get(connectedTicketsRef);
-                let connectedTickets = snapshot.val() || {};
-
-                // Supprimer les doublons et récupérer les informations complètes des tickets
-                const uniqueTickets = {};
-                for (const ticketId in connectedTickets) {
-                    const user = connectedTickets[ticketId].username;
-                    if (!uniqueTickets[user]) {
-                        uniqueTickets[user] = connectedTickets[ticketId];
-                    }
-                }
-                
-                pageLoaderMessage.textContent = "Traitement des tickets uniques...";
-                for (const user in uniqueTickets) {
-                    await processTicket(uniqueTickets[user]);
-                }
-                
-                pageLoaderMessage.textContent = "Nettoyage des tickets traités...";
-                // Nettoyer les tickets traités de TicketConnecté
-                for (const user in uniqueTickets) {
-                    const ticketId = Object.keys(connectedTickets).find(key => connectedTickets[key].username === user);
-                    if (ticketId) {
-                        await remove(ref(db, `TicketConnecté/${ticketId}`));
-                    }
-                }
-
-            } catch (error) {
-                console.error("Erreur lors du traitement des tickets connectés :", error);
-                showNotification("Erreur", "Une erreur est survenue lors du traitement des tickets.");
-            }
-        }
-
-        async function processTicket(ticket) {
-            const pageLoaderMessage = document.getElementById('pageLoaderMessage');
-            try {
-                pageLoaderMessage.textContent = `Vérification du ticket pour ${ticket.username}...`;
-
-                // Vérifier dans VendorsHistory
-                const vendorsHistoryRef = ref(db, 'VendorsHistory');
-                const vendorsHistorySnapshot = await get(vendorsHistoryRef);
-                const vendorsHistory = vendorsHistorySnapshot.val() || {};
-
-                let foundInHistory = false;
-                for (const vendorId in vendorsHistory) {
-                    const vendorHistory = vendorsHistory[vendorId];
-                    for (const saleId in vendorHistory) {
-                        if (vendorHistory[saleId].user === ticket.username) {
-                            foundInHistory = true;
-                            break;
-                        }
-                    }
-                    if (foundInHistory) break;
-                }
-
-                if (!foundInHistory) {
-                    pageLoaderMessage.textContent = `Traitement du ticket ${ticket.username}...`;
-
-                    // Vérifier dans TicketsTotal et TicketsTransit
-                    const ticketsTotalRef = ref(db, 'TicketsTotal');
-                    const ticketsTransitRef = ref(db, 'TicketsTransit');
-                    const totalSnapshot = await get(ticketsTotalRef);
-                    const transitSnapshot = await get(ticketsTransitRef);
-                    const totalTickets = totalSnapshot.val() || {};
-                    const transitTickets = transitSnapshot.val() || {};
-
-                    let foundTicket = null;
-                    let foundTicketRef = null;
-                    let foundInCategory = null;
-
-                    // Chercher dans TicketsTotal
-                    for (const category in totalTickets) {
-                        const ticketIndex = (totalTickets[category].utilisateur || []                        ).indexOf(ticket.username);
-                        
-                        if (ticketIndex > -1) {
-                            foundTicket = {
-                                category: category,
-                                user: totalTickets[category].utilisateur[ticketIndex],
-                                password: totalTickets[category].motDePasse[ticketIndex],
-                                price: totalTickets[category].prix[ticketIndex],
-                                updatedData: {
-                                    ...totalTickets[category],
-                                    utilisateur: totalTickets[category].utilisateur.filter((_, index) => index !== ticketIndex),
-                                    motDePasse: totalTickets[category].motDePasse.filter((_, index) => index !== ticketIndex),
-                                    prix: totalTickets[category].prix.filter((_, index) => index !== ticketIndex)
-                                }
-                            };
-                            foundTicketRef = ref(db, `TicketsTotal/${category}`);
-                            foundInCategory = "TicketsTotal";
-                            break;
-                        }
-                    }
-
-                    // Si non trouvé dans TicketsTotal, chercher dans TicketsTransit
-                    if (!foundTicket) {
-                        for (const transitId in transitTickets) {
-                            if (transitTickets[transitId].user === ticket.username) {
-                                foundTicket = {
-                                    category: transitTickets[transitId].category,
-                                    user: transitTickets[transitId].user,
-                                    password: transitTickets[transitId].password,
-                                    price: transitTickets[transitId].price
-                                };
-                                foundTicketRef = ref(db, `TicketsTransit/${transitId}`);
-                                foundInCategory = "TicketsTransit";
-                                break;
-                            }
-                        }
-                    }
-
-                    if (foundTicket) {
-                        pageLoaderMessage.textContent = `Vente du ticket ${ticket.username}...`;
-                        await sellTicketAutomatically(foundTicket, foundTicketRef, foundInCategory);
-                    }
-                }
-            } catch (error) {
-                console.error("Erreur lors du traitement du ticket :", error);
-                showNotification("Erreur", `Erreur lors du traitement du ticket ${ticket.username}.`);
-            }
-        }
-
-        async function sellTicketAutomatically(ticket, ticketRef, foundInCategory) {
-            try {
-                const automaticVendorId = "Vendeur automatique";
-
-                // Enregistrement de la vente dans VendorsHistory
-                const vendorHistoryRef = ref(db, `VendorsHistory/${automaticVendorId}`);
-                await push(vendorHistoryRef, {
-                    category: ticket.category,
-                    user: ticket.user,
-                    password: ticket.password,
-                    price: ticket.price,
-                    soldAt: Date.now()
-                });
-
-                // Enregistrement de la vente dans TicketsVendus
-                const ticketsVendusRef = ref(db, 'TicketsVendus');
-                await push(ticketsVendusRef, {
-                    category: ticket.category,
-                    user: ticket.user,
-                    password: ticket.password,
-                    price: ticket.price,
-                    soldAt: Date.now(),
-                    vendorId: automaticVendorId
-                });
-
-                // Suppression du ticket de la source (TicketsTotal ou TicketsTransit)
-                if(foundInCategory === "TicketsTotal"){
-                    await set(ticketRef, ticket.updatedData);
-                } else {
-                    await remove(ticketRef);
-                }
-
-                console.log(`Ticket ${ticket.user} vendu automatiquement.`);
-            } catch (error) {
-                console.error("Erreur lors de la vente automatique du ticket :", error);
-                showNotification("Erreur", "Erreur lors de la vente automatique du ticket.");
-            }
-        }
-
         function showSubscriptionRequiredModal() {
             subscriptionRequiredModal.style.display = 'flex';
         }
@@ -1018,6 +847,7 @@
         function redirectToSubscription() {
             window.location.href = 'index.html';
         }
+
         async function checkSubscriptionStatus() {
             const pageLoaderMessage = document.getElementById('pageLoaderMessage');
             pageLoaderMessage.textContent = "Vérification de l'abonnement...";
@@ -1057,6 +887,7 @@
                 showNotification("Erreur", "Erreur lors de la vérification de l'abonnement.");
             }
         }
+
 
         // Fonctions pour l'exportation des données
         window.printTable = function() {
@@ -1116,13 +947,17 @@
             saveAs(new Blob([s2ab(wbout)], { type: "application/octet-stream" }), "ventes.xlsx");
         };
 
-        window.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            showPageLoader();
+            await initializeDatabase(); // Initialize database first
             await checkSubscriptionStatus();
             await loadSalesData(); // Charger les données de vente et des vendeurs
             await loadPartners(); // Charger la liste des partenaires
             document.getElementById('periodFilter').value = 'today';
             applyFilters();
             lucide.createIcons();
+            hidePageLoader();
+            processConnectedTickets(); // Traitement des tickets connectés au démarrage
         });
         window.redirectToSubscription = redirectToSubscription;
         window.hideSubscriptionRequiredModal = redirectToSubscription;

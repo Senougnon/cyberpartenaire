@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des tickets</title>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -408,69 +407,47 @@
         </div>
     </div>
 
-    <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyB6AUBnK_7Vy2ABWI2JMo3ebG_Sljr8XlY",
-  authDomain: "cyber-campus-2706f.firebaseapp.com",
-  databaseURL: "https://cyber-campus-2706f-default-rtdb.firebaseio.com",
-  projectId: "cyber-campus-2706f",
-  storageBucket: "cyber-campus-2706f.appspot.com",
-  messagingSenderId: "719410601264",
-  appId: "1:719410601264:web:44fd2e3757721866303cf5",
-  measurementId: "G-CEEFJP5LYZ"
-};
-        
-        // Initialisation de Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        
+    <script type="module">
+        import { getActiveDatabase } from './firebase-config-manager.js';
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, get, set, push, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        let db;
+
+        async function initializeFirebaseApp() {
+            db = await getActiveDatabase();
+            loadTickets();
+        }
+
+        initializeFirebaseApp();
+
+
         let allTickets = {};
         let tempImportData = null;
         let tempCategory = null;
         let currentEditingTicket = null;
         let currentEditingCategory = null;
         let currentDatabase = 'TicketsTotal';
-        
+
         // Variables pour stocker les informations d'édition
         let editingCategory = '';
         let editingIndex = -1;
         let editingId = '';
-        
-        // Vérification immédiate avant tout chargement
-        (function() {
-            const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-            if (!isLoggedIn) {
-                window.location.replace('login.html');
-            }
-        })();
-        
-        // Vérification continue pendant la session
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!sessionStorage.getItem('isLoggedIn')) {
-                window.location.replace('login.html');
-            }
-        });
-        
-        // Empêcher le retour à la page après déconnexion
-        window.addEventListener('pageshow', function(event) {
-            if (event.persisted || !sessionStorage.getItem('isLoggedIn')) {
-                window.location.replace('login.html');
-            }
-        });
-        
+
+
+
         function showLoading() {
             document.getElementById('loadingIndicator').style.display = 'flex';
         }
-        
+
         function hideLoading() {
             document.getElementById('loadingIndicator').style.display = 'none';
         }
-        
+
         function loadTickets() {
             showLoading();
-            const ticketsRef = database.ref(currentDatabase);
-            ticketsRef.off('value'); // Détacher les anciens listeners
-            ticketsRef.on('value', (snapshot) => {
+            const ticketsRef = ref(db, currentDatabase);
+            onValue(ticketsRef, (snapshot) => {
                 allTickets = snapshot.val() || {};
                 displayTickets(allTickets);
                 hideLoading();
@@ -484,14 +461,14 @@ const firebaseConfig = {
         function displayTickets(tickets, searchTerm = '') {
         const categoriesContainer = document.getElementById('ticketCategories');
         categoriesContainer.innerHTML = '';
-        
+
         if (currentDatabase === 'TicketsTotal') {
             displayTicketsTotal(tickets, searchTerm);
         } else if (currentDatabase === 'TicketsTransit') {
             displayTicketsTransit(tickets, searchTerm);
         }
         }
-        
+
         // Fonction pour afficher les tickets de TicketsTotal
         function displayTicketsTotal(tickets, searchTerm = '') {
         const categoriesContainer = document.getElementById('ticketCategories');
@@ -511,9 +488,9 @@ const firebaseConfig = {
                             <label for="importFile_${category}" class="file-input-label">
                                 <i class="fas fa-file-import"></i> Importer dans ${category}
                             </label>
-                            <input type="file" id="importFile_${category}" 
-                                accept=".json,.csv,.txt" 
-                                style="display: none;" 
+                            <input type="file" id="importFile_${category}"
+                                accept=".json,.csv,.txt"
+                                style="display: none;"
                                 onchange="importTickets(event)">
                         </div>
                     </div>
@@ -539,7 +516,7 @@ const firebaseConfig = {
             categoriesContainer.innerHTML += categoryHtml;
         }
         }
-        
+
         // Fonction pour générer les lignes de tableau pour TicketsTotal
         function generateTicketRowsTotal(category, categoryTickets, searchTerm) {
         let rows = '';
@@ -564,12 +541,12 @@ const firebaseConfig = {
         }
         return rows;
         }
-        
+
         // Fonction pour afficher les tickets de TicketsTransit
         function displayTicketsTransit(tickets, searchTerm = '') {
         const categoriesContainer = document.getElementById('ticketCategories');
         categoriesContainer.innerHTML = '';
-        
+
         const categoryHtml = `
             <div class="category-section">
                 <div class="category-header">
@@ -583,9 +560,9 @@ const firebaseConfig = {
                         <label for="importFile_Transit" class="file-input-label">
                             <i class="fas fa-file-import"></i> Importer dans TicketsTransit
                         </label>
-<input type="file" id="importFile_Transit" 
-    accept=".txt,.json" 
-    style="display: none;" 
+<input type="file" id="importFile_Transit"
+    accept=".txt,.json"
+    style="display: none;"
     onchange="importTickets(event)">                    </div>
                 </div>
                 <button onclick="deleteAllTicketsInCategory(null)">Supprimer tous les tickets</button>
@@ -609,10 +586,10 @@ const firebaseConfig = {
                 <button onclick="deleteSelectedTickets(null)">Supprimer les tickets sélectionnés</button>
             </div>
         `;
-        
+
         categoriesContainer.innerHTML = categoryHtml;
         }
-        
+
         // Fonction pour générer les lignes de tableau pour TicketsTransit
         function generateTicketRowsTransit(tickets, searchTerm) {
         let rows = '';
@@ -640,7 +617,7 @@ const firebaseConfig = {
         }
         return rows;
         }
-        
+
         function editTicketTransit(id) {
         const ticket = allTickets[id];
         if (ticket) {
@@ -655,31 +632,31 @@ const firebaseConfig = {
             alert("Ticket introuvable.");
         }
         }
-        
+
         function saveTicketEdit() {
             const newPassword = document.getElementById('editPassword').value;
             const newPrice = document.getElementById('editPrice').value;
             const newUser = document.getElementById('editUser').value;
             const newCategory = document.getElementById('editCategory').value;
-        
+
             if (!newPassword || !newPrice || !newUser || !newCategory) {
                 alert('Tous les champs sont obligatoires');
                 return;
             }
-        
+
             showLoading();
-        
+
             if (currentDatabase === 'TicketsTotal') {
                 const categoryData = allTickets[editingCategory];
                 categoryData.motDePasse[editingIndex] = newPassword;
                 categoryData.prix[editingIndex] = newPrice;
                 categoryData.utilisateur[editingIndex] = newUser;
-        
+
                 const updates = {
                     [`${currentDatabase}/${editingCategory}`]: categoryData
                 };
-        
-                database.ref().update(updates)
+
+                set(ref(db),updates)
                     .then(() => {
                         hideLoading();
                         closeEditModal();
@@ -691,8 +668,8 @@ const firebaseConfig = {
                         alert('Erreur lors de la modification du ticket');
                     });
             } else if (currentDatabase === 'TicketsTransit') {
-                const ticketRef = database.ref(`${currentDatabase}/${editingId}`);
-                ticketRef.update({
+                const ticketRef = ref(db,`${currentDatabase}/${editingId}`);
+                set(ticketRef,{
                     category: newCategory,
                     password: newPassword,
                     price: newPrice,
@@ -710,21 +687,21 @@ const firebaseConfig = {
                 });
             }
         }
-        
+
                 function editTicketTotal(category, index) {
                     editingCategory = category;
                     editingIndex = index;
                     const ticket = allTickets[category];
-                    
+
                     document.getElementById('editId').value = '';
                     document.getElementById('editCategory').value = category;
                     document.getElementById('editPassword').value = ticket.motDePasse[index];
                     document.getElementById('editPrice').value = ticket.prix[index];
                     document.getElementById('editUser').value = ticket.utilisateur[index];
-                    
+
                     document.getElementById('editTicketModal').style.display = 'block';
                 }
-                
+
 function mergeTicketsToCategory(category, newTickets) {
     let updates = {};
 
@@ -754,7 +731,7 @@ function mergeTicketsToCategory(category, newTickets) {
         updates[`${currentDatabase}/${category}`] = mergedTickets;
     }
 
-    database.ref().update(updates)
+    set(ref(db),updates)
         .then(() => {
             hideLoading();
             alert(`Importation réussie dans ${category || 'TicketsTransit'}!`);
@@ -774,7 +751,7 @@ function editCategory(category) {
 
 function saveCategoryEdit() {
     const newCategoryName = document.getElementById('editCategoryName').value.trim();
-    
+
     if (!newCategoryName) {
         alert('Le nom de la catégorie ne peut pas être vide');
         return;
@@ -787,13 +764,13 @@ function saveCategoryEdit() {
 
     showLoading();
     const categoryData = allTickets[currentEditingCategory];
-    
+
     const updates = {
         [`${currentDatabase}/${currentEditingCategory}`]: null,
         [`${currentDatabase}/${newCategoryName}`]: categoryData
     };
 
-    database.ref().update(updates)
+    set(ref(db),updates)
         .then(() => {
             hideLoading();
             closeEditCategoryModal();
@@ -826,8 +803,8 @@ function saveNewTicket() {
             price: document.getElementById('newPrice').value.trim(),
             user: document.getElementById('newUser').value.trim()
         };
-        
-        database.ref(`${currentDatabase}/${id}`).set(newTicket)
+
+        set(ref(db,`${currentDatabase}/${id}`),newTicket)
             .then(() => {
                 hideLoading();
                 closeAddTicketModal();
@@ -851,7 +828,7 @@ function saveNewTicket() {
         categoryData.prix.push(newTicket.price);
         categoryData.utilisateur.push(newTicket.user);
 
-        database.ref(`${currentDatabase}/${category}`).set(categoryData)
+        set(ref(db,`${currentDatabase}/${category}`),categoryData)
             .then(() => {
                 hideLoading();
                 closeAddTicketModal();
@@ -917,7 +894,7 @@ function deleteTicket(category, index, id) {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce ticket ?')) {
         showLoading();
         if (currentDatabase === 'TicketsTransit') {
-            database.ref(`${currentDatabase}/${id}`).remove()
+            remove(ref(db,`${currentDatabase}/${id}`))
                 .then(() => {
                     hideLoading();
                     alert('Ticket supprimé avec succès!');
@@ -933,7 +910,7 @@ function deleteTicket(category, index, id) {
             categoryData.prix.splice(index, 1);
             categoryData.utilisateur.splice(index, 1);
 
-            database.ref(`${currentDatabase}/${category}`).set(categoryData)
+            set(ref(db,`${currentDatabase}/${category}`),categoryData)
             .then(() => {
                 hideLoading();
                 alert('Ticket supprimé avec succès!');
@@ -978,7 +955,7 @@ function deleteSelectedTickets(category) {
             updates[`${currentDatabase}/${category}`] = categoryData;
         }
 
-        database.ref().update(updates)
+        set(ref(db),updates)
             .then(() => {
                 hideLoading();
                 alert('Tickets sélectionnés supprimés avec succès!');
@@ -1062,7 +1039,7 @@ function saveBulkEdit() {
         updates[`${currentDatabase}/${category}`] = categoryData;
     }
 
-    database.ref().update(updates)
+    set(ref(db),updates)
         .then(() => {
             hideLoading();
             closeBulkEditModal();
@@ -1085,7 +1062,7 @@ function deleteAllTicketsInCategory(category) {
     if (confirm(`Êtes-vous sûr de vouloir supprimer TOUS les tickets de ${category || 'TicketsTransit'} ?`)) {
         showLoading();
         if (currentDatabase === 'TicketsTransit') {
-            database.ref(currentDatabase).set({})
+            set(ref(db,currentDatabase),{})
                 .then(() => {
                     hideLoading();
                     alert('Tous les tickets ont été supprimés avec succès!');
@@ -1096,7 +1073,7 @@ function deleteAllTicketsInCategory(category) {
                     alert('Erreur lors de la suppression des tickets');
                 });
         } else {
-            database.ref(`${currentDatabase}/${category}`).set({
+            set(ref(db,`${currentDatabase}/${category}`),{
                 motDePasse: [],
                 prix: [],
                 utilisateur: []
@@ -1202,7 +1179,7 @@ function handleJsonImport(jsonContent) {
             }
         }
 
-        database.ref().update(updates)
+        set(ref(db),updates)
             .then(() => {
                 hideLoading();
                 alert('Importation réussie !');
@@ -1395,7 +1372,7 @@ function finishImport() {
             }
         }
 
-        database.ref().update(updates)
+        set(ref(db),updates)
             .then(() => {
                 document.getElementById('priceModal').style.display = 'none';
                 document.getElementById('importFile').value = '';
@@ -1478,7 +1455,7 @@ function deleteSearchResults() {
             }
         }
 
-        database.ref().update(updates)
+        set(ref(db),updates)
             .then(() => {
                 hideLoading();
                 alert('Les tickets correspondant à la recherche ont été supprimés.');
@@ -1496,18 +1473,7 @@ function searchTickets() {
     displayTickets(allTickets, searchTerm);
 }
 
-// Ajoutez ce code au début de votre script existant, juste après la déclaration des variables
 
-function checkAuth() {
-    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-    
-    if (!isLoggedIn) {
-        window.location.replace('login.html');
-        return false;
-    }
-    
-    return true;
-}
 
 function changeDatabase() {
     currentDatabase = document.getElementById('databaseSelect').value;

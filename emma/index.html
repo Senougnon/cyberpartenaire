@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="styleA.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!--  Firebase App (compat) is NOT needed, removed it -->
-    <!--  Firebase Database (compat) is NOT needed, removed it -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
     <script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
 
     <style>
@@ -300,26 +300,19 @@
     <div class="overlay" id="overlay" style="display: none;" onclick="closePaymentModal()"></div>
 
     <script type="module">
-        import { getActiveDatabase } from './firebase-config-manager.js'; // Import from the external file
+        import { getActiveDatabase } from './firebase-config-manager.js'; // Import getActiveDatabase
         import { ref, get, set, push, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
         let db; // Database object will be initialized here
-        let adminRef;
-        let connectedTicketsRef;
-
+        let adminRef; // Admin reference
+        let connectedTicketsRef; // Connected Tickets reference
 
         async function initializeDatabase() {
-          try{
             db = await getActiveDatabase(); // Get the active database from the module
             adminRef = ref(db, 'admin/subscription'); // Initialize adminRef after db is available
-            connectedTicketsRef = ref(db, 'TicketConnecté');
+            connectedTicketsRef = ref(db, 'TicketConnecté'); // Initialize connectedTicketsRef after db is available
             console.log("Database initialized in index.html");
-          } catch (error) {
-              console.error("Failed to initialize database:", error);
-              // Consider showing a user-friendly error message
-          }
         }
-
 
 
         const venteMenuItem = document.getElementById('vente');
@@ -350,28 +343,6 @@
             document.getElementById('pageLoaderWrapper').style.display = 'none';
         }
 
-        // Vérification immédiate avant tout chargement
-        (function() {
-            const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-            if (!isLoggedIn) {
-                window.location.replace('loginAccueil.html');
-            }
-        })();
-
-        // Vérification continue pendant la session
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!sessionStorage.getItem('isLoggedIn')) {
-                window.location.replace('loginAccueil.html');
-            }
-        });
-
-        // Empêcher le retour à la page après déconnexion
-        window.addEventListener('pageshow', function(event) {
-            if (event.persisted || !sessionStorage.getItem('isLoggedIn')) {
-                window.location.replace('loginAccueil.html');
-            }
-        });
-
         function showSubscriptionRequiredModal() {
             subscriptionRequiredModal.style.display = 'flex';
         }
@@ -386,10 +357,6 @@
         }
 
         function checkSubscriptionStatus() {
-          if (!db) {
-            console.error("Database not initialized yet in checkSubscriptionStatus");
-            return; // Exit if db is not ready
-          }
             get(adminRef).then((snapshot) => {
                 const subscription = snapshot.val();
                 const now = new Date();
@@ -426,10 +393,6 @@
         }
 
         function checkUserAccess() {
-          if (!db) {
-             console.error("Database not initialized yet in checkUserAccess");
-             return;
-          }
             get(adminRef).then((snapshot) => {
                 const subscription = snapshot.val();
                 if (!subscription || subscription.status !== 'active') {
@@ -498,10 +461,6 @@
         }
 
         async function handleSuccessfulPayment(plan, response) {
-          if(!db){
-            console.error("Database not initialized in handleSuccessfulPayment.");
-            return;
-          }
             const startDate = new Date();
             const endDate = new Date(startDate);
             if (plan === 'monthly') {
@@ -531,10 +490,6 @@
         }
 
         async function cancelSubscription() {
-          if(!db) {
-            console.error("Database not initialized in cancelSubscription.");
-            return;
-          }
             try {
                 await set(adminRef, { ... (await get(adminRef)).val(), status: 'cancelled' });
                 checkSubscriptionStatus();
@@ -553,10 +508,6 @@
 
         async function processConnectedTickets() {
             const pageLoaderMessage = document.getElementById('pageLoaderMessage');
-            if(!db) {
-              console.error("Database not initialized in processConnectedTickets.");
-              return;
-            }
             try {
                 pageLoaderMessage.textContent = "Vérification des tickets connectés...";
                 const snapshot = await get(connectedTicketsRef);
@@ -589,10 +540,6 @@
 
         async function processTicket(ticket) {
             const pageLoaderMessage = document.getElementById('pageLoaderMessage');
-            if(!db) {
-                console.error("Database not initialized in processTicket.");
-                return;
-            }
             try {
                 pageLoaderMessage.textContent = `Vérification du ticket pour ${ticket.username}...`;
 
@@ -680,10 +627,6 @@
         }
 
         async function sellTicketAutomatically(ticket, ticketRef, foundInCategory) {
-          if(!db) {
-             console.error("Database not initialized in sellTicketAutomatically.");
-             return;
-          }
             try {
                 const automaticVendorId = "Vendeur automatique";
 
@@ -725,19 +668,19 @@
         // Initialisation
         document.addEventListener('DOMContentLoaded', async () => {
             showPageLoader();
-            try {
-              await initializeDatabase(); // Initialize the database first
-              await processConnectedTickets(); // Then process connected tickets
-              checkSubscriptionStatus();    // Check subscription status
-              lucide.createIcons();        // Create icons
-            } catch (error) {
-              console.error("Initialization error:", error);
-              showNotification("Erreur", "Une erreur est survenue lors de l'initialisation.");
-            } finally {
-              hidePageLoader();            // Hide loader in all cases
-            }
+            await initializeDatabase(); // Initialize database first
+            processConnectedTickets()
+                .then(() => checkSubscriptionStatus())
+                .then(() => {
+                  lucide.createIcons();
+                  hidePageLoader();
+                })
+                .catch((error) => {
+                    console.error("Erreur lors du traitement des tickets :", error);
+                    hidePageLoader();
+                    showNotification("Erreur", "Une erreur est survenue lors de l'initialisation.");
+                });
         });
-
         window.redirectToSubscription = redirectToSubscription;
         window.hideSubscriptionRequiredModal = redirectToSubscription;
 

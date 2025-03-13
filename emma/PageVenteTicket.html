@@ -815,24 +815,18 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getDatabase, ref, get, set, push, remove, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-    
-        const firebaseConfig = {
-  apiKey: "AIzaSyB6AUBnK_7Vy2ABWI2JMo3ebG_Sljr8XlY",
-  authDomain: "cyber-campus-2706f.firebaseapp.com",
-  databaseURL: "https://cyber-campus-2706f-default-rtdb.firebaseio.com",
-  projectId: "cyber-campus-2706f",
-  storageBucket: "cyber-campus-2706f.appspot.com",
-  messagingSenderId: "719410601264",
-  appId: "1:719410601264:web:44fd2e3757721866303cf5",
-  measurementId: "G-CEEFJP5LYZ"
-};
-    
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const adminRef = ref(db, 'admin/subscription');
-    
+        import { getActiveDatabase } from './firebase-config-manager.js'; // Import getActiveDatabase
+        import { ref, get, set, push, remove, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        let db; // Database object will be initialized here
+        let adminRef; // Admin reference
+
+        async function initializeDatabase() {
+            db = await getActiveDatabase(); // Get the active database from the module
+            adminRef = ref(db, 'admin/subscription'); // Initialize adminRef after db is available
+            console.log("Database initialized in PageVenteTicket.html");
+        }
+
         let ticketToSell = null;
         let localTickets = {};
         let currentReservedTicket = null;
@@ -855,7 +849,7 @@
                 console.error("Erreur lors de la récupération des vendeurs:", error);
             }
         }
-    
+
 // --- Autocomplétion ---
 const usernameInput = document.getElementById('username');
 const passwordInput = document.getElementById('password'); // Ajout pour le champ de mot de passe
@@ -956,19 +950,19 @@ loginForm.addEventListener('submit', async (event) => {
     }
 });
 
-    
+
         // Fonction pour synchroniser les tickets et gérer l'affichage
         async function syncTickets() {
             try {
                 const loadingMessage = document.querySelector('.loading-message');
                 const table = document.querySelector('.rates-section table');
-    
+
                 loadingMessage.style.display = 'block';
                 table.style.display = 'none';
-    
+
                 const ticketsTotalRef = ref(db, 'TicketsTotal');
                 const snapshot = await get(ticketsTotalRef);
-    
+
                 if (snapshot.exists()) {
                     localTickets = snapshot.val();
                     createTicketTable();
@@ -982,7 +976,7 @@ loginForm.addEventListener('submit', async (event) => {
                 loadingMessage.textContent = "Erreur de synchronisation des tickets.";
             }
         }
-    
+
         // Mise à jour de la création du tableau pour afficher uniquement les tickets disponibles avec leur nombre restant
         async function createTicketTable() {
             const table = document.querySelector('.rates-section table');
@@ -1012,20 +1006,20 @@ loginForm.addEventListener('submit', async (event) => {
             document.querySelector('.loading-message').style.display = 'none';
             table.style.display = 'table';
         }
-    
+
         // Modification de la fonction initTicketSale pour demander confirmation
         window.initTicketSale = async function(category) {
             showLoader();
             try {
                 const ticketsTotalRef = ref(db, `TicketsTotal/${category}`);
                 const snapshot = await get(ticketsTotalRef);
-    
+
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     if (!data.utilisateur || data.utilisateur.length === 0) {
                         throw new Error("Plus de tickets disponibles");
                     }
-    
+
                     ticketToSell = {
                         category: category,
                         user: data.utilisateur[0],
@@ -1038,7 +1032,7 @@ loginForm.addEventListener('submit', async (event) => {
                             prix: data.prix.slice(1)
                         }
                     };
-    
+
                     showConfirmation(ticketToSell);
                     hideLoader();
                 }
@@ -1048,26 +1042,26 @@ loginForm.addEventListener('submit', async (event) => {
                 hideLoader();
             }
         };
-    
+
         // Fonction pour afficher la confirmation
         function showConfirmation(ticket) {
             const notification = document.getElementById('notification');
             const message = document.getElementById('notification-message');
             const ticketActions = document.getElementById('ticket-actions');
             const confirmationButtons = document.getElementById('confirmation-buttons');
-    
+
             document.getElementById('notification-title').textContent = 'Confirmation de vente';
             message.innerHTML = `
                 <p>Voulez-vous vendre ce ticket ?</p>
                 <p><strong>Catégorie:</strong> ${ticket.category}</p>
                 <p><strong>Prix:</strong> ${ticket.price} FCFA</p>
             `;
-    
+
             confirmationButtons.style.display = 'flex';
             ticketActions.style.display = 'none';
             notification.style.display = 'block';
         }
-    
+
         // Fonction pour procéder à la vente après confirmation
         window.proceedWithSale = async function() {
             showLoader();
@@ -1076,12 +1070,12 @@ loginForm.addEventListener('submit', async (event) => {
                 hideLoader();
                 return;
             }
-    
+
             try {
                 // Mettre à jour la base de données
                 const ticketsTotalRef = ref(db, `TicketsTotal/${ticketToSell.category}`);
                 await set(ticketsTotalRef, ticketToSell.updatedData);
-    
+
                 // Ajouter aux tickets vendus
                 const ticketsVendusRef = ref(db, 'TicketsVendus');
                 await push(ticketsVendusRef, {
@@ -1092,7 +1086,7 @@ loginForm.addEventListener('submit', async (event) => {
                     soldAt: Date.now(),
                     vendorId: currentVendorId
                 });
-    
+
                 // Ajouter à l'historique du vendeur
                 const vendorHistoryRef = ref(db, `VendorsHistory/${currentVendorId}`);
                 await push(vendorHistoryRef, {
@@ -1102,7 +1096,7 @@ loginForm.addEventListener('submit', async (event) => {
                     price: ticketToSell.price,
                     soldAt: Date.now()
                 });
-    
+
                 // Afficher les détails du ticket vendu
                 showTicketDetails(ticketToSell);
                 await syncTickets();
@@ -1112,17 +1106,17 @@ loginForm.addEventListener('submit', async (event) => {
                 showNotification("Erreur", "Impossible de finaliser la vente");
                 hideLoader();
             }
-    
+
             ticketToSell = null;
         };
-    
+
         // Fonction pour afficher les détails après la vente
         function showTicketDetails(ticket) {
             const notification = document.getElementById('notification');
             const message = document.getElementById('notification-message');
             const ticketActions = document.getElementById('ticket-actions');
             const confirmationButtons = document.getElementById('confirmation-buttons');
-    
+
             document.getElementById('notification-title').textContent = 'Ticket vendu avec succès';
             message.innerHTML = `
                 <p><strong>Catégorie:</strong> ${ticket.category}</p>
@@ -1130,7 +1124,7 @@ loginForm.addEventListener('submit', async (event) => {
                 <p><strong>Mot de passe:</strong> ${ticket.password}</p>
                 <p><strong>Prix:</strong> ${ticket.price} FCFA</p>
             `;
-    
+
             confirmationButtons.style.display = 'none';
             ticketActions.style.display = 'flex';
             notification.style.display = 'block';
@@ -1141,14 +1135,14 @@ loginForm.addEventListener('submit', async (event) => {
             const notification = document.getElementById('notification');
             const message = document.getElementById('notification-message');
             const buttons = document.getElementById('notification-buttons');
-    
+
             message.innerHTML = `
                 <p><strong>Catégorie:</strong> ${ticket.category}</p>
                 <p><strong>Nom d'utilisateur:</strong> ${ticket.user}</p>
                 <p><strong>Mot de passe:</strong> ${ticket.password}</p>
                 <p><strong>Prix:</strong> ${ticket.price} FCFA</p>
             `;
-    
+
             buttons.innerHTML = `
                 <button class="btn-sell" onclick="window.confirmSale()">
                     Confirmer la vente
@@ -1157,11 +1151,11 @@ loginForm.addEventListener('submit', async (event) => {
                     Annuler
                 </button>
             `;
-    
+
             notification.style.display = 'block';
             lucide.createIcons();
         }
-    
+
         // Confirmation de la vente
         window.confirmSale = async function() {
             showLoader();
@@ -1170,7 +1164,7 @@ loginForm.addEventListener('submit', async (event) => {
                 hideLoader();
                 return;
             }
-    
+
             try {
                 // Ajouter aux tickets vendus
                 const ticketsVendusRef = ref(db, 'TicketsVendus');
@@ -1179,14 +1173,14 @@ loginForm.addEventListener('submit', async (event) => {
                     soldAt: Date.now(),
                     vendorId: currentVendorId
                 });
-    
+
                 // Ajouter à l'historique du vendeur
                 const vendorHistoryRef = ref(db, `VendorsHistory/${currentVendorId}`);
                 await push(vendorHistoryRef, {
                     ...currentReservedTicket,
                     soldAt: Date.now()
                 });
-    
+
                 showNotification("Succès", "Ticket vendu avec succès!");
                 currentReservedTicket = null;
                 hideNotification();
@@ -1198,13 +1192,13 @@ loginForm.addEventListener('submit', async (event) => {
                 hideLoader();
             }
         };
-    
+
         // Annulation de la vente
         window.cancelSale = function() {
             currentReservedTicket = null;
             hideNotification();
         };
-    
+
         // Notifications
         function showNotification(title, message) {
             const notification = document.getElementById('notification');
@@ -1226,18 +1220,18 @@ loginForm.addEventListener('submit', async (event) => {
 
             notification.style.display = 'block';
         }
-    
+
         window.hideNotification = function() {
             document.getElementById('notification').style.display = 'none';
         };
-    
+
         // Chargement de l'historique
         async function loadHistory() {
             showLoader();
             try {
                 const historyRef = ref(db, `VendorsHistory/${currentVendorId}`);
                 const snapshot = await get(historyRef);
-    
+
                 let salesHistory = [];
                 if (snapshot.exists()) {
                     salesHistory = Object.entries(snapshot.val()).map(([id, data]) => ({
@@ -1245,7 +1239,7 @@ loginForm.addEventListener('submit', async (event) => {
                         ...data
                     }));
                 }
-                
+
                 // Appliquer les filtres par défaut (Aujourd'hui)
                 filterHistory(salesHistory);
 
@@ -1256,7 +1250,7 @@ loginForm.addEventListener('submit', async (event) => {
                 hideLoader();
             }
         }
-    
+
         // Filtrage de l'historique par période
         function filterHistory(salesHistory) {
             const period = document.getElementById('periodFilter').value;
@@ -1267,15 +1261,15 @@ loginForm.addEventListener('submit', async (event) => {
                 month: new Date(now.setDate(1)),
                 all: new Date(0)
             };
-        
+
             let filteredSales = salesHistory;
-        
+
             if (period !== 'all') {
                 filteredSales = salesHistory.filter(sale =>
                     new Date(sale.soldAt) >= startOf[period]
                 );
             }
-        
+
             updateStats(filteredSales);
             updateHistoryTable(filteredSales);
         }
@@ -1309,28 +1303,28 @@ loginForm.addEventListener('submit', async (event) => {
                 updateHistoryTable(filteredSales);
             });
         };
-    
+
         // Mise à jour des statistiques
         function updateStats(sales) {
             const totalTickets = sales.length;
             const totalRevenue = sales.reduce((sum, sale) => sum + parseFloat(sale.price), 0);
-            
+
             const categoryCounts = sales.reduce((acc, sale) => {
                 acc[sale.category] = (acc[sale.category] || 0) + 1;
                 return acc;
             }, {});
             const topCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
-    
-            const days = sales.length > 0 ? 
+
+            const days = sales.length > 0 ?
                 Math.max(1, Math.ceil((Date.now() - Math.min(...sales.map(s => s.soldAt))) / (1000 * 60 * 60 * 24))) : 1;
             const avgDaily = (totalTickets / days).toFixed(1);
-    
+
             document.getElementById('totalTickets').textContent = totalTickets;
             document.getElementById('totalRevenue').textContent = `${totalRevenue.toLocaleString()} FCFA`;
             document.getElementById('topCategory').textContent = topCategory;
             document.getElementById('avgDaily').textContent = avgDaily;
         }
-    
+
         // Mise à jour du tableau d'historique
         function updateHistoryTable(sales) {
             const tbody = document.getElementById('historyTableBody');
@@ -1367,7 +1361,7 @@ loginForm.addEventListener('submit', async (event) => {
                 hideLoader();
             }
         }
-    
+
         // Gestionnaire pour le bouton d'historique
         window.toggleHistory = function() {
             const historySection = document.getElementById('historySection');
@@ -1377,26 +1371,26 @@ loginForm.addEventListener('submit', async (event) => {
                 loadHistory();
             }
         };
-    
+
         window.closeHistory = function() {
             document.getElementById('historySection').style.display = 'none';
         };
-    
+
         // Ajouter la fonction de filtrage à window pour l'accès depuis le HTML
         window.filterHistory = function() {
             loadHistory();
         };
-    
+
         // Fonction pour écouter les nouveaux messages
         function listenForNewMessages() {
             const messagesRef = ref(db, `Vendors/${currentVendorId}/messages`);
-    
+
             onChildAdded(messagesRef, (snapshot) => {
                 const message = snapshot.val();
                 displayNewMessage(message);
             });
         }
-    
+
         // Fonction pour afficher un nouveau message
         function displayNewMessage(message) {
             const messagesContainer = document.getElementById('messagesContainer');
@@ -1407,11 +1401,11 @@ loginForm.addEventListener('submit', async (event) => {
                 <span class="timestamp">${new Date(message.timestamp).toLocaleString()}</span>
             `;
             messagesContainer.appendChild(messageElement);
-    
+
             // Scroll vers le bas pour afficher le dernier message
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
-        // Fonction pour partager un ticket 
+        // Fonction pour partager un ticket
         window.shareTicket = function() {
             const ticketDetails = document.getElementById('notification-message').innerText;
             if (navigator.share) {
@@ -1445,7 +1439,7 @@ loginForm.addEventListener('submit', async (event) => {
             showLoader();
             const ticketDetails = document.getElementById('notification-message');
             const pdf = new jsPDF();
-            
+
             // Convertir le HTML en canvas
             const canvas = await html2canvas(ticketDetails);
             const imgData = canvas.toDataURL('image/png');
@@ -1548,7 +1542,7 @@ loginForm.addEventListener('submit', async (event) => {
 
         function redirectToSubscription() {
             window.location.href = 'index.html';
-            
+
         }
         async function checkSubscriptionStatus() {
             const pageLoaderMessage = document.getElementById('pageLoaderMessage');
@@ -1582,19 +1576,24 @@ loginForm.addEventListener('submit', async (event) => {
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-    checkSubscriptionStatus()
-        .then(() => {
-            fetchVendors();
-            lucide.createIcons();
-            hidePageLoader()
-        })
-        .catch((error) => {
-            console.error("Erreur lors de l'initialisation :", error);
-            showNotification("Erreur", "Une erreur est survenue lors de l'initialisation.");
-            hidePageLoader()
-               });
-});
+        document.addEventListener('DOMContentLoaded', async () => {
+            showPageLoader();
+            await initializeDatabase(); // Initialize database first
+            checkSubscriptionStatus()
+                .then(async () => {
+                    await fetchVendors();
+                    await syncTickets();
+                    loadHistory();
+                    listenForNewMessages();
+                    lucide.createIcons();
+                    hidePageLoader()
+                })
+                .catch((error) => {
+                    console.error("Erreur lors de l'initialisation :", error);
+                    showNotification("Erreur", "Une erreur est survenue lors de l'initialisation.");
+                    hidePageLoader()
+                });
+        });
         window.redirectToSubscription = redirectToSubscription;
         window.hideSubscriptionRequiredModal = redirectToSubscription;
     </script>

@@ -1,11 +1,14 @@
+--- START OF FILE login.html ---
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion Administrateur</title>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <!--  Ne plus importer firebase directement ici -->
+    <!-- <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script> -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -110,47 +113,38 @@
         <div id="errorMessage" class="error-message"></div>
     </div>
 
-    <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyB6AUBnK_7Vy2ABWI2JMo3ebG_Sljr8XlY",
-  authDomain: "cyber-campus-2706f.firebaseapp.com",
-  databaseURL: "https://cyber-campus-2706f-default-rtdb.firebaseio.com",
-  projectId: "cyber-campus-2706f",
-  storageBucket: "cyber-campus-2706f.appspot.com",
-  messagingSenderId: "719410601264",
-  appId: "1:719410601264:web:44fd2e3757721866303cf5",
-  measurementId: "G-CEEFJP5LYZ"
-};
-
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+    <script type="module">  //  Utiliser type="module"
+        import { getActiveDatabase } from './firebase-config-manager.js'; // Import the function
+        import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"; // Importer les fonctions nécessaires
 
         async function login(event) {
             event.preventDefault();
-            
+
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
-            
+
             try {
-                const adminRef = database.ref('admins');
-                const snapshot = await adminRef.once('value');
+                const db = await getActiveDatabase(); // Obtenir la base de données active
+                const adminRef = ref(db, 'admins'); // Utiliser ref avec la db active
+                const snapshot = await get(adminRef);  // Utiliser get au lieu de once
                 const admins = snapshot.val();
 
-                const admin = Object.values(admins).find(admin => 
+
+                const admin = Object.values(admins || {}).find(admin =>  // Gérer le cas où admins est null
                     admin.username === username && admin.password === password
                 );
 
                 if (admin) {
                     // Vérification du statut de l'abonnement
-                    const subscriptionRef = database.ref('admin/subscription');
-                    const subscriptionSnapshot = await subscriptionRef.once('value');
+                    const subscriptionRef = ref(db, 'admin/subscription'); // Utiliser ref
+                    const subscriptionSnapshot = await get(subscriptionRef); // Utiliser get
                     const subscription = subscriptionSnapshot.val();
 
                     if (subscription && subscription.status === 'active' && new Date(subscription.endDate) > new Date()) {
                         // Abonnement actif, connexion réussie
                         sessionStorage.setItem('isLoggedIn', 'true');
-                        window.location.href = 'a3.html';
+                        window.location.href = 'a3.html'; // Redirection correcte
                     } else {
                         // Abonnement inactif ou expiré, redirection vers index.html
                         errorMessage.textContent = 'Votre abonnement n\'est pas actif. Veuillez vous abonner.';
@@ -172,3 +166,4 @@ const firebaseConfig = {
     </script>
 </body>
 </html>
+--- END OF FILE login.html ---

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion Utilisateur</title>
-    <!-- Firebase App (compat) and Database (compat) are not needed with modular approach -->
+    <!-- Firebase App (compat) and Database (compat) are NOT needed here anymore -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styleA.css">
     <style>
@@ -131,30 +131,32 @@
         import { getActiveDatabase } from './firebase-config-manager.js'; // Import getActiveDatabase
         import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-        let database; // Database object
+
+        let db; // Will hold the active database
+        let adminsRef; // Firebase reference to admins
 
         async function initializeDatabase() {
             try {
-                database = await getActiveDatabase(); // Initialize database
+                db = await getActiveDatabase(); // Get the active database
+                adminsRef = ref(db, 'admins'); // Initialize adminsRef after db is ready
                 console.log("Database initialized in loginAccueil.html");
             } catch (error) {
-                console.error("Failed to initialize database in loginAccueil.html:", error);
-                // Handle database initialization error, e.g., display a message to the user
-                document.getElementById('errorMessage').textContent = 'Erreur de connexion à la base de données. Veuillez réessayer plus tard.';
+                console.error("Database initialization failed:", error);
+                // Handle initialization error, e.g., display a message to the user
+                document.getElementById('errorMessage').textContent = 'Erreur lors de la connexion à la base de données.';
                 document.getElementById('errorMessage').style.display = 'block';
-                return false; // Indicate initialization failure
             }
-            return true; // Indicate successful initialization
         }
 
 
         async function login(event) {
             event.preventDefault();
 
-            if (!database) { // Check if database is initialized
-                if (!await initializeDatabase()) { // Try to initialize and if fails, exit
-                    return;
-                }
+            if (!db) { // Check if db is initialized
+                console.error("Database not initialized. Login attempt aborted.");
+                document.getElementById('errorMessage').textContent = 'Base de données non initialisée. Veuillez réessayer.';
+                document.getElementById('errorMessage').style.display = 'block';
+                return;
             }
 
             const username = document.getElementById('username').value;
@@ -162,18 +164,16 @@
             const errorMessage = document.getElementById('errorMessage');
 
             try {
-                const adminRef = ref(database, 'admins'); // Use the initialized database object
-                const snapshot = await get(adminRef);
+                const snapshot = await get(adminsRef); // Use the initialized adminsRef
                 const admins = snapshot.val();
                 if(!admins){
-                        errorMessage.textContent = 'Nom d\'utilisateur ou mot de passe incorrect';
-                        errorMessage.style.display = 'block';
-                       return;
+                    errorMessage.textContent = 'Nom d\'utilisateur ou mot de passe incorrect';
+                    errorMessage.style.display = 'block';
+                   return;
                 }
                 const admin = Object.values(admins).find(admin =>
                     admin.username === username && admin.password === password
                 );
-
 
                 if (admin) {
                     sessionStorage.setItem('isLoggedIn', 'true');
@@ -188,6 +188,11 @@
                 errorMessage.style.display = 'block';
             }
         }
+
+        // Initialize database on DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeDatabase();
+        });
     </script>
 </body>
 </html>

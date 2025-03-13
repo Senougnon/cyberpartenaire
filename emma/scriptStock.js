@@ -12,12 +12,7 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
-const adminRef = database.ref('admin/subscription');
 
-const loginForm = document.getElementById('loginForm');
-const signupForm = document.getElementById('signupForm');
-const loginContainer = document.getElementById('loginContainer');
-const signupContainer = document.getElementById('signupContainer');
 const dashboardContainer = document.getElementById('dashboardContainer');
 const salesForm = document.getElementById('salesForm');
 const salesTable = document.getElementById('salesTable');
@@ -28,16 +23,16 @@ const toggleAnalysisButton = document.getElementById('toggleAnalysisButton');
 const toggleSalesButton = document.getElementById('toggleSalesButton');
 const analysisSection = document.getElementById('analysisSection');
 const salesDetailsSection = document.getElementById('salesDetailsSection');
-const signupButton = document.getElementById('signupButton');
-const loginFromSignup = document.getElementById('loginFromSignup');
 const productSelect = document.getElementById('product');
 const stockTableGlobal = document.getElementById('stockTableGlobal');
+const userSelectDropdown = document.getElementById('userSelect');
 let salesChart;
 let currentUser;
 let salesData = [];
 let stockData = [];
 let ticketCategories = {};
 let salesDataListener; // Variable pour stocker la référence à la fonction d'écoute
+let users = {}; // Store users data
 
 // Set default date and time to now
 document.getElementById('dateTime').value = new Date().toISOString().slice(0, 16);
@@ -65,88 +60,75 @@ function populateProductSelect() {
 // Initialize ticket categories fetch
 fetchTicketCategories();
 
-loginForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    
-    database.ref('users/' + username).once('value').then((snapshot) => {
-        if (snapshot.exists()) {
-            // User exists, check password
-            if (snapshot.val().password === password) {
-                loginSuccess(username);
-            } else {
-                alert('Mot de passe incorrect');
-            }
-        } else {
-            alert('Utilisateur introuvable');
-        }
+// Function to fetch users and populate the dropdown
+function fetchUsers() {
+    database.ref('users').once('value').then((snapshot) => {
+        users = snapshot.val() || {};
+        populateUserSelect();
     });
-});
+}
 
-signupForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const username = document.getElementById('signupUsername').value;
-    const password = document.getElementById('signupPassword').value;
+// Function to populate user select dropdown
+function populateUserSelect() {
+    userSelectDropdown.innerHTML = '<option value="">Sélectionner un utilisateur</option><option value="addUser">Ajouter un utilisateur</option>';
+    for (const username in users) {
+        const option = document.createElement('option');
+        option.value = username;
+        option.textContent = username;
+        userSelectDropdown.appendChild(option);
+    }
+}
 
-    database.ref('users/' + username).once('value').then((snapshot) => {
-        if (snapshot.exists()) {
-            alert('Ce nom d\'utilisateur est déjà utilisé.');
-        } else {
-            database.ref('users/' + username).set({
-                password: password
+// Initialize users fetch
+fetchUsers();
+
+// User selection event listener
+userSelectDropdown.addEventListener('change', function() {
+    const selectedUser = this.value;
+    if (selectedUser === 'addUser') {
+        const newUsername = prompt("Entrez le nom du nouvel utilisateur:");
+        if (newUsername) {
+            const defaultPassword = 'password'; // You might want to improve password handling
+            database.ref('users/' + newUsername).set({
+                password: defaultPassword // Store default password for simplicity, consider better practices
             }).then(() => {
-                alert('Inscription réussie ! Connectez-vous.');
-                signupContainer.style.display = 'none';
-                loginContainer.style.display = 'block';
+                alert(`Utilisateur "${newUsername}" ajouté avec le mot de passe par défaut "password". Veuillez le modifier.`);
+                fetchUsers(); // Refresh user list
+                // Optionally select the newly added user automatically:
+                userSelectDropdown.value = newUsername;
+                userSelectSuccess(newUsername);
             }).catch((error) => {
                 console.error('Error creating user:', error);
-                alert('Erreur lors de la création du compte');
+                alert('Erreur lors de la création de l\'utilisateur');
             });
+        } else {
+            // Reset dropdown selection if no username is entered
+            userSelectDropdown.value = '';
         }
-    });
+    } else if (selectedUser) {
+        userSelectSuccess(selectedUser);
+    }
 });
 
-signupButton.addEventListener('click', function() {
-    loginContainer.style.display = 'none';
-    signupContainer.style.display = 'block';
-});
 
-loginFromSignup.addEventListener('click', function() {
-    signupContainer.style.display = 'none';
-    loginContainer.style.display = 'block';
-});
-
-function loginSuccess(username) {
+function userSelectSuccess(username) {
     currentUser = username;
-    loginContainer.style.display = 'none';
-    signupContainer.style.display = 'none';
     dashboardContainer.style.display = 'block';
     userInfoElement.textContent = `Utilisateur: ${username}`;
-    checkSubscriptionStatus()
-        .then(isSubscribed => {
-            if (isSubscribed) {
-                // Continuer avec les opérations normales si l'utilisateur est abonné
-                updateTable();
-                updateStockTables();
-                updateAnalysis();
 
-                // Attacher la fonction d'écoute des modifications
-                listenForSalesDataChanges();
-            } else {
-                // Afficher la modale si l'utilisateur n'est pas abonné
-                showSubscriptionRequiredModal();
-            }
-        })
-        .catch(error => {
-            console.error("Erreur lors de la vérification de l'abonnement :", error);
-            // Gérer l'erreur, par exemple en affichant un message à l'utilisateur
-            alert("Erreur lors de la vérification de l'abonnement.");
-        });
+    updateTable();
+    updateStockTables();
+    updateAnalysis();
+
+    // Attacher la fonction d'écoute des modifications
+    listenForSalesDataChanges();
 }
 
 // Fonction pour écouter les modifications en temps réel dans Firebase
 function listenForSalesDataChanges() {
+    if (salesDataListener) {
+        database.ref('sales/' + currentUser).off('value', salesDataListener);
+    }
     salesDataListener = database.ref('sales/' + currentUser).on('value', (snapshot) => {
         salesData = [];
         snapshot.forEach((childSnapshot) => {
@@ -160,6 +142,8 @@ function listenForSalesDataChanges() {
         if (analysisSection.style.display === 'block') {
             updateAnalysis(salesData);
         }
+        renderTable(salesData); // Keep table updated on data changes
+        setupSearch(); // Re-setup search after data update
     });
 }
 
@@ -205,7 +189,7 @@ salesForm.addEventListener('submit', function(e) {
         SF: parseInt(document.getElementById('SF').value) || 0,
         PV: parseFloat(document.getElementById('PV').value) || 0
     };
-    
+
     // Save to Firebase
     database.ref('sales/' + currentUser).push(newEntry).then(() => {
         updateTable();
@@ -226,6 +210,7 @@ function updateTable() {
         salesData = [];
         snapshot.forEach((childSnapshot) => {
             const entry = childSnapshot.val();
+            entry.key = childSnapshot.key;
             entry.total = (entry.V * entry.PV).toFixed(2);
             salesData.push(entry);
         });
@@ -263,13 +248,13 @@ function updateStockTables() {
 function exportToExcel() {
     // Créer un nouveau classeur
     const wb = XLSX.utils.book_new();
-    
+
     // Convertir les données du tableau en une feuille de calcul
     const ws = XLSX.utils.table_to_sheet(document.getElementById('salesTable'));
-    
+
     // Ajouter la feuille au classeur
     XLSX.utils.book_append_sheet(wb, ws, "Ventes");
-    
+
     // Générer le fichier Excel et le télécharger
     XLSX.writeFile(wb, "ventes_wifi_zone.xlsx");
 }
@@ -318,7 +303,7 @@ function updateStockAfterDeletion(deletedEntry) {
             if (entries.length > 1 && entries[0].key !== deletedEntry.key) {
                 const previousEntry = entries[1];
                 const newStockFinal = previousEntry.SF + deletedEntry.V - deletedEntry.APP;
-                
+
                 return database.ref(`sales/${currentUser}/${previousEntry.key}`).update({SF: newStockFinal});
             }
             return Promise.resolve();
@@ -471,7 +456,7 @@ function updateAnalysis(data = salesData) {
 
 function updateChart(data) {
     const ctx = document.getElementById('salesChart').getContext('2d');
-    
+
     if (salesChart) {
         salesChart.destroy();
     }
@@ -597,7 +582,6 @@ themeToggle.addEventListener('click', () => {
 });
 
 
-
 // Appelle la fonction au chargement de la page (Modifié)
 document.addEventListener('DOMContentLoaded', () => {
     // Initialisation du thème basé sur les préférences sauvegardées ou clair par défaut
@@ -657,42 +641,6 @@ function updateStockTables(startDate, endDate) {
     });
 }
 
-function showSubscriptionRequiredModal() {
-    document.getElementById('subscriptionRequiredModal').style.display = 'flex';
-}
-
-function hideSubscriptionRequiredModal() {
-    document.getElementById('subscriptionRequiredModal').style.display = 'none';
-}
-
-function redirectToSubscription() {
-    window.location.href = 'index.html';
-}
-async function checkSubscriptionStatus() {
-    try {
-        const snapshot = await adminRef.once('value');
-        const subscription = snapshot.val();
-        const now = new Date();
-
-        if (subscription && subscription.status === 'active') {
-            const endDate = new Date(subscription.endDate);
-            if (endDate >= now) {
-                // Abonnement actif
-                return true;
-            } else {
-                // Abonnement expiré
-                await adminRef.update({ status: 'expired' });
-                return false;
-            }
-        } else {
-            // Pas d'abonnement actif
-            return false;
-        }
-    } catch (error) {
-        console.error("Erreur lors de la vérification de l'abonnement :", error);
-        throw error; // Propager l'erreur pour la gérer dans le flux d'appel
-    }
-}
 
 // Initial setup
 updateTable();
