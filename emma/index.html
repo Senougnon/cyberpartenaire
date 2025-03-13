@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBER CAMPUS - WIFI ZONE</title>
+    <link rel="stylesheet" href="styleA.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!--  Firebase App (compat) is NOT needed, removed it -->
+    <!--  Firebase Database (compat) is NOT needed, removed it -->
+    <script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
+
+    <style>
+        /* ... (Styles CSS - Pas de modifications ici) ... */
+        /* Style pour le modal de paiement */
+        .payment-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .payment-modal h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .payment-modal p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .payment-modal button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0 10px;
+        }
+
+        .payment-modal button:hover {
+            background-color: #e6a727;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        /* Style pour l'overlay */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        #subscriptionSection {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        #subscriptionSection h2 {
+            font-size: 24px;
+            color: #fdbb2d;
+            margin-bottom: 20px;
+        }
+
+        #subscriptionStatus {
+            font-size: 18px;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .subscription-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .subscription-buttons button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .subscription-buttons button:hover {
+            background-color: #e6a727;
+        }
+
+        /* Style pour le message d'abonnement requis */
+        .subscription-required {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .subscription-required-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .subscription-required-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .subscription-required-content p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .subscription-required-content button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0 10px;
+        }
+
+        .subscription-required-content button:hover {
+            background-color: #e6a727;
+        }
+        .loader-wrapper {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+        }
+
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .page-loader-wrapper {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1002;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .page-loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        .loader-message {
+            color: white;
+            margin-top: 16px;
+            font-size: 1rem;
+            text-align: center;
+            max-width: 80%;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-loader-wrapper" id="pageLoaderWrapper">
+        <div class="page-loader"></div>
+        <div class="loader-message" id="pageLoaderMessage">Initialisation...</div>
+    </div>
+    <div class="loader-wrapper" id="loaderWrapper">
+        <div class="loader"></div>
+    </div>
+    <div class="container">
+        <header>
+            <h1>CYBER CAMPUS - WIFI ZONE</h1>
+            <div class="wave"></div>
+        </header>
+
+        <main>
+            <div id="subscriptionSection">
+                <h2>Statut de l'Abonnement</h2>
+                <div id="subscriptionStatus"></div>
+                <div class="subscription-button">
+                    <button id="subscribeMonthly">S'abonner (Mensuel - 1000 FCFA)</button>
+                    <button id="subscribeYearly">S'abonner (Annuel - 10 000 FCFA)</button>
+                </div>
+            </div>
+            <div class="menu">
+                <a href="PageVenteTicket.html" class="menu-item" id="vente">
+                    <i data-lucide="ticket"></i>
+                    <h2>Vente de Tickets</h2>
+                    <p>Procédez à la vente de nouveaux tickets Wifi.</p>
+                </a>
+                <a href="AdminVentePartenaires.html" class="menu-item" id="inventaire">
+                    <i data-lucide="clipboard-list"></i>
+                    <h2>Inventaire des Tickets</h2>
+                    <p>Consultez l'état des ventes de vos partenaires.</p>
+                </a>
+                <a href="Stock.html" class="menu-item" id="stock">
+                    <i data-lucide="boxes"></i>
+                    <h2>Gestion des Stocks Partenaire</h2>
+                    <p>Suivez les stocks de tickets de vos partenaires.</p>
+                </a>
+                <a href="a3.html" class="menu-item" id="administration">
+                    <i data-lucide="settings"></i>
+                    <h2>Administration des Tickets</h2>
+                    <p>Gérez les tickets, activez ou désactivez-les.</p>
+                </a>
+                <button id="cancelSubscription" style="display: none;">Annuler l'abonnement</button>
+            </div>
+
+        </main>
+
+    </div>
+
+
+    <div id="paymentModal" class="payment-modal" style="display: none;">
+        <span class="close-modal" onclick="closePaymentModal()">×</span>
+        <h2>Paiement de l'Abonnement</h2>
+        <p>Choisissez votre plan d'abonnement et procédez au paiement via FedaPay.</p>
+        <!-- Les boutons de paiement seront ajoutés ici par le script -->
+    </div>
+
+    <div id="subscriptionRequiredModal" class="subscription-required" style="display: none;">
+        <div class="subscription-required-content">
+            <h2>Abonnement Requis</h2>
+            <p>Un abonnement actif est nécessaire pour accéder à cette fonctionnalité.</p>
+            <button onclick="redirectToSubscription()">S'abonner</button>
+            <button onclick="hideSubscriptionRequiredModal()">Fermer</button>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay" style="display: none;" onclick="closePaymentModal()"></div>
+
+    <script type="module">
+        import { getActiveDatabase } from './firebase-config-manager.js'; // Import from the external file
+        import { ref, get, set, push, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        let db; // Database object will be initialized here
+        let adminRef;
+        let connectedTicketsRef;
+
+
+        async function initializeDatabase() {
+          try{
+            db = await getActiveDatabase(); // Get the active database from the module
+            adminRef = ref(db, 'admin/subscription'); // Initialize adminRef after db is available
+            connectedTicketsRef = ref(db, 'TicketConnecté');
+            console.log("Database initialized in index.html");
+          } catch (error) {
+              console.error("Failed to initialize database:", error);
+              // Consider showing a user-friendly error message
+          }
+        }
+
+
+
+        const venteMenuItem = document.getElementById('vente');
+        const inventaireMenuItem = document.getElementById('inventaire');
+        const stockMenuItem = document.getElementById('stock');
+        const administrationMenuItem = document.getElementById('administration');
+        const subscriptionStatus = document.getElementById('subscriptionStatus');
+        const subscribeMonthlyButton = document.getElementById('subscribeMonthly');
+        const subscribeYearlyButton = document.getElementById('subscribeYearly');
+        const cancelSubscriptionButton = document.getElementById('cancelSubscription');
+        const paymentModal = document.getElementById('paymentModal');
+        const overlay = document.getElementById('overlay');
+        const subscriptionRequiredModal = document.getElementById('subscriptionRequiredModal');
+
+        function showLoader() {
+            document.getElementById('loaderWrapper').style.display = 'block';
+        }
+
+        function hideLoader() {
+            document.getElementById('loaderWrapper').style.display = 'none';
+        }
+
+        function showPageLoader() {
+            document.getElementById('pageLoaderWrapper').style.display = 'flex';
+        }
+
+        function hidePageLoader() {
+            document.getElementById('pageLoaderWrapper').style.display = 'none';
+        }
+
+        // Vérification immédiate avant tout chargement
+        (function() {
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+            if (!isLoggedIn) {
+                window.location.replace('loginAccueil.html');
+            }
+        })();
+
+        // Vérification continue pendant la session
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!sessionStorage.getItem('isLoggedIn')) {
+                window.location.replace('loginAccueil.html');
+            }
+        });
+
+        // Empêcher le retour à la page après déconnexion
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted || !sessionStorage.getItem('isLoggedIn')) {
+                window.location.replace('loginAccueil.html');
+            }
+        });
+
+        function showSubscriptionRequiredModal() {
+            subscriptionRequiredModal.style.display = 'flex';
+        }
+
+        function hideSubscriptionRequiredModal() {
+            subscriptionRequiredModal.style.display = 'none';
+        }
+
+        function redirectToSubscription() {
+            hideSubscriptionRequiredModal();
+            // Mettre l'accent sur la section d'abonnement
+        }
+
+        function checkSubscriptionStatus() {
+          if (!db) {
+            console.error("Database not initialized yet in checkSubscriptionStatus");
+            return; // Exit if db is not ready
+          }
+            get(adminRef).then((snapshot) => {
+                const subscription = snapshot.val();
+                const now = new Date();
+
+                if (subscription && subscription.status === 'active') {
+                    const endDate = new Date(subscription.endDate);
+                    if (endDate < now) {
+                        // L'abonnement a expiré
+                        subscriptionStatus.textContent = "Statut de l'abonnement: Expiré";
+                        subscriptionStatus.style.color = 'red';
+                        subscribeMonthlyButton.style.display = 'inline-block';
+                        subscribeYearlyButton.style.display = 'inline-block';
+                        cancelSubscriptionButton.style.display = 'none';
+
+                        // Mettre à jour l'état de l'abonnement dans la base de données comme 'expired'
+                        set(adminRef, { ...subscription, status: 'expired' });
+                    } else {
+                        // L'abonnement est actif
+                        subscriptionStatus.textContent = `Statut de l'abonnement: Actif jusqu'au ${endDate.toLocaleDateString()}`;
+                        subscriptionStatus.style.color = 'green';
+                        subscribeMonthlyButton.style.display = 'none';
+                        subscribeYearlyButton.style.display = 'none';
+                        cancelSubscriptionButton.style.display = 'inline-block';
+                    }
+                } else {
+                    // Pas d'abonnement actif
+                    subscriptionStatus.textContent = "Statut de l'abonnement: Inactif";
+                    subscriptionStatus.style.color = 'red';
+                    subscribeMonthlyButton.style.display = 'inline-block';
+                    subscribeYearlyButton.style.display = 'inline-block';
+                    cancelSubscriptionButton.style.display = 'none';
+                }
+            });
+        }
+
+        function checkUserAccess() {
+          if (!db) {
+             console.error("Database not initialized yet in checkUserAccess");
+             return;
+          }
+            get(adminRef).then((snapshot) => {
+                const subscription = snapshot.val();
+                if (!subscription || subscription.status !== 'active') {
+                    showSubscriptionRequiredModal();
+                }
+            });
+        }
+
+        venteMenuItem.addEventListener('click', (event) => {
+            event.preventDefault();
+            checkUserAccess();
+            window.location.href = 'PageVenteTicket.html';
+        });
+
+        inventaireMenuItem.addEventListener('click', (event) => {
+            event.preventDefault();
+            checkUserAccess();
+            window.location.href = 'AdminVentePartenaires.html';
+        });
+
+        stockMenuItem.addEventListener('click', (event) => {
+            event.preventDefault();
+            checkUserAccess();
+            window.location.href = 'Stock.html';
+        });
+
+        administrationMenuItem.addEventListener('click', (event) => {
+            event.preventDefault();
+            checkUserAccess();
+            window.location.href = 'a3.html';
+        });
+
+        subscribeMonthlyButton.addEventListener('click', () => {
+            initiatePayment('monthly');
+        });
+
+        subscribeYearlyButton.addEventListener('click', () => {
+            initiatePayment('yearly');
+        });
+
+        cancelSubscriptionButton.addEventListener('click', () => {
+            cancelSubscription();
+        });
+
+        function initiatePayment(plan) {
+            const amount = plan === 'monthly' ? 1000 : 10000;
+            const planDescription = plan === 'monthly' ? 'Abonnement mensuel' : 'Abonnement annuel';
+
+            FedaPay.init({
+                public_key: 'pk_live_TfSz212W0xSMKK7oPEogkFmp',
+                transaction: {
+                    amount: amount,
+                    description: planDescription,
+                },
+                customer: {
+                    email: 'admin@example.com', // Email de l'administrateur
+                },
+                onComplete: async function(response) {
+                        if (response.reason === FedaPay.DIALOG_DISMISSED) {
+                            alert('Paiement échoué.');
+                        } else if (response.reason === FedaPay.CHECKOUT_COMPLETED) {
+                            handleSuccessfulPayment(plan, response);
+                        }
+                    }
+            }).open();
+        }
+
+        async function handleSuccessfulPayment(plan, response) {
+          if(!db){
+            console.error("Database not initialized in handleSuccessfulPayment.");
+            return;
+          }
+            const startDate = new Date();
+            const endDate = new Date(startDate);
+            if (plan === 'monthly') {
+                endDate.setMonth(endDate.getMonth() + 1);
+            } else {
+                endDate.setFullYear(endDate.getFullYear() + 1);
+            }
+
+            const subscriptionData = {
+                status: 'active',
+                startDate: startDate.toISOString(),
+                endDate: endDate.toISOString(),
+                transactionId: response.transaction.id,
+                plan: plan
+            };
+
+            try {
+                await set(adminRef, subscriptionData);
+                checkSubscriptionStatus();
+                alert(`Abonnement ${plan === 'monthly' ? 'mensuel' : 'annuel'} réussi!`);
+            } catch (error) {
+                console.error('Erreur lors de la mise à jour de l\'abonnement:', error);
+                console.error('Détails de la réponse de FedaPay:', response);
+                console.error('Données d\'abonnement tentées:', subscriptionData);
+                alert('Erreur lors de la mise à jour de l\'abonnement.');
+            }
+        }
+
+        async function cancelSubscription() {
+          if(!db) {
+            console.error("Database not initialized in cancelSubscription.");
+            return;
+          }
+            try {
+                await set(adminRef, { ... (await get(adminRef)).val(), status: 'cancelled' });
+                checkSubscriptionStatus();
+                alert('Abonnement annulé.');
+            } catch (error) {
+                console.error('Erreur lors de l\'annulation de l\'abonnement:', error);
+                alert('Erreur lors de l\'annulation de l\'abonnement.');
+            }
+        }
+
+        // Fonction de déconnexion améliorée
+        function logout() {
+            sessionStorage.clear(); // Nettoie toutes les données de session
+            window.location.replace('loginAccueil.html');
+        }
+
+        async function processConnectedTickets() {
+            const pageLoaderMessage = document.getElementById('pageLoaderMessage');
+            if(!db) {
+              console.error("Database not initialized in processConnectedTickets.");
+              return;
+            }
+            try {
+                pageLoaderMessage.textContent = "Vérification des tickets connectés...";
+                const snapshot = await get(connectedTicketsRef);
+                let connectedTickets = snapshot.val() || {};
+
+                // Supprimer les doublons et récupérer les informations complètes des tickets
+                const uniqueTickets = {};
+                for (const ticketId in connectedTickets) {
+                    const user = connectedTickets[ticketId].username;
+                    if (!uniqueTickets[user]) {
+                        uniqueTickets[user] = connectedTickets[ticketId];
+                    }
+                }
+
+                pageLoaderMessage.textContent = "Traitement des tickets uniques...";
+                for (const user in uniqueTickets) {
+                    await processTicket(uniqueTickets[user]);
+                }
+
+                pageLoaderMessage.textContent = "Nettoyage des tickets traités...";
+
+                // Nettoyer tous les tickets de TicketConnecté
+                await remove(connectedTicketsRef);
+
+            } catch (error) {
+                console.error("Erreur lors du traitement des tickets connectés :", error);
+                showNotification("Erreur", "Une erreur est survenue lors du traitement des tickets.");
+            }
+        }
+
+        async function processTicket(ticket) {
+            const pageLoaderMessage = document.getElementById('pageLoaderMessage');
+            if(!db) {
+                console.error("Database not initialized in processTicket.");
+                return;
+            }
+            try {
+                pageLoaderMessage.textContent = `Vérification du ticket pour ${ticket.username}...`;
+
+                // Vérifier dans VendorsHistory
+                const vendorsHistoryRef = ref(db, 'VendorsHistory');
+                const vendorsHistorySnapshot = await get(vendorsHistoryRef);
+                const vendorsHistory = vendorsHistorySnapshot.val() || {};
+
+                let foundInHistory = false;
+                for (const vendorId in vendorsHistory) {
+                    const vendorHistory = vendorsHistory[vendorId];
+                    for (const saleId in vendorHistory) {
+                        if (vendorHistory[saleId].user === ticket.username) {
+                            foundInHistory = true;
+                            break;
+                        }
+                    }
+                    if (foundInHistory) break;
+                }
+
+                if (!foundInHistory) {
+                    pageLoaderMessage.textContent = `Traitement du ticket ${ticket.username}...`;
+
+                    // Vérifier dans TicketsTotal et TicketsTransit
+                    const ticketsTotalRef = ref(db, 'TicketsTotal');
+                    const ticketsTransitRef = ref(db, 'TicketsTransit');
+                    const totalSnapshot = await get(ticketsTotalRef);
+                    const transitSnapshot = await get(ticketsTransitRef);
+                    const totalTickets = totalSnapshot.val() || {};
+                    const transitTickets = transitSnapshot.val() || {};
+
+                    let foundTicket = null;
+                    let foundTicketRef = null;
+                    let foundInCategory = null;
+
+                    // Chercher dans TicketsTotal
+                    for (const category in totalTickets) {
+                        const ticketIndex = (totalTickets[category].utilisateur || []).indexOf(ticket.username);
+
+                        if (ticketIndex > -1) {
+                            foundTicket = {
+                                category: category,
+                                user: totalTickets[category].utilisateur[ticketIndex],
+                                password: totalTickets[category].motDePasse[ticketIndex],
+                                price: totalTickets[category].prix[ticketIndex],
+                                updatedData: {
+                                    ...totalTickets[category],
+                                    utilisateur: totalTickets[category].utilisateur.filter((_, index) => index !== ticketIndex),
+                                    motDePasse: totalTickets[category].motDePasse.filter((_, index) => index !== ticketIndex),
+                                    prix: totalTickets[category].prix.filter((_, index) => index !== ticketIndex)
+                                }
+                            };
+                            foundTicketRef = ref(db, `TicketsTotal/${category}`);
+                            foundInCategory = "TicketsTotal";
+                            break;
+                        }
+                    }
+
+                    // Si non trouvé dans TicketsTotal, chercher dans TicketsTransit
+                    if (!foundTicket) {
+                        for (const transitId in transitTickets) {
+                            if (transitTickets[transitId].user === ticket.username) {
+                                foundTicket = {
+                                    category: transitTickets[transitId].category,
+                                    user: transitTickets[transitId].user,
+                                    password: transitTickets[transitId].password,
+                                    price: transitTickets[transitId].price
+                                };
+                                foundTicketRef = ref(db, `TicketsTransit/${transitId}`);
+                                foundInCategory = "TicketsTransit";
+                                break;
+                            }
+                        }
+                    }
+
+                    if (foundTicket) {
+                        pageLoaderMessage.textContent = `Vente du ticket ${ticket.username}...`;
+                        await sellTicketAutomatically(foundTicket, foundTicketRef, foundInCategory);
+                    }
+                }
+            } catch (error) {
+                console.error("Erreur lors du traitement du ticket :", error);
+                showNotification("Erreur", `Erreur lors du traitement du ticket ${ticket.username}.`);
+            }
+        }
+
+        async function sellTicketAutomatically(ticket, ticketRef, foundInCategory) {
+          if(!db) {
+             console.error("Database not initialized in sellTicketAutomatically.");
+             return;
+          }
+            try {
+                const automaticVendorId = "Vendeur automatique";
+
+                // Enregistrement de la vente dans VendorsHistory
+                const vendorHistoryRef = ref(db, `VendorsHistory/${automaticVendorId}`);
+                await push(vendorHistoryRef, {
+                    category: ticket.category,
+                    user: ticket.user,
+                    password: ticket.password,
+                    price: ticket.price,
+                    soldAt: Date.now()
+                });
+
+                // Enregistrement de la vente dans TicketsVendus
+                const ticketsVendusRef = ref(db, 'TicketsVendus');
+                await push(ticketsVendusRef, {
+                    category: ticket.category,
+                    user: ticket.user,
+                    password: ticket.password,
+                    price: ticket.price,
+                    soldAt: Date.now(),
+                    vendorId: automaticVendorId
+                });
+
+                // Suppression du ticket de la source (TicketsTotal ou TicketsTransit)
+                if(foundInCategory === "TicketsTotal"){
+                    await set(ticketRef, ticket.updatedData);
+                } else {
+                    await remove(ticketRef);
+                }
+
+                console.log(`Ticket ${ticket.user} vendu automatiquement.`);
+            } catch (error) {
+                console.error("Erreur lors de la vente automatique du ticket :", error);
+                showNotification("Erreur", "Erreur lors de la vente automatique du ticket.");
+            }
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', async () => {
+            showPageLoader();
+            try {
+              await initializeDatabase(); // Initialize the database first
+              await processConnectedTickets(); // Then process connected tickets
+              checkSubscriptionStatus();    // Check subscription status
+              lucide.createIcons();        // Create icons
+            } catch (error) {
+              console.error("Initialization error:", error);
+              showNotification("Erreur", "Une erreur est survenue lors de l'initialisation.");
+            } finally {
+              hidePageLoader();            // Hide loader in all cases
+            }
+        });
+
+        window.redirectToSubscription = redirectToSubscription;
+        window.hideSubscriptionRequiredModal = redirectToSubscription;
+
+        function closePaymentModal() {
+            paymentModal.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+         window.onload = () => {
+
+            lucide.createIcons();
+        };
+    </script>
+
+</body>
+</html>

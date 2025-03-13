@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Administrateur - E-FDR WIFI ZONE</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #424242, #073018, #553a01);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card h3 {
+            color: #fdbb2d;
+            margin-bottom: 10px;
+        }
+
+        .filters {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        select, input {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        select option {
+            background: #1a2a6c;
+            color: white;
+        }
+
+        .sales-table {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative; /* Ajout pour le positionnement absolu des boutons */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            background: rgba(0, 0, 0, 0.2);
+            color: #fdbb2d;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+            color: rgb(60, 255, 0);
+        }
+
+        .delete-btn {
+            background: #b21f1f;
+        }
+
+        .clear-btn {
+            background: #1a2a6c;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .partners-management {
+            margin-bottom: 30px;
+        }
+
+        .partner-actions {
+            margin-bottom: 20px;
+        }
+
+        .partner-form {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .partner-form input {
+            margin-bottom: 10px;
+        }
+
+        .partners-table table {
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+        }
+
+        .loader-wrapper {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+        }
+
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .page-loader-wrapper {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1002;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .page-loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        .loader-message {
+            color: white;
+            margin-top: 16px;
+            font-size: 1rem;
+            text-align: center;
+            max-width: 80%;
+        }
+        .subscription-required {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .subscription-required-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .subscription-required-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .subscription-required-content p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .subscription-required-content button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0 10px;
+        }
+
+        .subscription-required-content button:hover {
+            background-color: #e6a727;
+        }
+
+        /* Styles pour les boutons d'exportation */
+        .export-buttons {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+            z-index: 10; /* Pour s'assurer qu'ils restent au-dessus du tableau */
+        }
+
+        .export-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .export-btn:hover {
+            background-color: #218838;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .export-btn i {
+            margin-right: 6px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="page-loader-wrapper" id="pageLoaderWrapper">
+        <div class="page-loader"></div>
+        <div class="loader-message" id="pageLoaderMessage">Initialisation...</div>
+    </div>
+    <div class="loader-wrapper" id="loaderWrapper">
+        <div class="loader"></div>
+    </div>
+    <div class="container">
+        <div class="header">
+            <h1>Dashboard Administrateur</h1>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total des ventes</h3>
+                <div id="totalSales">0 FCFA</div>
+            </div>
+            <div class="stat-card">
+                <h3>Nombre de tickets vendus</h3>
+                <div id="totalTickets">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Meilleur vendeur</h3>
+                <div id="topVendor">-</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <select id="vendorFilter">
+                <option value="all">Tous les vendeurs</option>
+            </select>
+            <select id="periodFilter">
+                <option value="today">Aujourd'hui</option>
+                <option value="week">Cette semaine</option>
+                <option value="month">Ce mois</option>
+                <option value="all">Toute la période</option>
+            </select>
+            <input type="date" id="startDate">
+            <input type="date" id="endDate">
+            <button class="action-btn" onclick="applyFilters()">Filtrer</button>
+        </div>
+
+        <div class="sales-table">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Vendeur</th>
+                        <th>Catégorie</th>
+                        <th>Utilisateur</th>
+                        <th>Prix</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="salesTable"></tbody>
+            </table>
+            <div class="export-buttns">
+                <button class="action-btn delete-btn" onclick="printTable()"><i data-lucide="printer"></i> Imprimer</button>
+                <button class="action-btn delete-btn" onclick="exportToPDF()"><i data-lucide="file-down"></i> Exporter en PDF</button>
+                <button class="action-btn delete-btn" onclick="exportToExcel()"><i data-lucide="file-spreadsheet"></i> Exporter en Excel</button>
+            </div>
+        </div>
+
+        <div class="partners-management">
+            <h2>Gestion des partenaires</h2>
+            <div class="partner-actions">
+                <button class="action-btn" onclick="showAddPartnerForm()">Ajouter un partenaire</button>
+            </div>
+
+            <div class="partner-form" id="addPartnerForm" style="display: none;">
+                <h3>Ajouter un partenaire</h3>
+                <input type="text" id="newPartnerName" placeholder="Nom du partenaire">
+                <input type="password" id="newPartnerPassword" placeholder="Mot de passe">
+                <button class="action-btn" onclick="addPartner()">Enregistrer</button>
+                <button class="action-btn clear-btn" onclick="hideAddPartnerForm()">Annuler</button>
+            </div>
+
+            <div class="partners-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nom du partenaire</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partnersTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="editPartnerModal" class="modal">
+            <div class="modal-content">
+                <h2>Modifier le partenaire</h2>
+                <input type="hidden" id="editPartnerId">
+                <input type="text" id="editPartnerName" placeholder="Nom du partenaire">
+                <input type="password" id="editPartnerPassword" placeholder="Mot de passe">
+                <div class="modal-actions">
+                    <button class="action-btn" onclick="closeEditModal()">Annuler</button>
+                    <button class="action-btn" onclick="updatePartner()">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="messagePartnerModal" class="modal">
+            <div class="modal-content">
+                <h2>Envoyer un message</h2>
+                <input type="hidden" id="messagePartnerId">
+                <textarea id="messageContent" placeholder="Votre message"></textarea>
+                <div class="modal-actions">
+                    <button class="action-btn" onclick="closeMessageModal()">Annuler</button>
+                    <button class="action-btn" onclick="sendMessage()">Envoyer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h2>Confirmation</h2>
+            <p id="modalMessage"></p>
+            <div class="modal-actions">
+                <button class="action-btn" onclick="closeModal()">Annuler</button>
+                <button class="action-btn delete-btn" id="confirmBtn">Confirmer</button>
+            </div>
+        </div>
+    </div>
+    <div id="subscriptionRequiredModal" class="subscription-required" style="display: none;">
+        <div class="subscription-required-content">
+            <h2>Abonnement Requis</h2>
+            <p>Un abonnement actif est nécessaire pour accéder à cette fonctionnalité.</p>
+            <button onclick="redirectToSubscription()">S'abonner</button>
+            <button onclick="hideSubscriptionRequiredModal()">Fermer</button>
+        </div>
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, get, remove, set, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        const firebaseConfig = {
+  apiKey: "AIzaSyB6AUBnK_7Vy2ABWI2JMo3ebG_Sljr8XlY",
+  authDomain: "cyber-campus-2706f.firebaseapp.com",
+  databaseURL: "https://cyber-campus-2706f-default-rtdb.firebaseio.com",
+  projectId: "cyber-campus-2706f",
+  storageBucket: "cyber-campus-2706f.appspot.com",
+  messagingSenderId: "719410601264",
+  appId: "1:719410601264:web:44fd2e3757721866303cf5",
+  measurementId: "G-CEEFJP5LYZ"
+};
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const adminRef = ref(db, 'admin/subscription');
+
+        let allSales = [];
+        let vendors = new Set();
+        let partners = {}; // Stockera les informations des partenaires
+
+        // ------ Fonctions pour la gestion des partenaires ------
+
+        // Charger la liste des partenaires
+        async function loadPartners() {
+            try {
+                const partnersRef = ref(db, 'Vendors');
+                const snapshot = await get(partnersRef);
+
+                if (snapshot.exists()) {
+                    partners = snapshot.val();
+                    updatePartnersTable();
+                }
+            } catch (error) {
+                console.error("Erreur lors du chargement des partenaires:", error);
+            }
+        }
+
+        // Mettre à jour le tableau des partenaires
+        function updatePartnersTable() {
+            const tbody = document.getElementById('partnersTable');
+            tbody.innerHTML = '';
+
+            for (const partnerId in partners) {
+                const partner = partners[partnerId];
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${partnerId}</td>
+                    <td>
+                        <button class="action-btn" onclick="showEditPartnerForm('${partnerId}')">Modifier</button>
+                        <button class="action-btn delete-btn" onclick="deletePartner('${partnerId}')">Supprimer</button>
+                        <button class="action-btn" onclick="showMessagePartnerForm('${partnerId}')">Message</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            }
+        }
+
+        // Afficher le formulaire d'ajout de partenaire
+        window.showAddPartnerForm = function() {
+            document.getElementById('addPartnerForm').style.display = 'block';
+        };
+
+        // Masquer le formulaire d'ajout de partenaire
+        window.hideAddPartnerForm = function() {
+            document.getElementById('newPartnerName').value = '';
+            document.getElementById('newPartnerPassword').value = '';
+            document.getElementById('addPartnerForm').style.display = 'none';
+        };
+
+        // Ajouter un nouveau partenaire
+        window.addPartner = async function() {
+            const name = document.getElementById('newPartnerName').value;
+            const password = document.getElementById('newPartnerPassword').value;
+
+            if (name && password) {
+                try {
+                    const partnersRef = ref(db, `Vendors/${name}`);
+                    await set(partnersRef, { password: password });
+                    await loadPartners();
+                    hideAddPartnerForm();
+                } catch (error) {
+                    console.error("Erreur lors de l'ajout du partenaire:", error);
+                }
+            } else {
+                alert('Veuillez remplir tous les champs.');
+            }
+        };
+
+        // Afficher le formulaire de modification de partenaire
+        window.showEditPartnerForm = function(partnerId) {
+            const modal = document.getElementById('editPartnerModal');
+            document.getElementById('editPartnerId').value = partnerId;
+            document.getElementById('editPartnerName').value = partnerId;
+            document.getElementById('editPartnerPassword').value = partners[partnerId].password;
+            modal.style.display = 'flex';
+        };
+
+        // Fermer le formulaire de modification de partenaire
+        window.closeEditModal = function() {
+            document.getElementById('editPartnerModal').style.display = 'none';
+        };
+
+        // Mettre à jour un partenaire
+        window.updatePartner = async function() {
+            const partnerId = document.getElementById('editPartnerId').value;
+            const name = document.getElementById('editPartnerName').value;
+            const password = document.getElementById('editPartnerPassword').value;
+
+            if (name && password) {
+                try {
+                    const partnersRef = ref(db, `Vendors/${name}`); // Met à jour avec le nouveau nom si modifié
+                    await set(partnersRef, { password: password });
+
+                    // Si le nom a changé, supprimer l'ancien
+                    if (partnerId !== name) {
+                        await remove(ref(db, `Vendors/${partnerId}`));
+                    }
+
+                    await loadPartners();
+                    closeEditModal();
+                } catch (error) {
+                    console.error("Erreur lors de la mise à jour du partenaire:", error);
+                }
+            } else {
+                alert('Veuillez remplir tous les champs.');
+            }
+        };
+
+        // Supprimer un partenaire
+        window.deletePartner = async function(partnerId) {
+            if (confirm(`Êtes-vous sûr de vouloir supprimer le partenaire ${partnerId} ?`)) {
+                try {
+                    const partnerRef = ref(db, `Vendors/${partnerId}`);
+                    await remove(partnerRef);
+                    await loadPartners();
+                } catch (error) {
+                    console.error("Erreur lors de la suppression du partenaire:", error);
+                }
+            }
+        };
+
+        // Afficher le formulaire d'envoi de message
+        window.showMessagePartnerForm = function(partnerId) {
+            const modal = document.getElementById('messagePartnerModal');
+            document.getElementById('messagePartnerId').value = partnerId;
+            document.getElementById('messageContent').value = '';
+            modal.style.display = 'flex';
+        };
+
+        // Fermer le formulaire d'envoi de message
+        window.closeMessageModal = function() {
+            document.getElementById('messagePartnerModal').style.display = 'none';
+        };
+
+        // Envoyer un message à un partenaire
+        window.sendMessage = async function() {
+            const partnerId = document.getElementById('messagePartnerId').value;
+            const message = document.getElementById('messageContent').value;
+
+            if (message) {
+                try {
+                    const messagesRef = ref(db, `Vendors/${partnerId}/messages`);
+                    await push(messagesRef, {
+                        content: message,
+                        timestamp: Date.now()
+                    });
+                    alert('Message envoyé !');
+                    closeMessageModal();
+                } catch (error) {
+                    console.error("Erreur lors de l'envoi du message:", error);
+                }
+            } else {
+                alert('Veuillez saisir un message.');
+            }
+        };
+
+        // ------ Fin des fonctions pour la gestion des partenaires ------
+
+        // Chargement initial des données de vente et des partenaires
+        async function loadSalesData() {
+            try {
+                // Charger les données des vendeurs
+                const vendorsRef = ref(db, 'VendorsHistory');
+                const vendorsSnapshot = await get(vendorsRef);
+
+                if (vendorsSnapshot.exists()) {
+                    vendors = new Set(Object.keys(vendorsSnapshot.val()));
+                    updateVendorFilter();
+                }
+
+                // Charger les données des ventes
+                const salesRef = ref(db, 'VendorsHistory');
+                const salesSnapshot = await get(salesRef);
+
+                if (salesSnapshot.exists()) {
+                    allSales = [];
+                    const data = salesSnapshot.val();
+                    Object.entries(data).forEach(([vendor, sales]) => {
+                        Object.entries(sales).forEach(([id, sale]) => {
+                            allSales.push({
+                                id,
+                                vendor,
+                                ...sale
+                            });
+                        });
+                    });
+                    applyFilters();
+                }
+            } catch (error) {
+                console.error("Erreur lors du chargement des données:", error);
+            }
+        }
+
+        // Ancienement loadVendors
+        function updateVendorFilter() {
+            const vendorFilter = document.getElementById('vendorFilter');
+            vendorFilter.innerHTML = '<option value="all">Tous les vendeurs</option>';
+            vendors.forEach(vendor => {
+                vendorFilter.innerHTML += `<option value="${vendor}">${vendor}</option>`;
+            });
+        }
+
+        async function loadSales() {
+            try {
+                const salesRef = ref(db, 'VendorsHistory');
+                const snapshot = await get(salesRef);
+                
+                if (snapshot.exists()) {
+                    allSales = [];
+                    const data = snapshot.val();
+                    Object.entries(data).forEach(([vendor, sales]) => {
+                        Object.entries(sales).forEach(([id, sale]) => {
+                            allSales.push({
+                                id,
+                                vendor,
+                                ...sale
+                            });
+                        });
+                    });
+                    applyFilters();
+                }
+            } catch (error) {
+                console.error("Erreur lors du chargement des ventes:", error);
+            }
+        }
+
+        window.applyFilters = function() {
+            const vendorFilter = document.getElementById('vendorFilter').value;
+            const periodFilter = document.getElementById('periodFilter').value;
+            const startDate = new Date(document.getElementById('startDate').value);
+            const endDate = new Date(document.getElementById('endDate').value);
+            endDate.setHours(23, 59, 59);
+
+            let filteredSales = allSales;
+
+            // Filtre par vendeur
+            if (vendorFilter !== 'all') {
+                filteredSales = filteredSales.filter(sale => sale.vendor === vendorFilter);
+            }
+
+            // Filtre par période
+            if (periodFilter !== 'all' || !isNaN(startDate.getTime()) || !isNaN(endDate.getTime())) {
+                const now = new Date();
+                const periods = {
+                    today: new Date(now.setHours(0, 0, 0, 0)),
+                    week: new Date(now.setDate(now.getDate() - now.getDay())),
+                    month: new Date(now.setDate(1))
+                };
+
+                filteredSales = filteredSales.filter(sale => {
+                    const saleDate = new Date(sale.soldAt);
+                    if (periodFilter !== 'all' && periods[periodFilter]) {
+                        return saleDate >= periods[periodFilter];
+                    }
+                    if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                        return saleDate >= startDate && saleDate <= endDate;
+                    }
+                    return true;
+                });
+            }
+
+            updateTable(filteredSales);
+            updateStats(filteredSales);
+        };
+
+        function updateTable(sales) {
+            const tbody = document.getElementById('salesTable');
+            tbody.innerHTML = sales
+                .sort((a, b) => b.soldAt - a.soldAt)
+                .map(sale => `
+                    <tr>
+                        <td>${new Date(sale.soldAt).toLocaleString()}</td>
+                        <td>${sale.vendor}</td>
+                        <td>${sale.category}</td>
+                        <td>${sale.user}</td>
+                        <td>${sale.price} FCFA</td>
+                        <td>
+                            <button class="action-btn delete-btn" onclick="deleteSale('${sale.vendor}', '${sale.id}')">
+                                Supprimer
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+        }
+
+        function updateStats(sales) {
+            const totalSales = sales.reduce((sum, sale) => sum + parseFloat(sale.price), 0);
+            const totalTickets = sales.length;
+            
+            const vendorSales = sales.reduce((acc, sale) => {
+                acc[sale.vendor] = (acc[sale.vendor] || 0) + parseFloat(sale.price);
+                return acc;
+            }, {});
+            const topVendor = Object.entries(vendorSales)
+                .sort(([,a], [,b]) => b - a)[0]?.[0] || '-';
+
+            document.getElementById('totalSales').textContent = `${totalSales.toLocaleString()} FCFA`;
+            document.getElementById('totalTickets').textContent = totalTickets;
+            document.getElementById('topVendor').textContent = topVendor;
+        }
+
+        window.deleteSale = function(vendor, saleId) {
+            const modal = document.getElementById('confirmModal');
+            document.getElementById('modalMessage').textContent = 'Êtes-vous sûr de vouloir supprimer cette vente ?';
+            
+            const confirmBtn = document.getElementById('confirmBtn');
+            confirmBtn.onclick = async () => {
+                try {
+                    await remove(ref(db, `VendorsHistory/${vendor}/${saleId}`));
+                    await loadSales();
+                    closeModal();
+                } catch (error) {
+                    console.error("Erreur lors de la suppression:", error);
+                }
+            };
+            
+            modal.style.display = 'flex';
+        };
+
+        window.clearVendorHistory = function(vendor) {
+            const modal = document.getElementById('confirmModal');
+            document.getElementById('modalMessage').textContent = 
+                `Êtes-vous sûr de vouloir effacer tout l'historique de ${vendor} ?`;
+            
+            const confirmBtn = document.getElementById('confirmBtn');
+            confirmBtn.onclick = async () => {
+                try {
+                    await set(ref(db, `VendorsHistory/${vendor}`), null);
+                    await loadSales();
+                    closeModal();
+                } catch (error) {
+                    console.error("Erreur lors de l'effacement:", error);
+                }
+            };
+            
+            modal.style.display = 'flex';
+        };
+
+        window.closeModal = function() {
+            document.getElementById('confirmModal').style.display = 'none';
+        };
+
+        function showLoader() {
+            document.getElementById('loaderWrapper').style.display = 'block';
+        }
+
+        function hideLoader() {
+            document.getElementById('loaderWrapper').style.display = 'none';
+        }
+
+        function showPageLoader() {
+            document.getElementById('pageLoaderWrapper').style.display = 'flex';
+        }
+
+        function hidePageLoader() {
+            document.getElementById('pageLoaderWrapper').style.display = 'none';
+        }
+
+        async function processConnectedTickets() {
+            const pageLoaderMessage = document.getElementById('pageLoaderMessage');
+            try {
+                pageLoaderMessage.textContent = "Vérification des tickets connectés...";
+                const connectedTicketsRef = ref(db, 'TicketConnecté');
+                const snapshot = await get(connectedTicketsRef);
+                let connectedTickets = snapshot.val() || {};
+
+                // Supprimer les doublons et récupérer les informations complètes des tickets
+                const uniqueTickets = {};
+                for (const ticketId in connectedTickets) {
+                    const user = connectedTickets[ticketId].username;
+                    if (!uniqueTickets[user]) {
+                        uniqueTickets[user] = connectedTickets[ticketId];
+                    }
+                }
+                
+                pageLoaderMessage.textContent = "Traitement des tickets uniques...";
+                for (const user in uniqueTickets) {
+                    await processTicket(uniqueTickets[user]);
+                }
+                
+                pageLoaderMessage.textContent = "Nettoyage des tickets traités...";
+                // Nettoyer les tickets traités de TicketConnecté
+                for (const user in uniqueTickets) {
+                    const ticketId = Object.keys(connectedTickets).find(key => connectedTickets[key].username === user);
+                    if (ticketId) {
+                        await remove(ref(db, `TicketConnecté/${ticketId}`));
+                    }
+                }
+
+            } catch (error) {
+                console.error("Erreur lors du traitement des tickets connectés :", error);
+                showNotification("Erreur", "Une erreur est survenue lors du traitement des tickets.");
+            }
+        }
+
+        async function processTicket(ticket) {
+            const pageLoaderMessage = document.getElementById('pageLoaderMessage');
+            try {
+                pageLoaderMessage.textContent = `Vérification du ticket pour ${ticket.username}...`;
+
+                // Vérifier dans VendorsHistory
+                const vendorsHistoryRef = ref(db, 'VendorsHistory');
+                const vendorsHistorySnapshot = await get(vendorsHistoryRef);
+                const vendorsHistory = vendorsHistorySnapshot.val() || {};
+
+                let foundInHistory = false;
+                for (const vendorId in vendorsHistory) {
+                    const vendorHistory = vendorsHistory[vendorId];
+                    for (const saleId in vendorHistory) {
+                        if (vendorHistory[saleId].user === ticket.username) {
+                            foundInHistory = true;
+                            break;
+                        }
+                    }
+                    if (foundInHistory) break;
+                }
+
+                if (!foundInHistory) {
+                    pageLoaderMessage.textContent = `Traitement du ticket ${ticket.username}...`;
+
+                    // Vérifier dans TicketsTotal et TicketsTransit
+                    const ticketsTotalRef = ref(db, 'TicketsTotal');
+                    const ticketsTransitRef = ref(db, 'TicketsTransit');
+                    const totalSnapshot = await get(ticketsTotalRef);
+                    const transitSnapshot = await get(ticketsTransitRef);
+                    const totalTickets = totalSnapshot.val() || {};
+                    const transitTickets = transitSnapshot.val() || {};
+
+                    let foundTicket = null;
+                    let foundTicketRef = null;
+                    let foundInCategory = null;
+
+                    // Chercher dans TicketsTotal
+                    for (const category in totalTickets) {
+                        const ticketIndex = (totalTickets[category].utilisateur || []                        ).indexOf(ticket.username);
+                        
+                        if (ticketIndex > -1) {
+                            foundTicket = {
+                                category: category,
+                                user: totalTickets[category].utilisateur[ticketIndex],
+                                password: totalTickets[category].motDePasse[ticketIndex],
+                                price: totalTickets[category].prix[ticketIndex],
+                                updatedData: {
+                                    ...totalTickets[category],
+                                    utilisateur: totalTickets[category].utilisateur.filter((_, index) => index !== ticketIndex),
+                                    motDePasse: totalTickets[category].motDePasse.filter((_, index) => index !== ticketIndex),
+                                    prix: totalTickets[category].prix.filter((_, index) => index !== ticketIndex)
+                                }
+                            };
+                            foundTicketRef = ref(db, `TicketsTotal/${category}`);
+                            foundInCategory = "TicketsTotal";
+                            break;
+                        }
+                    }
+
+                    // Si non trouvé dans TicketsTotal, chercher dans TicketsTransit
+                    if (!foundTicket) {
+                        for (const transitId in transitTickets) {
+                            if (transitTickets[transitId].user === ticket.username) {
+                                foundTicket = {
+                                    category: transitTickets[transitId].category,
+                                    user: transitTickets[transitId].user,
+                                    password: transitTickets[transitId].password,
+                                    price: transitTickets[transitId].price
+                                };
+                                foundTicketRef = ref(db, `TicketsTransit/${transitId}`);
+                                foundInCategory = "TicketsTransit";
+                                break;
+                            }
+                        }
+                    }
+
+                    if (foundTicket) {
+                        pageLoaderMessage.textContent = `Vente du ticket ${ticket.username}...`;
+                        await sellTicketAutomatically(foundTicket, foundTicketRef, foundInCategory);
+                    }
+                }
+            } catch (error) {
+                console.error("Erreur lors du traitement du ticket :", error);
+                showNotification("Erreur", `Erreur lors du traitement du ticket ${ticket.username}.`);
+            }
+        }
+
+        async function sellTicketAutomatically(ticket, ticketRef, foundInCategory) {
+            try {
+                const automaticVendorId = "Vendeur automatique";
+
+                // Enregistrement de la vente dans VendorsHistory
+                const vendorHistoryRef = ref(db, `VendorsHistory/${automaticVendorId}`);
+                await push(vendorHistoryRef, {
+                    category: ticket.category,
+                    user: ticket.user,
+                    password: ticket.password,
+                    price: ticket.price,
+                    soldAt: Date.now()
+                });
+
+                // Enregistrement de la vente dans TicketsVendus
+                const ticketsVendusRef = ref(db, 'TicketsVendus');
+                await push(ticketsVendusRef, {
+                    category: ticket.category,
+                    user: ticket.user,
+                    password: ticket.password,
+                    price: ticket.price,
+                    soldAt: Date.now(),
+                    vendorId: automaticVendorId
+                });
+
+                // Suppression du ticket de la source (TicketsTotal ou TicketsTransit)
+                if(foundInCategory === "TicketsTotal"){
+                    await set(ticketRef, ticket.updatedData);
+                } else {
+                    await remove(ticketRef);
+                }
+
+                console.log(`Ticket ${ticket.user} vendu automatiquement.`);
+            } catch (error) {
+                console.error("Erreur lors de la vente automatique du ticket :", error);
+                showNotification("Erreur", "Erreur lors de la vente automatique du ticket.");
+            }
+        }
+
+        function showSubscriptionRequiredModal() {
+            subscriptionRequiredModal.style.display = 'flex';
+        }
+
+        function hideSubscriptionRequiredModal() {
+            subscriptionRequiredModal.style.display = 'none';
+        }
+
+        function redirectToSubscription() {
+            window.location.href = 'index.html';
+        }
+        async function checkSubscriptionStatus() {
+            const pageLoaderMessage = document.getElementById('pageLoaderMessage');
+            pageLoaderMessage.textContent = "Vérification de l'abonnement...";
+
+            try {
+                const snapshot = await get(adminRef);
+                const subscription = snapshot.val();
+                const now = new Date();
+
+                if (subscription && subscription.status === 'active') {
+                    const endDate = new Date(subscription.endDate);
+                    if (endDate < now) {
+                        // Abonnement expiré
+                        pageLoaderMessage.textContent = "Abonnement expiré";
+                        hidePageLoader();
+
+                        showSubscriptionRequiredModal();
+
+                        await adminRef.update({ status: 'expired' });
+                    } else {
+                        // Abonnement actif
+                        pageLoaderMessage.textContent = "Abonnement actif";
+                        hidePageLoader();
+
+                    }
+                } else {
+                    // Pas d'abonnement
+                    pageLoaderMessage.textContent = "Pas d'abonnement actif";
+                    hidePageLoader();
+
+                    showSubscriptionRequiredModal();
+                }
+            } catch (error) {
+                hidePageLoader();
+                console.error("Erreur lors de la vérification de l'abonnement :", error);
+                pageLoaderMessage.textContent = "Erreur lors de la vérification de l'abonnement";
+                showNotification("Erreur", "Erreur lors de la vérification de l'abonnement.");
+            }
+        }
+
+        // Fonctions pour l'exportation des données
+        window.printTable = function() {
+            window.print();
+        };
+
+        window.exportToPDF = function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const table = document.getElementById("salesTable");
+
+            // Personnalisation du header du tableau
+            const headerStyles = {
+                fillColor: [42, 58, 108], // Couleur de fond bleu foncé
+                textColor: [255, 255, 255], // Texte en blanc
+                fontStyle: 'bold', // Texte en gras
+                halign: 'center' // Alignement horizontal au centre
+            };
+
+            // Personnalisation des cellules du tableau
+            const bodyStyles = {
+                halign: 'left' // Alignement horizontal à gauche
+            };
+
+            // Personnalisation du style du tableau
+            const styles = {
+                theme: 'grid', // Thème en grille pour une meilleure lisibilité
+                headStyles: headerStyles,
+                bodyStyles: bodyStyles,
+                margin: { top: 20 }, // Marge en haut pour le titre
+                startY: 20 // Position de départ du tableau sur la page
+            };
+
+            // Ajout d'un titre au document
+            doc.text("Liste des ventes", 14, 15);
+
+            // Génération du tableau avec autoTable
+            doc.autoTable({
+                html: '#salesTable',
+                ...styles
+            });
+
+            doc.save("ventes.pdf");
+        };
+
+        window.exportToExcel = function() {
+            const wb = XLSX.utils.table_to_book(document.getElementById('salesTable'), { sheet: "Ventes" });
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+
+            function s2ab(s) {
+                const buf = new ArrayBuffer(s.length);
+                const view = new Uint8Array(buf);
+                for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+                return buf;
+            }
+
+            saveAs(new Blob([s2ab(wbout)], { type: "application/octet-stream" }), "ventes.xlsx");
+        };
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await checkSubscriptionStatus();
+            await loadSalesData(); // Charger les données de vente et des vendeurs
+            await loadPartners(); // Charger la liste des partenaires
+            document.getElementById('periodFilter').value = 'today';
+            applyFilters();
+            lucide.createIcons();
+        });
+        window.redirectToSubscription = redirectToSubscription;
+        window.hideSubscriptionRequiredModal = redirectToSubscription;
+    </script>
+</body>
+</html>

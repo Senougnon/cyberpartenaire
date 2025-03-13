@@ -1,0 +1,193 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion Utilisateur</title>
+    <!-- Firebase App (compat) and Database (compat) are not needed with modular approach -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styleA.css">
+    <style>
+         /* Style pour le formulaire de connexion */
+         body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #fff;
+            background: linear-gradient(135deg, #1a2a6c, #fdbb2d);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+             margin: 0; /* Reset margin for the body */
+            padding: 0; /* Reset padding for the body */
+        }
+        .login-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a2a6c;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            text-align: left;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #1a2a6c;
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background-color: #1a2a6c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0e1639;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 1rem;
+            display: none;
+        }
+      /* Media query pour les écrans plus petits (smartphones) */
+        @media (max-width: 600px) {
+            .login-container {
+                padding: 1.5rem;
+                 max-width: 90%;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+                margin-bottom: 1.5rem;
+            }
+
+            input {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+            }
+          button {
+               padding: 0.8rem;
+              font-size: 0.9rem;
+          }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Connexion Administrateur</h1>
+        <form id="loginForm" onsubmit="return login(event)">
+            <div class="input-group">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">Se connecter</button>
+        </form>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <script type="module">
+        import { getActiveDatabase } from './firebase-config-manager.js'; // Import getActiveDatabase
+        import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        let database; // Database object
+
+        async function initializeDatabase() {
+            try {
+                database = await getActiveDatabase(); // Initialize database
+                console.log("Database initialized in loginAccueil.html");
+            } catch (error) {
+                console.error("Failed to initialize database in loginAccueil.html:", error);
+                // Handle database initialization error, e.g., display a message to the user
+                document.getElementById('errorMessage').textContent = 'Erreur de connexion à la base de données. Veuillez réessayer plus tard.';
+                document.getElementById('errorMessage').style.display = 'block';
+                return false; // Indicate initialization failure
+            }
+            return true; // Indicate successful initialization
+        }
+
+
+        async function login(event) {
+            event.preventDefault();
+
+            if (!database) { // Check if database is initialized
+                if (!await initializeDatabase()) { // Try to initialize and if fails, exit
+                    return;
+                }
+            }
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+
+            try {
+                const adminRef = ref(database, 'admins'); // Use the initialized database object
+                const snapshot = await get(adminRef);
+                const admins = snapshot.val();
+                if(!admins){
+                        errorMessage.textContent = 'Nom d\'utilisateur ou mot de passe incorrect';
+                        errorMessage.style.display = 'block';
+                       return;
+                }
+                const admin = Object.values(admins).find(admin =>
+                    admin.username === username && admin.password === password
+                );
+
+
+                if (admin) {
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    window.location.href = 'index.html';
+                } else {
+                    errorMessage.textContent = 'Nom d\'utilisateur ou mot de passe incorrect';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Erreur de connexion:', error);
+                errorMessage.textContent = 'Une erreur est survenue. Veuillez réessayer.';
+                errorMessage.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
