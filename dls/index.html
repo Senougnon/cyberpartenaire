@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion Wifi Zone - Accueil</title>
+    <title>DLS WIFI ZONE</title>
     <link rel="stylesheet" href="styleA.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -12,6 +12,7 @@
     <script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
 
     <style>
+        /* ... (Styles CSS - Pas de modifications ici) ... */
         /* Style pour le modal de paiement */
         .payment-modal {
             display: none;
@@ -167,53 +168,119 @@
         .subscription-required-content button:hover {
             background-color: #e6a727;
         }
+        .loader-wrapper {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+        }
+
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .page-loader-wrapper {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1002;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .page-loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        .loader-message {
+            color: white;
+            margin-top: 16px;
+            font-size: 1rem;
+            text-align: center;
+            max-width: 80%;
+        }
     </style>
 </head>
 <body>
+    <div class="page-loader-wrapper" id="pageLoaderWrapper">
+        <div class="page-loader"></div>
+        <div class="loader-message" id="pageLoaderMessage">Initialisation...</div>
+    </div>
+    <div class="loader-wrapper" id="loaderWrapper">
+        <div class="loader"></div>
+    </div>
     <div class="container">
         <header>
             <h1>DLS WIFI ZONE</h1>
-            <div class="wave"></div> 
+            <div class="wave"></div>
         </header>
 
         <main>
             <div id="subscriptionSection">
                 <h2>Statut de l'Abonnement</h2>
                 <div id="subscriptionStatus"></div>
-                <div class="subscription-buttons">
+                <div class="subscription-button">
                     <button id="subscribeMonthly">S'abonner (Mensuel - 1000 FCFA)</button>
                     <button id="subscribeYearly">S'abonner (Annuel - 10 000 FCFA)</button>
                 </div>
             </div>
             <div class="menu">
                 <a href="PageVenteTicket.html" class="menu-item" id="vente">
-                    <i data-lucide="ticket"></i>
+                    <i class="fas fa-ticket-alt"></i>
                     <h2>Vente de Tickets</h2>
                     <p>Procédez à la vente de nouveaux tickets Wifi.</p>
                 </a>
                 <a href="AdminVentePartenaires.html" class="menu-item" id="inventaire">
-                    <i data-lucide="clipboard-list"></i>
+                    <i class="fas fa-clipboard-list"></i>
                     <h2>Inventaire des Tickets</h2>
                     <p>Consultez l'état des ventes de vos partenaires.</p>
                 </a>
                 <a href="Stock.html" class="menu-item" id="stock">
-                    <i data-lucide="boxes"></i>
+                    <i class="fas fa-boxes"></i>
                     <h2>Gestion des Stocks Partenaire</h2>
                     <p>Suivez les stocks de tickets de vos partenaires.</p>
                 </a>
                 <a href="a3.html" class="menu-item" id="administration">
-                    <i data-lucide="settings"></i>
+                    <i class="fas fa-cog"></i>
                     <h2>Administration des Tickets</h2>
                     <p>Gérez les tickets, activez ou désactivez-les.</p>
                 </a>
                 <button id="cancelSubscription" style="display: none;">Annuler l'abonnement</button>
             </div>
-            
+
         </main>
 
     </div>
 
-    
+
     <div id="paymentModal" class="payment-modal" style="display: none;">
         <span class="close-modal" onclick="closePaymentModal()">×</span>
         <h2>Paiement de l'Abonnement</h2>
@@ -232,8 +299,9 @@
 
     <div class="overlay" id="overlay" style="display: none;" onclick="closePaymentModal()"></div>
 
-    <script>
-const _0xd72e6a=_0x54ef;(function(_0x9a41c6,_0x21da2b){const _0x3c2dcb=_0x54ef,_0x313970=_0x9a41c6();while(!![]){try{const _0x1c2bf7=-parseInt(_0x3c2dcb(0x1dc))/0x1*(parseInt(_0x3c2dcb(0x219))/0x2)+parseInt(_0x3c2dcb(0x208))/0x3*(parseInt(_0x3c2dcb(0x1df))/0x4)+parseInt(_0x3c2dcb(0x1d7))/0x5+parseInt(_0x3c2dcb(0x200))/0x6+-parseInt(_0x3c2dcb(0x205))/0x7+parseInt(_0x3c2dcb(0x1e1))/0x8*(-parseInt(_0x3c2dcb(0x1e0))/0x9)+-parseInt(_0x3c2dcb(0x20b))/0xa;if(_0x1c2bf7===_0x21da2b)break;else _0x313970['push'](_0x313970['shift']());}catch(_0x5d1ba6){_0x313970['push'](_0x313970['shift']());}}}(_0x19d3,0x46331));const firebaseConfig={'apiKey':_0xd72e6a(0x209),'authDomain':_0xd72e6a(0x1da),'databaseURL':_0xd72e6a(0x1ef),'projectId':'dlswifi','storageBucket':_0xd72e6a(0x1fa),'messagingSenderId':_0xd72e6a(0x1d1),'appId':_0xd72e6a(0x202),'measurementId':_0xd72e6a(0x1e5)};firebase[_0xd72e6a(0x1eb)](firebaseConfig);const database=firebase[_0xd72e6a(0x1f5)](),adminRef=database[_0xd72e6a(0x20e)](_0xd72e6a(0x21a)),venteMenuItem=document[_0xd72e6a(0x1db)](_0xd72e6a(0x21f)),inventaireMenuItem=document[_0xd72e6a(0x1db)](_0xd72e6a(0x1de)),stockMenuItem=document[_0xd72e6a(0x1db)](_0xd72e6a(0x214)),administrationMenuItem=document[_0xd72e6a(0x1db)](_0xd72e6a(0x21b)),subscriptionStatus=document[_0xd72e6a(0x1db)]('subscriptionStatus'),subscribeMonthlyButton=document['getElementById'](_0xd72e6a(0x207)),subscribeYearlyButton=document[_0xd72e6a(0x1db)](_0xd72e6a(0x1ee)),cancelSubscriptionButton=document[_0xd72e6a(0x1db)](_0xd72e6a(0x1e9)),paymentModal=document[_0xd72e6a(0x1db)](_0xd72e6a(0x1d0)),overlay=document[_0xd72e6a(0x1db)](_0xd72e6a(0x1ea)),subscriptionRequiredModal=document[_0xd72e6a(0x1db)](_0xd72e6a(0x1ff));function showSubscriptionRequiredModal(){const _0x44d120=_0xd72e6a;subscriptionRequiredModal[_0x44d120(0x1d2)]['display']=_0x44d120(0x1d8);}function hideSubscriptionRequiredModal(){const _0x492350=_0xd72e6a;subscriptionRequiredModal[_0x492350(0x1d2)][_0x492350(0x1dd)]=_0x492350(0x203);}function redirectToSubscription(){hideSubscriptionRequiredModal();}function checkSubscriptionStatus(){const _0x2df8ee=_0xd72e6a;adminRef['on'](_0x2df8ee(0x21d),_0x4b02ec=>{const _0x35d4e0=_0x2df8ee,_0x193220=_0x4b02ec['val'](),_0x5c2596=new Date();if(_0x193220&&_0x193220[_0x35d4e0(0x1d5)]===_0x35d4e0(0x20a)){const _0x2176a4=new Date(_0x193220['endDate']);_0x2176a4<_0x5c2596?(subscriptionStatus['textContent']='Statut\x20de\x20l\x27abonnement:\x20Expiré',subscriptionStatus[_0x35d4e0(0x1d2)][_0x35d4e0(0x21c)]=_0x35d4e0(0x1d6),subscribeMonthlyButton[_0x35d4e0(0x1d2)][_0x35d4e0(0x1dd)]=_0x35d4e0(0x216),subscribeYearlyButton[_0x35d4e0(0x1d2)][_0x35d4e0(0x1dd)]=_0x35d4e0(0x216),cancelSubscriptionButton[_0x35d4e0(0x1d2)][_0x35d4e0(0x1dd)]=_0x35d4e0(0x203),adminRef[_0x35d4e0(0x21e)]({'status':'expired'})):(subscriptionStatus[_0x35d4e0(0x1e3)]=_0x35d4e0(0x206)+_0x2176a4[_0x35d4e0(0x1f8)](),subscriptionStatus[_0x35d4e0(0x1d2)]['color']=_0x35d4e0(0x1f3),subscribeMonthlyButton[_0x35d4e0(0x1d2)][_0x35d4e0(0x1dd)]=_0x35d4e0(0x203),subscribeYearlyButton['style']['display']=_0x35d4e0(0x203),cancelSubscriptionButton[_0x35d4e0(0x1d2)]['display']=_0x35d4e0(0x216));}else subscriptionStatus['textContent']='Statut\x20de\x20l\x27abonnement:\x20Inactif',subscriptionStatus[_0x35d4e0(0x1d2)][_0x35d4e0(0x21c)]=_0x35d4e0(0x1d6),subscribeMonthlyButton[_0x35d4e0(0x1d2)][_0x35d4e0(0x1dd)]=_0x35d4e0(0x216),subscribeYearlyButton[_0x35d4e0(0x1d2)][_0x35d4e0(0x1dd)]=_0x35d4e0(0x216),cancelSubscriptionButton[_0x35d4e0(0x1d2)][_0x35d4e0(0x1dd)]='none';});}function checkUserAccess(){const _0x1c8cbb=_0xd72e6a;adminRef[_0x1c8cbb(0x1f0)]('value',_0x585361=>{const _0x139775=_0x1c8cbb,_0x1fb474=_0x585361[_0x139775(0x1fe)]();(!_0x1fb474||_0x1fb474['status']!=='active')&&showSubscriptionRequiredModal();});}venteMenuItem['addEventListener'](_0xd72e6a(0x1f7),_0x1573bf=>{const _0x49e417=_0xd72e6a;_0x1573bf['preventDefault'](),checkUserAccess(),window[_0x49e417(0x1ed)]['href']=_0x49e417(0x20f);}),inventaireMenuItem[_0xd72e6a(0x212)](_0xd72e6a(0x1f7),_0xe0a7d9=>{const _0x3b391e=_0xd72e6a;_0xe0a7d9[_0x3b391e(0x1d9)](),checkUserAccess(),window[_0x3b391e(0x1ed)]['href']=_0x3b391e(0x1e6);}),stockMenuItem['addEventListener'](_0xd72e6a(0x1f7),_0x9d0723=>{const _0x231e3b=_0xd72e6a;_0x9d0723[_0x231e3b(0x1d9)](),checkUserAccess(),window['location'][_0x231e3b(0x1d3)]=_0x231e3b(0x1fd);}),administrationMenuItem['addEventListener']('click',_0x4f4c8f=>{const _0x48b477=_0xd72e6a;_0x4f4c8f[_0x48b477(0x1d9)](),checkUserAccess(),window['location'][_0x48b477(0x1d3)]=_0x48b477(0x1f9);}),subscribeMonthlyButton[_0xd72e6a(0x212)](_0xd72e6a(0x1f7),()=>{initiatePayment('monthly');}),subscribeYearlyButton[_0xd72e6a(0x212)](_0xd72e6a(0x1f7),()=>{const _0x3ede38=_0xd72e6a;initiatePayment(_0x3ede38(0x20d));}),cancelSubscriptionButton[_0xd72e6a(0x212)]('click',()=>{cancelSubscription();});function initiatePayment(_0x15e247){const _0x2b9d47=_0xd72e6a,_0x64e486=_0x15e247===_0x2b9d47(0x1f4)?0x3e8:0x2710,_0x54ed00=_0x15e247===_0x2b9d47(0x1f4)?_0x2b9d47(0x210):_0x2b9d47(0x213);FedaPay[_0x2b9d47(0x201)]({'public_key':_0x2b9d47(0x1e2),'transaction':{'amount':_0x64e486,'description':_0x54ed00},'customer':{'email':'admin@example.com'},'onComplete':async function(_0x3ede1b){const _0x437526=_0x2b9d47;if(_0x3ede1b[_0x437526(0x1e8)]===FedaPay[_0x437526(0x218)])alert('Paiement\x20échoué.');else _0x3ede1b[_0x437526(0x1e8)]===FedaPay[_0x437526(0x220)]&&handleSuccessfulPayment(_0x15e247,_0x3ede1b);}})['open']();}async function handleSuccessfulPayment(_0x5477c1,_0x188533){const _0x2bd499=_0xd72e6a,_0x2c9caf=new Date(),_0x41b385=new Date(_0x2c9caf);_0x5477c1==='monthly'?_0x41b385[_0x2bd499(0x20c)](_0x41b385[_0x2bd499(0x1ec)]()+0x1):_0x41b385[_0x2bd499(0x1fc)](_0x41b385[_0x2bd499(0x1f1)]()+0x1);const _0x3a610a={'status':_0x2bd499(0x20a),'startDate':_0x2c9caf[_0x2bd499(0x1f6)](),'endDate':_0x41b385[_0x2bd499(0x1f6)](),'transactionId':_0x188533[_0x2bd499(0x217)]['id'],'plan':_0x5477c1};try{await adminRef['set'](_0x3a610a),checkSubscriptionStatus(),alert('Abonnement\x20'+(_0x5477c1===_0x2bd499(0x1f4)?_0x2bd499(0x1e4):_0x2bd499(0x1e7))+'\x20réussi!');}catch(_0x2c157b){console[_0x2bd499(0x1fb)](_0x2bd499(0x1cf),_0x2c157b),console[_0x2bd499(0x1fb)]('Détails\x20de\x20la\x20réponse\x20de\x20FedaPay:',_0x188533),console[_0x2bd499(0x1fb)](_0x2bd499(0x1d4),_0x3a610a),alert(_0x2bd499(0x1f2));}}async function cancelSubscription(){const _0xbbb2a9=_0xd72e6a;try{await adminRef[_0xbbb2a9(0x21e)]({'status':_0xbbb2a9(0x204)}),checkSubscriptionStatus(),alert(_0xbbb2a9(0x211));}catch(_0x580af5){console[_0xbbb2a9(0x1fb)](_0xbbb2a9(0x215),_0x580af5),alert('Erreur\x20lors\x20de\x20l\x27annulation\x20de\x20l\x27abonnement.');}}document[_0xd72e6a(0x212)]('DOMContentLoaded',()=>{checkSubscriptionStatus(),lucide['createIcons']();}),lucide['createIcons']();function _0x54ef(_0x115367,_0x3cb208){const _0x19d388=_0x19d3();return _0x54ef=function(_0x54ef3a,_0x1f8405){_0x54ef3a=_0x54ef3a-0x1cf;let _0x44e1fe=_0x19d388[_0x54ef3a];return _0x44e1fe;},_0x54ef(_0x115367,_0x3cb208);}function _0x19d3(){const _0x1c8325=['active','1142910GvPjid','setMonth','yearly','ref','PageVenteTicket.html','Abonnement\x20mensuel','Abonnement\x20annulé.','addEventListener','Abonnement\x20annuel','stock','Erreur\x20lors\x20de\x20l\x27annulation\x20de\x20l\x27abonnement:','inline-block','transaction','DIALOG_DISMISSED','220288iDhOqh','admin/subscription','administration','color','value','update','vente','CHECKOUT_COMPLETED','Erreur\x20lors\x20de\x20la\x20mise\x20à\x20jour\x20de\x20l\x27abonnement:','paymentModal','914445912574','style','href','Données\x20d\x27abonnement\x20tentées:','status','red','1435480HwuvLl','flex','preventDefault','dlswifi.firebaseapp.com','getElementById','2pzRlLe','display','inventaire','12fqlpdw','98955AkBrjD','40iULNSe','pk_live_TfSz212W0xSMKK7oPEogkFmp','textContent','mensuel','G-YDLNR7S0C6','AdminVentePartenaires.html','annuel','reason','cancelSubscription','overlay','initializeApp','getMonth','location','subscribeYearly','https://dlswifi-default-rtdb.firebaseio.com','once','getFullYear','Erreur\x20lors\x20de\x20la\x20mise\x20à\x20jour\x20de\x20l\x27abonnement.','green','monthly','database','toISOString','click','toLocaleDateString','a3.html','dlswifi.firebasestorage.app','error','setFullYear','Stock.html','val','subscriptionRequiredModal','3161862FonuGd','init','1:914445912574:web:4448ebbc615241b63ad8af','none','cancelled','3658256tBwGpo','Statut\x20de\x20l\x27abonnement:\x20Actif\x20jusqu\x27au\x20','subscribeMonthly','385626NcPgfc','AIzaSyBwLgE4rF7RimBCr2cx8krF2c9FpXetQLc'];_0x19d3=function(){return _0x1c8325;};return _0x19d3();}
+    <script type="module">
+ const _0x145973=_0x481a;function _0x481a(_0x211809,_0x1801ee){const _0x380455=_0x3804();return _0x481a=function(_0x481a0d,_0x13de9c){_0x481a0d=_0x481a0d-0x179;let _0x2869fe=_0x380455[_0x481a0d];return _0x2869fe;},_0x481a(_0x211809,_0x1801ee);}(function(_0x35d5e2,_0x21973c){const _0x39b090=_0x481a,_0x3eb484=_0x35d5e2();while(!![]){try{const _0x49a3ef=-parseInt(_0x39b090(0x1ae))/0x1*(-parseInt(_0x39b090(0x1c7))/0x2)+parseInt(_0x39b090(0x1d7))/0x3+parseInt(_0x39b090(0x1eb))/0x4*(parseInt(_0x39b090(0x19a))/0x5)+-parseInt(_0x39b090(0x1c4))/0x6+parseInt(_0x39b090(0x1d0))/0x7*(-parseInt(_0x39b090(0x194))/0x8)+-parseInt(_0x39b090(0x191))/0x9+-parseInt(_0x39b090(0x1e5))/0xa;if(_0x49a3ef===_0x21973c)break;else _0x3eb484['push'](_0x3eb484['shift']());}catch(_0x3cfa01){_0x3eb484['push'](_0x3eb484['shift']());}}}(_0x3804,0x3ad52));import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';import{getDatabase,ref,get,set,push,remove}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';const firebaseConfig={'apiKey':_0x145973(0x188),'authDomain':'dlswifi.firebaseapp.com','databaseURL':_0x145973(0x17e),'projectId':_0x145973(0x1ec),'storageBucket':_0x145973(0x1b5),'messagingSenderId':'914445912574','appId':_0x145973(0x196),'measurementId':_0x145973(0x19e)},app=initializeApp(firebaseConfig),database=getDatabase(app),adminRef=ref(database,_0x145973(0x1b9)),connectedTicketsRef=ref(database,_0x145973(0x192)),venteMenuItem=document[_0x145973(0x1b1)](_0x145973(0x1a8)),inventaireMenuItem=document[_0x145973(0x1b1)](_0x145973(0x1e2)),stockMenuItem=document['getElementById'](_0x145973(0x1cf)),administrationMenuItem=document[_0x145973(0x1b1)](_0x145973(0x1be)),subscriptionStatus=document[_0x145973(0x1b1)](_0x145973(0x195)),subscribeMonthlyButton=document[_0x145973(0x1b1)](_0x145973(0x1e8)),subscribeYearlyButton=document[_0x145973(0x1b1)](_0x145973(0x1ee)),cancelSubscriptionButton=document[_0x145973(0x1b1)](_0x145973(0x19b)),paymentModal=document[_0x145973(0x1b1)](_0x145973(0x18f)),overlay=document['getElementById'](_0x145973(0x1b6)),subscriptionRequiredModal=document[_0x145973(0x1b1)]('subscriptionRequiredModal');function showLoader(){const _0x2d4300=_0x145973;document[_0x2d4300(0x1b1)](_0x2d4300(0x1c2))[_0x2d4300(0x1a2)]['display']=_0x2d4300(0x1c5);}function hideLoader(){const _0x19ca41=_0x145973;document[_0x19ca41(0x1b1)]('loaderWrapper')[_0x19ca41(0x1a2)][_0x19ca41(0x197)]=_0x19ca41(0x18b);}function _0x3804(){const _0x1f3178=['click','loginAccueil.html','Stock.html','Abonnement\x20','\x20réussi!','color','href','textContent','inventaire','monthly','indexOf','30890hAtwJK','utilisateur','Erreur\x20lors\x20du\x20traitement\x20du\x20ticket\x20:','subscribeMonthly','val','username','4SVKHJy','dlswifi','password','subscribeYearly','error','user','then','pageshow','preventDefault','Erreur\x20lors\x20de\x20la\x20vente\x20automatique\x20du\x20ticket.','red','isLoggedIn','TicketsTransit','https://dlswifi-default-rtdb.firebaseio.com','updatedData','clear','Statut\x20de\x20l\x27abonnement:\x20Inactif','Statut\x20de\x20l\x27abonnement:\x20Actif\x20jusqu\x27au\x20','Détails\x20de\x20la\x20réponse\x20de\x20FedaPay:','Abonnement\x20annuel','location','price','Abonnement\x20annulé.','AIzaSyBwLgE4rF7RimBCr2cx8krF2c9FpXetQLc','open','yearly','none','Paiement\x20échoué.','replace','getItem','paymentModal','getMonth','1799055QwfqQT','TicketConnecté','DIALOG_DISMISSED','155336lBrCUF','subscriptionStatus','1:914445912574:web:4448ebbc615241b63ad8af','display','filter','green','2331430GNiekp','cancelSubscription','prix','setMonth','G-YDLNR7S0C6','Une\x20erreur\x20est\x20survenue\x20lors\x20de\x20l\x27initialisation.','Erreur\x20lors\x20de\x20la\x20mise\x20à\x20jour\x20de\x20l\x27abonnement:','VendorsHistory','style','annuel','pk_live_TfSz212W0xSMKK7oPEogkFmp','CHECKOUT_COMPLETED','mensuel','persisted','vente','pageLoaderMessage','cancelled','transaction','Erreur\x20lors\x20du\x20traitement\x20des\x20tickets\x20:','Abonnement\x20mensuel','43209yPUGQC','Données\x20d\x27abonnement\x20tentées:','Une\x20erreur\x20est\x20survenue\x20lors\x20du\x20traitement\x20des\x20tickets.','getElementById','toISOString','Erreur\x20lors\x20de\x20l\x27annulation\x20de\x20l\x27abonnement:','Ticket\x20','dlswifi.firebasestorage.app','overlay','DOMContentLoaded','category','admin/subscription','addEventListener','onload','a3.html','Erreur\x20lors\x20de\x20la\x20vente\x20automatique\x20du\x20ticket\x20:','administration','TicketsTransit/','Erreur\x20lors\x20de\x20l\x27annulation\x20de\x20l\x27abonnement.','inline-block','loaderWrapper','flex','1194402dMatBL','block','motDePasse','18BxkmZP','TicketsVendus','Erreur','log','active','admin@example.com','TicketsTotal/','AdminVentePartenaires.html','stock','140FjbZth','reason','TicketsTotal','status','catch','Vérification\x20des\x20tickets\x20connectés...','hideSubscriptionRequiredModal','528606ChXfAg','\x20vendu\x20automatiquement.','now'];_0x3804=function(){return _0x1f3178;};return _0x3804();}function showPageLoader(){const _0x45b8c7=_0x145973;document[_0x45b8c7(0x1b1)]('pageLoaderWrapper')[_0x45b8c7(0x1a2)]['display']=_0x45b8c7(0x1c3);}function hidePageLoader(){const _0x296094=_0x145973;document[_0x296094(0x1b1)]('pageLoaderWrapper')[_0x296094(0x1a2)]['display']=_0x296094(0x18b);}(function(){const _0xc1063f=_0x145973,_0x5e7bab=sessionStorage[_0xc1063f(0x18e)](_0xc1063f(0x17c));!_0x5e7bab&&window[_0xc1063f(0x185)][_0xc1063f(0x18d)](_0xc1063f(0x1db));}()),document[_0x145973(0x1ba)](_0x145973(0x1b7),function(){const _0x44d004=_0x145973;!sessionStorage[_0x44d004(0x18e)](_0x44d004(0x17c))&&window[_0x44d004(0x185)][_0x44d004(0x18d)](_0x44d004(0x1db));}),window['addEventListener'](_0x145973(0x1f2),function(_0x22f6fb){const _0x59a546=_0x145973;(_0x22f6fb[_0x59a546(0x1a7)]||!sessionStorage[_0x59a546(0x18e)](_0x59a546(0x17c)))&&window[_0x59a546(0x185)]['replace'](_0x59a546(0x1db));});function showSubscriptionRequiredModal(){const _0x31a7a4=_0x145973;subscriptionRequiredModal[_0x31a7a4(0x1a2)]['display']='flex';}function hideSubscriptionRequiredModal(){const _0x341a45=_0x145973;subscriptionRequiredModal[_0x341a45(0x1a2)]['display']=_0x341a45(0x18b);}function redirectToSubscription(){hideSubscriptionRequiredModal();}function checkSubscriptionStatus(){const _0x1a3157=_0x145973;get(adminRef)[_0x1a3157(0x1f1)](_0x24fa2b=>{const _0x54a5eb=_0x1a3157,_0x4a65f2=_0x24fa2b[_0x54a5eb(0x1e9)](),_0x3d5077=new Date();if(_0x4a65f2&&_0x4a65f2[_0x54a5eb(0x1d3)]==='active'){const _0x218b41=new Date(_0x4a65f2['endDate']);_0x218b41<_0x3d5077?(subscriptionStatus[_0x54a5eb(0x1e1)]='Statut\x20de\x20l\x27abonnement:\x20Expiré',subscriptionStatus[_0x54a5eb(0x1a2)][_0x54a5eb(0x1df)]=_0x54a5eb(0x17b),subscribeMonthlyButton[_0x54a5eb(0x1a2)][_0x54a5eb(0x197)]=_0x54a5eb(0x1c1),subscribeYearlyButton[_0x54a5eb(0x1a2)][_0x54a5eb(0x197)]='inline-block',cancelSubscriptionButton[_0x54a5eb(0x1a2)][_0x54a5eb(0x197)]=_0x54a5eb(0x18b),set(adminRef,{..._0x4a65f2,'status':'expired'})):(subscriptionStatus[_0x54a5eb(0x1e1)]=_0x54a5eb(0x182)+_0x218b41['toLocaleDateString'](),subscriptionStatus[_0x54a5eb(0x1a2)][_0x54a5eb(0x1df)]=_0x54a5eb(0x199),subscribeMonthlyButton[_0x54a5eb(0x1a2)]['display']=_0x54a5eb(0x18b),subscribeYearlyButton[_0x54a5eb(0x1a2)][_0x54a5eb(0x197)]=_0x54a5eb(0x18b),cancelSubscriptionButton['style'][_0x54a5eb(0x197)]=_0x54a5eb(0x1c1));}else subscriptionStatus['textContent']=_0x54a5eb(0x181),subscriptionStatus[_0x54a5eb(0x1a2)][_0x54a5eb(0x1df)]='red',subscribeMonthlyButton['style']['display']=_0x54a5eb(0x1c1),subscribeYearlyButton[_0x54a5eb(0x1a2)][_0x54a5eb(0x197)]=_0x54a5eb(0x1c1),cancelSubscriptionButton[_0x54a5eb(0x1a2)][_0x54a5eb(0x197)]=_0x54a5eb(0x18b);});}function checkUserAccess(){get(adminRef)['then'](_0x33db4b=>{const _0x4976e7=_0x481a,_0x767661=_0x33db4b[_0x4976e7(0x1e9)]();(!_0x767661||_0x767661[_0x4976e7(0x1d3)]!==_0x4976e7(0x1cb))&&showSubscriptionRequiredModal();});}venteMenuItem[_0x145973(0x1ba)](_0x145973(0x1da),_0xa217b0=>{const _0x57ba82=_0x145973;_0xa217b0[_0x57ba82(0x179)](),checkUserAccess(),window[_0x57ba82(0x185)]['href']='PageVenteTicket.html';}),inventaireMenuItem[_0x145973(0x1ba)](_0x145973(0x1da),_0x47ebc0=>{const _0x151428=_0x145973;_0x47ebc0[_0x151428(0x179)](),checkUserAccess(),window[_0x151428(0x185)][_0x151428(0x1e0)]=_0x151428(0x1ce);}),stockMenuItem[_0x145973(0x1ba)]('click',_0x4e2979=>{const _0x4ab66e=_0x145973;_0x4e2979[_0x4ab66e(0x179)](),checkUserAccess(),window[_0x4ab66e(0x185)]['href']=_0x4ab66e(0x1dc);}),administrationMenuItem[_0x145973(0x1ba)](_0x145973(0x1da),_0x1496a1=>{const _0x2dcadb=_0x145973;_0x1496a1[_0x2dcadb(0x179)](),checkUserAccess(),window[_0x2dcadb(0x185)][_0x2dcadb(0x1e0)]=_0x2dcadb(0x1bc);}),subscribeMonthlyButton['addEventListener']('click',()=>{const _0xeb4e7=_0x145973;initiatePayment(_0xeb4e7(0x1e3));}),subscribeYearlyButton['addEventListener'](_0x145973(0x1da),()=>{const _0x32f0b6=_0x145973;initiatePayment(_0x32f0b6(0x18a));}),cancelSubscriptionButton[_0x145973(0x1ba)]('click',()=>{cancelSubscription();});function initiatePayment(_0x1084a2){const _0x35caf4=_0x145973,_0x4705e6=_0x1084a2===_0x35caf4(0x1e3)?0x3e8:0x2710,_0x391bad=_0x1084a2===_0x35caf4(0x1e3)?_0x35caf4(0x1ad):_0x35caf4(0x184);FedaPay['init']({'public_key':_0x35caf4(0x1a4),'transaction':{'amount':_0x4705e6,'description':_0x391bad},'customer':{'email':_0x35caf4(0x1cc)},'onComplete':async function(_0x25f1bc){const _0x75435c=_0x35caf4;if(_0x25f1bc['reason']===FedaPay[_0x75435c(0x193)])alert(_0x75435c(0x18c));else _0x25f1bc[_0x75435c(0x1d1)]===FedaPay[_0x75435c(0x1a5)]&&handleSuccessfulPayment(_0x1084a2,_0x25f1bc);}})[_0x35caf4(0x189)]();}async function handleSuccessfulPayment(_0x246519,_0x42a6e6){const _0x15a18b=_0x145973,_0x1bf16f=new Date(),_0x545c25=new Date(_0x1bf16f);_0x246519===_0x15a18b(0x1e3)?_0x545c25[_0x15a18b(0x19d)](_0x545c25[_0x15a18b(0x190)]()+0x1):_0x545c25['setFullYear'](_0x545c25['getFullYear']()+0x1);const _0x3d6218={'status':_0x15a18b(0x1cb),'startDate':_0x1bf16f[_0x15a18b(0x1b2)](),'endDate':_0x545c25[_0x15a18b(0x1b2)](),'transactionId':_0x42a6e6[_0x15a18b(0x1ab)]['id'],'plan':_0x246519};try{await set(adminRef,_0x3d6218),checkSubscriptionStatus(),alert(_0x15a18b(0x1dd)+(_0x246519==='monthly'?_0x15a18b(0x1a6):_0x15a18b(0x1a3))+_0x15a18b(0x1de));}catch(_0x421b29){console[_0x15a18b(0x1ef)](_0x15a18b(0x1a0),_0x421b29),console[_0x15a18b(0x1ef)](_0x15a18b(0x183),_0x42a6e6),console[_0x15a18b(0x1ef)](_0x15a18b(0x1af),_0x3d6218),alert('Erreur\x20lors\x20de\x20la\x20mise\x20à\x20jour\x20de\x20l\x27abonnement.');}}async function cancelSubscription(){const _0x24acbf=_0x145973;try{await set(adminRef,{...(await get(adminRef))[_0x24acbf(0x1e9)](),'status':_0x24acbf(0x1aa)}),checkSubscriptionStatus(),alert(_0x24acbf(0x187));}catch(_0x123d6b){console[_0x24acbf(0x1ef)](_0x24acbf(0x1b3),_0x123d6b),alert(_0x24acbf(0x1c0));}}function logout(){const _0x35e2fc=_0x145973;sessionStorage[_0x35e2fc(0x180)](),window[_0x35e2fc(0x185)][_0x35e2fc(0x18d)](_0x35e2fc(0x1db));}async function processConnectedTickets(){const _0x51e2ea=_0x145973,_0x13c993=document[_0x51e2ea(0x1b1)](_0x51e2ea(0x1a9));try{_0x13c993[_0x51e2ea(0x1e1)]=_0x51e2ea(0x1d5);const _0x1efff8=await get(connectedTicketsRef);let _0x1a3aa5=_0x1efff8[_0x51e2ea(0x1e9)]()||{};const _0x379d99={};for(const _0xccdaf6 in _0x1a3aa5){const _0x14e4c0=_0x1a3aa5[_0xccdaf6][_0x51e2ea(0x1ea)];!_0x379d99[_0x14e4c0]&&(_0x379d99[_0x14e4c0]=_0x1a3aa5[_0xccdaf6]);}_0x13c993[_0x51e2ea(0x1e1)]='Traitement\x20des\x20tickets\x20uniques...';for(const _0x2340a4 in _0x379d99){await processTicket(_0x379d99[_0x2340a4]);}_0x13c993[_0x51e2ea(0x1e1)]='Nettoyage\x20des\x20tickets\x20traités...',await remove(connectedTicketsRef);}catch(_0xabb355){console[_0x51e2ea(0x1ef)]('Erreur\x20lors\x20du\x20traitement\x20des\x20tickets\x20connectés\x20:',_0xabb355),showNotification('Erreur',_0x51e2ea(0x1b0));}}async function processTicket(_0x5ca5cb){const _0x39f40f=_0x145973,_0x3edcc3=document['getElementById'](_0x39f40f(0x1a9));try{_0x3edcc3[_0x39f40f(0x1e1)]='Vérification\x20du\x20ticket\x20pour\x20'+_0x5ca5cb[_0x39f40f(0x1ea)]+'...';const _0x47dcd9=ref(database,_0x39f40f(0x1a1)),_0x3e0730=await get(_0x47dcd9),_0x2f1dc8=_0x3e0730['val']()||{};let _0x495681=![];for(const _0x1f5a0c in _0x2f1dc8){const _0x41ba33=_0x2f1dc8[_0x1f5a0c];for(const _0x14b27a in _0x41ba33){if(_0x41ba33[_0x14b27a]['user']===_0x5ca5cb['username']){_0x495681=!![];break;}}if(_0x495681)break;}if(!_0x495681){_0x3edcc3[_0x39f40f(0x1e1)]='Traitement\x20du\x20ticket\x20'+_0x5ca5cb[_0x39f40f(0x1ea)]+'...';const _0x40ba10=ref(database,_0x39f40f(0x1d2)),_0x36bd8d=ref(database,'TicketsTransit'),_0x36d704=await get(_0x40ba10),_0x50f96f=await get(_0x36bd8d),_0x212bd1=_0x36d704['val']()||{},_0x10d0ec=_0x50f96f['val']()||{};let _0x5d248c=null,_0x7e9018=null,_0x23405d=null;for(const _0x4c53cd in _0x212bd1){const _0x35f925=(_0x212bd1[_0x4c53cd][_0x39f40f(0x1e6)]||[])[_0x39f40f(0x1e4)](_0x5ca5cb[_0x39f40f(0x1ea)]);if(_0x35f925>-0x1){_0x5d248c={'category':_0x4c53cd,'user':_0x212bd1[_0x4c53cd][_0x39f40f(0x1e6)][_0x35f925],'password':_0x212bd1[_0x4c53cd][_0x39f40f(0x1c6)][_0x35f925],'price':_0x212bd1[_0x4c53cd][_0x39f40f(0x19c)][_0x35f925],'updatedData':{..._0x212bd1[_0x4c53cd],'utilisateur':_0x212bd1[_0x4c53cd][_0x39f40f(0x1e6)][_0x39f40f(0x198)]((_0x2a31f3,_0x3d02a0)=>_0x3d02a0!==_0x35f925),'motDePasse':_0x212bd1[_0x4c53cd][_0x39f40f(0x1c6)][_0x39f40f(0x198)]((_0x470feb,_0x196a15)=>_0x196a15!==_0x35f925),'prix':_0x212bd1[_0x4c53cd]['prix'][_0x39f40f(0x198)]((_0x3b6c38,_0x53afe4)=>_0x53afe4!==_0x35f925)}},_0x7e9018=ref(database,_0x39f40f(0x1cd)+_0x4c53cd),_0x23405d=_0x39f40f(0x1d2);break;}}if(!_0x5d248c)for(const _0x11d857 in _0x10d0ec){if(_0x10d0ec[_0x11d857]['user']===_0x5ca5cb[_0x39f40f(0x1ea)]){_0x5d248c={'category':_0x10d0ec[_0x11d857][_0x39f40f(0x1b8)],'user':_0x10d0ec[_0x11d857][_0x39f40f(0x1f0)],'password':_0x10d0ec[_0x11d857][_0x39f40f(0x1ed)],'price':_0x10d0ec[_0x11d857][_0x39f40f(0x186)]},_0x7e9018=ref(database,_0x39f40f(0x1bf)+_0x11d857),_0x23405d=_0x39f40f(0x17d);break;}}_0x5d248c&&(_0x3edcc3['textContent']='Vente\x20du\x20ticket\x20'+_0x5ca5cb[_0x39f40f(0x1ea)]+'...',await sellTicketAutomatically(_0x5d248c,_0x7e9018,_0x23405d));}}catch(_0x3a8fdd){console[_0x39f40f(0x1ef)](_0x39f40f(0x1e7),_0x3a8fdd),showNotification(_0x39f40f(0x1c9),'Erreur\x20lors\x20du\x20traitement\x20du\x20ticket\x20'+_0x5ca5cb[_0x39f40f(0x1ea)]+'.');}}async function sellTicketAutomatically(_0x45f9a3,_0x457d85,_0x1ea15d){const _0x5187b5=_0x145973;try{const _0x1763b3='Vendeur\x20automatique',_0x3bec29=ref(database,'VendorsHistory/'+_0x1763b3);await push(_0x3bec29,{'category':_0x45f9a3[_0x5187b5(0x1b8)],'user':_0x45f9a3[_0x5187b5(0x1f0)],'password':_0x45f9a3[_0x5187b5(0x1ed)],'price':_0x45f9a3[_0x5187b5(0x186)],'soldAt':Date[_0x5187b5(0x1d9)]()});const _0x415e10=ref(database,_0x5187b5(0x1c8));await push(_0x415e10,{'category':_0x45f9a3['category'],'user':_0x45f9a3[_0x5187b5(0x1f0)],'password':_0x45f9a3[_0x5187b5(0x1ed)],'price':_0x45f9a3[_0x5187b5(0x186)],'soldAt':Date[_0x5187b5(0x1d9)](),'vendorId':_0x1763b3}),_0x1ea15d===_0x5187b5(0x1d2)?await set(_0x457d85,_0x45f9a3[_0x5187b5(0x17f)]):await remove(_0x457d85),console[_0x5187b5(0x1ca)](_0x5187b5(0x1b4)+_0x45f9a3[_0x5187b5(0x1f0)]+_0x5187b5(0x1d8));}catch(_0x4bdfbf){console['error'](_0x5187b5(0x1bd),_0x4bdfbf),showNotification(_0x5187b5(0x1c9),_0x5187b5(0x17a));}}document[_0x145973(0x1ba)]('DOMContentLoaded',()=>{const _0x2d5a8a=_0x145973;showPageLoader(),processConnectedTickets()['then'](()=>checkSubscriptionStatus())[_0x2d5a8a(0x1f1)](()=>{hidePageLoader();})[_0x2d5a8a(0x1d4)](_0x3cc542=>{const _0x16a83b=_0x2d5a8a;console[_0x16a83b(0x1ef)](_0x16a83b(0x1ac),_0x3cc542),hidePageLoader(),showNotification(_0x16a83b(0x1c9),_0x16a83b(0x19f));});}),window['redirectToSubscription']=redirectToSubscription,window[_0x145973(0x1d6)]=redirectToSubscription;function closePaymentModal(){const _0x38f459=_0x145973;paymentModal[_0x38f459(0x1a2)][_0x38f459(0x197)]='none',overlay[_0x38f459(0x1a2)][_0x38f459(0x197)]=_0x38f459(0x18b);}window[_0x145973(0x1bb)]=()=>{};
     </script>
+
 </body>
 </html>
