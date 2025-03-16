@@ -2,12 +2,14 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <!-- (Head section - No changes except for adding Font Awesome) -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord des ventes WiFi Zone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        /* ... (Your CSS - No changes needed here) ... */
-        :root {
+        /* (CSS - No changes needed here except as noted below) */
+         :root {
             --primary-color: #00ffff;
             --secondary-color: #ff00ff;
             --background-color: #0a0a1a;
@@ -171,6 +173,9 @@
         #userInfo {
             font-size: 1.2em;
             color: var(--text-color);
+			display: flex; /* Make userInfo a flex container */
+            align-items: center; /* Vertically center items */
+            gap: 10px; /* Add some space between items */
         }
 
         #searchInputs {
@@ -526,15 +531,41 @@
             gap: 10px;
             margin-top: 10px;
         }
+		/* Add User Modal Styles */
+        #addUserModal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--box-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            z-index: 1002;
+        }
+
+        #addUserModal input {
+            margin-bottom: 10px;
+            width: 100%;
+        }
+          /* User Select Dropdown Styles */
+        #userSelect {
+            padding: 5px;
+            border-radius: 5px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--table-border-color);
+        }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-    <button id="theme-toggle" aria-label="Toggle theme">🌙</button>
+  <button id="theme-toggle" aria-label="Toggle theme">🌙</button>
 
-     <!-- Section d'authentification -->
-     <div id="authSection" class="container" style="display: block;">
+    <!-- Section d'authentification -->
+    <div id="authSection" class="container" style="display: block;">
         <h1>Connexion / Inscription</h1>
         <form id="loginForm">
             <input type="text" id="username" placeholder="Nom d'utilisateur" required>
@@ -555,13 +586,27 @@
     </div>
 
     <div id="dashboardContainer" class="container" style="display: none;">
-    <div id="dashboardHeader">
-    <h1>CYBER CAMPUS - WIFI ZONE</h1>
-    <div id="userInfo"></div>
-    <button onclick="logout()" class="logout-button">
-        <i class="fas fa-sign-out-alt"></i> Déconnexion
-    </button>
-</div>
+        <div id="dashboardHeader">
+            <h1>CYBER CAMPUS - WIFI ZONE</h1>
+             <div id="userInfo">
+                <span></span>  <!-- User name will go here -->
+                <i id="addUserIcon" class="fas fa-user-plus" style="cursor: pointer;"></i> <!-- Add User Icon -->
+                <select id="userSelect"></select>     <!-- User Select Dropdown -->
+            </div>
+            <button onclick="logout()" class="logout-button">
+                <i class="fas fa-sign-out-alt"></i> Déconnexion
+            </button>
+        </div>
+
+		<!-- Add User Modal -->
+        <div id="addUserModal">
+            <h2>Ajouter un utilisateur</h2>
+            <form id="addUserForm">
+                <input type="text" id="newUserName" placeholder="Nom d'utilisateur" required>
+                <button type="submit">Ajouter</button>
+                <button type="button" onclick="document.getElementById('addUserModal').style.display='none'">Annuler</button>
+            </form>
+        </div>
 
 
         <h2>Enregistrer une nouvelle opération</h2>
@@ -632,32 +677,32 @@
                         <th data-sort="APP">APP</th>
                         <th data-sort="V">V</th>
                         <th data-sort="SF">SF</th>
-                        <th data-sort="PV">PV (FCFA)</th>
+                        <th data-sort="PV (FCFA)</th>
                         <th data-sort="total">Total (FCFA)</th>
                     </tr>
                 </thead>
                 <tbody></tbody>            </table>
                 <button id="exportExcel" class="export-button">Exporter vers Excel</button>
             </div>
-    
+
             <div id="analysisSection">
                 <h2>Analyse des ventes</h2>
                 <p id="totalSales"></p>
                 <p id="averageSales"></p>
                 <canvas id="salesChart"></canvas>
-    
+
                 <div class="period-analysis" id="weekAnalysis">
                     <h3>Analyse de la semaine</h3>
                     <p id="weekTotalSales"></p>
                     <p id="weekAverageSales"></p>
                 </div>
-    
+
                 <div class="period-analysis" id="monthAnalysis">
                     <h3>Analyse du mois</h3>
                     <p id="monthTotalSales"></p>
                     <p id="monthAverageSales"></p>
                 </div>
-    
+
                 <div class="period-analysis" id="threeMonthAnalysis">
                     <h3>Analyse des 3 derniers mois</h3>
                     <p id="threeMonthTotalSales"></p>
@@ -673,791 +718,11 @@
                 <button onclick="window.hideSubscriptionRequiredModal()">Fermer</button>
             </div>
         </div>
-    
-        <script type="module">
-            import { getActiveDatabase } from './firebase-config-manager.js';
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-            import { getDatabase, ref, onValue, set, get, update, push, remove, off } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-    
-            let db;
-            let adminRef;
-            let ticketCategories = {};
-            let salesData = [];
-            let stockData = [];
-            let salesChart;
-            let currentUser;
-            let salesDataListener;
-    
-            // --- DOM Element References ---
-            //const loginForm = document.getElementById('loginForm');  // Removed
-            //const signupForm = document.getElementById('signupForm'); // Removed
-            //const loginContainer = document.getElementById('loginContainer'); // Removed
-            //const signupContainer = document.getElementById('signupContainer'); // Removed
-            const authSection = document.getElementById('authSection'); // New auth section
-            const dashboardContainer = document.getElementById('dashboardContainer');
-            const salesForm = document.getElementById('salesForm');
-            const salesTable = document.getElementById('salesTable');
-            const totalSalesElement = document.getElementById('totalSales');
-            const averageSalesElement = document.getElementById('averageSales');
-            const userInfoElement = document.getElementById('userInfo');
-            const toggleAnalysisButton = document.getElementById('toggleAnalysisButton');
-            const toggleSalesButton = document.getElementById('toggleSalesButton');
-            const analysisSection = document.getElementById('analysisSection');
-            const salesDetailsSection = document.getElementById('salesDetailsSection');
-            const signupButton = document.getElementById('signupButton');
-            const loginFromSignup = document.getElementById('loginFromSignup');
-            const productSelect = document.getElementById('product');
-            const stockTableGlobal = document.getElementById('stockTableGlobal');
-            const themeToggle = document.getElementById('theme-toggle');  // Moved here
-    
-    
-            // --- Initialization ---
-            async function initializeDatabase() {
-                db = await getActiveDatabase();
-                adminRef = ref(db, 'admin/subscription');
-                console.log("Database initialized in Gestion de stock ticket.html");
-            }
-    
-            // --- DOMContentLoaded Event ---
-            document.addEventListener('DOMContentLoaded', async () => {
-                await initializeDatabase();
-                setupAuthEventListeners(); // Set up auth event listeners *before* checking login
-                checkLoginStatus();  // Now check login status
-                setupEventListeners(); // Set up all event listeners here
-    
-                // Initialisation du thème basé sur les préférences sauvegardées ou clair par défaut
-                const savedTheme = localStorage.getItem('darkTheme');
-                if (savedTheme !== null) {
-                    setTheme(savedTheme === 'true');
-                } else {
-                    setTheme(false); // Appliquer le thème clair par défaut
-                }
-                document.getElementById('dateTime').value = new Date().toISOString().slice(0, 16);
-            });
-    
-            // --- Function Definitions ---
-            // Fetch ticket categories.  MODIFICATION: Partition par utilisateur.
-            async function fetchTicketCategories() {
-                if (!currentUser) {
-                    console.log("User not logged in. Cannot fetch ticket categories.");
-                    return; // Early exit
-                }
-              try {
-                // MODIFICATION: Ajout de currentUser
-                const ticketsTotalRef = ref(db, `users-data/${currentUser}/TicketsTotal`);
-                const snapshot = await get(ticketsTotalRef);
-    
-                if (snapshot.exists()) {
-                    ticketCategories = snapshot.val();
-                    populateProductSelect();
-                } else {
-                    console.log("No data available at TicketsTotal");
-                    ticketCategories = {}; // Initialize as empty object
-                    populateProductSelect(); // Still call this to clear/prepare the select
-                }
-              } catch (error) {
-                console.error("Error fetching ticket categories:", error);
-                // Handle the error appropriately, e.g., display a message to the user.
-              }
-            }
-    
-            // Populate product select
-            function populateProductSelect() {
-                productSelect.innerHTML = '<option value="">Sélectionner un produit</option>';
-                for (const category in ticketCategories) {
-                    const price = ticketCategories[category]?.prix?.[0]; // Optional chaining and nullish coalescing
-                    if (price !== undefined) { // Check if price is not undefined
-                        const option = document.createElement('option');
-                        option.value = category;
-                        option.textContent = `${category} (${price} FCFA)`;
-                        productSelect.appendChild(option);
-                    }
-                }
-            }
-    
-            function checkLoginStatus() {
-                if (sessionStorage.getItem('isLoggedIn') === 'true') {
-                    currentUser = sessionStorage.getItem('currentUserId'); // Set currentUser
-                    loginSuccess(currentUser); // Use the retrieved username
-                } else {
-                    showAuthSection();
-                }
-            }
-    
-           function loginSuccess(username) {
-                currentUser = username;
-                authSection.style.display = 'none';  // Hide auth
-                dashboardContainer.style.display = 'block';
-                userInfoElement.textContent = `Utilisateur: ${username}`;
-    
-                checkSubscriptionStatus()
-                    .then(isSubscribed => {
-                        if (isSubscribed) {
-                            fetchTicketCategories();  // Fetch after login.
-                            updateTable();
-                            updateStockTables();
-                            updateAnalysis();
-                            listenForSalesDataChanges();
-                        } else {
-                            window.showSubscriptionRequiredModal();
-                        }
-                    })
-                    .catch(error => {
-                        console.error("Subscription check error:", error);
-                        alert("Subscription check error.");
-                    });
-            }
-    
-    
-            function listenForSalesDataChanges() {
-                if (salesDataListener) { // Check if a listener already exists
-                    off(ref(db, 'sales/' + currentUser), 'value', salesDataListener); // Detach the old one
-                }
-                // MODIFICATION: Ajout de currentUser
-                salesDataListener = onValue(ref(db, `users-data/${currentUser}/sales`), (snapshot) => {
-                    salesData = [];
-                    snapshot.forEach((childSnapshot) => {
-                        const entry = childSnapshot.val();
-                        entry.key = childSnapshot.key;
-                        entry.total = (entry.V * entry.PV).toFixed(2);
-                        salesData.push(entry);
-                    });
-    
-                    if (analysisSection.style.display === 'block') {
-                        updateAnalysis(salesData);
-                    }
-                });
-            }
-    
-            function updateSF() {
-                const si = parseInt(document.getElementById('SI').value) || 0;
-                const app = parseInt(document.getElementById('APP').value) || 0;
-                const v = parseInt(document.getElementById('V').value) || 0;
-                document.getElementById('SF').value = si + app - v;
-            }
-    
-            function updatePV() {
-                const product = document.getElementById('product').value;
-                const price = ticketCategories[product]?.prix?.[0];
-                document.getElementById('PV').value = price || 0;
-            }
-    
-    
-        // MODIFICATION: Partitionnement des données par utilisateur, usage de currentUser
-           async function updateTable() {
-                if (!currentUser) {
-                    console.error("User not logged in. Cannot update table.");
-                    return; // Exit if user not logged in.
-                }
-                const tbody = salesTable.querySelector('tbody');
-                tbody.innerHTML = ''; // Clear existing rows
-                try {
-                    // MODIFICATION: Utilisation de currentUser
-                    const snapshot = await get(ref(db, `users-data/${currentUser}/sales`));
-                    salesData = []; // Reset salesData
-                    if (snapshot.exists()) {
-                        snapshot.forEach((childSnapshot) => {
-                            const entry = childSnapshot.val();
-                            entry.key = childSnapshot.key;
-                            entry.total = (entry.V * entry.PV).toFixed(2); // Calculate total here
-                            salesData.push(entry);
-                        });
-                    }
-                    renderTable(salesData);
-                    setupSearch();
-                    setupSort(salesTable);
-    
-                } catch (error) {
-                    console.error("Error updating table:", error);
-                    alert("Error updating table."); // Inform the user
-                }
-            }
-            // MODIFICATION: Partitionnement des données par utilisateur
-            function updateStockTables(startDate, endDate) {
-                if (!currentUser) {
-                    console.error("User not logged in. Cannot update stock tables.");
-                    return;
-                }
-                const stockTable = document.getElementById('stockTableGlobal');
-                const tbody = stockTable.querySelector('tbody'); // Get the tbody element
-                 tbody.innerHTML = ''; // Clear previous entries
-                //MODIFICATION: On utilise currentSalesUser
-                get(ref(db, 'users-data/' + currentUser + '/sales')).then((snapshot) => {
-                    const latestStocks = {};
-                    snapshot.forEach((childSnapshot) => {
-                        const entry = childSnapshot.val();
-                        const entryDate = new Date(entry.dateTime);
-                        if ((!startDate || entryDate >= startDate) && (!endDate || entryDate <= endDate)) {
-                            if (!latestStocks[entry.product] || entryDate > new Date(latestStocks[entry.product].dateTime)) {
-                                latestStocks[entry.product] = entry;
-                            }
-                        }
-                    });
-    
-                    Object.values(latestStocks).forEach((entry) => {
-                        const row = tbody.insertRow(); // Use the tbody element here
-                        row.insertCell(0).textContent = entry.product;
-                        row.insertCell(1).textContent = entry.SF;
-                        row.insertCell(2).textContent = new Date(entry.dateTime).toLocaleString();
-                    });
-    
-                    setupSort(stockTable);
-                });
-            }
-    
-    
-            // Export to Excel
-            function exportToExcel() {
-                const wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.table_to_sheet(document.getElementById('salesTable'));
-                XLSX.utils.book_append_sheet(wb, ws, "Ventes");
-                XLSX.writeFile(wb, "ventes_wifi_zone.xlsx");
-            }
-    
-            // MODIFICATION : Partitionnement des données, usage de currentUser.
-          async function deleteEntry(key) {
-            if (!currentUser) {
-                console.error("User not logged in. Cannot delete entry.");
-                return; // Or redirect to login, depending on your needs
-            }
-            try {
-                 // MODIFICATION: Utilisation de currentUser
-                const snapshot = await get(ref(db, `users-data/${currentUser}/sales/${key}`));
-                const deletedEntry = snapshot.val();
-    
-                // MODIFICATION: Utilisation de currentUser
-                await remove(ref(db, `users-data/${currentUser}/sales/${key}`));
-                console.log("Entrée supprimée avec succès");
-    
-                await updateStockAfterDeletion(deletedEntry);
-                await updateTable(); // Now returns a promise
-                updateStockTables();
-                updateAnalysis();
-    
-            } catch (error) {
-                console.error("Erreur lors de la suppression de l'entrée:", error);
-            }
-          }
-    
-    
-            // (Previous code from Gestion de stock ticket.html) ...
-            // MODIFICATION: Usage de currentUser
-            async function updateStockAfterDeletion(deletedEntry) {
-                if (!currentUser) {
-                    console.error("User not logged in. Cannot update stock after deletion.");
-                    return; // Or redirect
-                }
-    
-                try {
-                    // MODIFICATION: Utilisation de currentUser
-                    const snapshot = await get(ref(db, `users-data/${currentUser}/sales`)
-                        .orderByChild('dateTime')
-                        .endAt(deletedEntry.dateTime)
-                        .limitToLast(2)
-                    );
-    
-                    let entries = [];
-                    snapshot.forEach((childSnapshot) => {
-                        entries.push({ key: childSnapshot.key, ...childSnapshot.val() });
-                    });
-                    entries.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
-    
-                    if (entries.length > 1 && entries[0].key !== deletedEntry.key) {
-                        const previousEntry = entries[1];
-                        const newStockFinal = previousEntry.SF + deletedEntry.V - deletedEntry.APP;
-                         // MODIFICATION: Utilisation de currentUser
-                        await update(ref(db, `users-data/${currentUser}/sales/${previousEntry.key}`), { SF: newStockFinal });
-                    }
-                } catch (error) {
-                    console.error("Error updating stock after deletion:", error);
-                    // Consider showing an error message to the user.
-                }
-            }
-    
-            function renderTable(data) {
-                const tbody = salesTable.querySelector('tbody');
-                tbody.innerHTML = ''; // Clear existing rows
-    
-                data.forEach((entry) => {
-                    const row = tbody.insertRow();
-                    row.dataset.key = entry.key;  // Store the Firebase key
-                    row.insertCell(0).textContent = new Date(entry.dateTime).toLocaleString();
-                    row.insertCell(1).textContent = entry.product;
-                    row.insertCell(2).textContent = entry.SI;
-                    row.insertCell(3).textContent = entry.APP;
-                    row.insertCell(4).textContent = entry.V;
-                    row.insertCell(5).textContent = entry.SF;
-                    row.insertCell(6).textContent = entry.PV;
-                    row.insertCell(7).textContent = entry.total;
-                });
-               window.addDeleteIcons(); // Add delete icons after rendering
-            }
-    
-            function addDeleteIcons() {
-                const rows = salesTable.querySelectorAll('tbody tr');
-                rows.forEach((row) => {
-                    const deleteIcon = document.createElement('span');
-                    deleteIcon.innerHTML = '✖';
-                    deleteIcon.className = 'delete-icon';
-                    deleteIcon.onclick = (e) => {
-                        e.stopPropagation();
-                        window.showConfirmDialog(row.dataset.key); // Pass the Firebase key
-                    };
-                    row.querySelector('td:first-child').appendChild(deleteIcon);
-                });
-            }
-    
-            function showConfirmDialog(key) {
-                const dialog = document.createElement('div');
-                dialog.className = 'confirm-dialog';
-                dialog.innerHTML = `
-                    <p>Êtes-vous sûr de vouloir supprimer cette entrée ?</p>
-                    <button id="confirmDelete">Confirmer</button>
-                    <button id="cancelDelete">Annuler</button>
-                `;
-                document.body.appendChild(dialog);
-    
-                document.getElementById('confirmDelete').onclick = () => {
-                    deleteEntry(key); // Call deleteEntry with the key
-                    document.body.removeChild(dialog);
-                };
-                document.getElementById('cancelDelete').onclick = () => {
-                    document.body.removeChild(dialog);
-                };
-            }
-    
-            function setupSearch() {
-                const searchInputs = document.querySelectorAll('#searchInputs input');
-                searchInputs.forEach(input => {
-                    input.addEventListener('input', () => {
-                        const filteredData = salesData.filter(entry => {
-                            return Object.keys(entry).every(key => {
-                                const searchField = document.getElementById(`search${key.charAt(0).toUpperCase() + key.slice(1)}`);
-                                const searchValue = searchField ? searchField.value.toLowerCase() : '';
-                                return entry[key].toString().toLowerCase().includes(searchValue);
-                            });
-                        });
-                        renderTable(filteredData);
-                        updateAnalysis(filteredData); // Update analysis on search
-                    });
-                });
-            }
-    
-            function setupSort(table) {
-                const headers = table.querySelectorAll('th[data-sort]');
-                headers.forEach(header => {
-                    header.addEventListener('click', () => {
-                        const sortKey = header.dataset.sort;
-                        const data = table.id === 'salesTable' ? salesData : stockData;
-    
-                        data.sort((a, b) => {
-                             const aVal = isNaN(parseFloat(a[sortKey])) ?  a[sortKey] : parseFloat(a[sortKey]);
-                             const bVal = isNaN(parseFloat(b[sortKey])) ?  b[sortKey] : parseFloat(b[sortKey]);
-    
-                            if (aVal < bVal) return -1;
-                            if (aVal > bVal) return 1;
-                            return 0;
-                        });
-                        if (table.id === 'salesTable') {
-                            renderTable(data);
-                            updateAnalysis(data); // Update analysis on sort
-                        } else {
-                            renderStockTable(data, table); // You had this, seems correct.
-                        }
-                    });
-                });
-            }
-    
-            function renderStockTable(data, table) {
-                const tbody = table.querySelector('tbody');
-                tbody.innerHTML = ''; //Clear
-                data.forEach((entry) => {
-                    const row = tbody.insertRow();
-                    row.insertCell(0).textContent = entry.product;
-                    row.insertCell(1).textContent = entry.SF;
-                    row.insertCell(2).textContent = new Date(entry.dateTime).toLocaleString();
-                });
-            }
-    
-            function updateAnalysis(data = salesData) {
-                let totalSales = 0;
-                let count = 0;
-                const chartData = {
-                    labels: [],
-                    sales: [],
-                    prices: []
-                };
-    
-                data.forEach((entry) => {
-                    totalSales += entry.V * entry.PV;
-                    count++;
-                    chartData.labels.push(new Date(entry.dateTime).toLocaleString());
-                    chartData.sales.push(entry.V);
-                    chartData.prices.push(entry.PV);
-                });
-    
-                const averageSales = totalSales / (count || 1); // Avoid division by zero
-    
-                totalSalesElement.textContent = `Total des ventes: ${totalSales.toFixed(2)} FCFA`;
-                averageSalesElement.textContent = `Moyenne des ventes par jour: ${averageSales.toFixed(2)} FCFA`;
-    
-                updateChart(chartData);
-                updatePeriodAnalysis(data);
-            }
-    
-            function updateChart(data) {
-                const ctx = document.getElementById('salesChart').getContext('2d');
-    
-                if (salesChart) {
-                    salesChart.destroy();
-                }
-    
-                salesChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            label: 'Ventes',
-                            data: data.sales,
-                            borderColor: 'rgb(0, 255, 255)',
-                            tension: 0.1
-                        }, {
-                            label: 'Prix de vente',
-                            data: data.prices,
-                            borderColor: 'rgb(255, 99, 132)',
-                            tension: 0.1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: {
-                                    color: 'rgba(255, 255, 255, 0.1)'
-                                },
-                                ticks: {
-                                    color: 'rgb(0, 255, 255)'
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    color: 'rgba(255, 255, 255, 0.1)'
-                                },
-                                ticks: {
-                                    color: 'rgb(0, 255, 255)'
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                labels: {
-                                    color: 'rgb(0, 255, 255)'
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-    
-           function updatePeriodAnalysis(data) {
-                const now = new Date();
-                const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-                const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-    
-                const weekData = data.filter(entry => new Date(entry.dateTime) >= oneWeekAgo);
-                const monthData = data.filter(entry => new Date(entry.dateTime) >= oneMonthAgo);
-                const threeMonthData = data.filter(entry => new Date(entry.dateTime) >= threeMonthsAgo);
-    
-                updatePeriodStats(weekData, 'week');
-                updatePeriodStats(monthData, 'month');
-                updatePeriodStats(threeMonthData, 'threeMonth');
-            }
-    
-            function updatePeriodStats(data, period) {
-                const totalSales = data.reduce((sum, entry) => sum + entry.V * entry.PV, 0);
-                const averageSales = totalSales / (data.length || 1); // Avoid division by zero.
-    
-                document.getElementById(`${period}TotalSales`).textContent = `Total des ventes: ${totalSales.toFixed(2)} FCFA`;
-                document.getElementById(`${period}AverageSales`).textContent = `Moyenne des ventes par jour: ${averageSales.toFixed(2)} FCFA`;
-            }
-    
-    
-    
-            // Theme toggle functionality
-            let isDarkTheme = true; //Keep track
-    
-            function setTheme(dark) {
-                if (dark) {
-                    document.documentElement.classList.remove('light-theme');
-                    themeToggle.textContent = '🌙';
-                    themeToggle.setAttribute('aria-label', 'Activer le mode clair');
-                } else {
-                    document.documentElement.classList.add('light-theme');
-                    themeToggle.textContent = '☀️';
-                    themeToggle.setAttribute('aria-label', 'Activer le mode sombre');
-                }
-                isDarkTheme = dark;
-                localStorage.setItem('darkTheme', dark);
-            }
-    
-    
-            function showSubscriptionRequiredModal() {
-                document.getElementById('subscriptionRequiredModal').style.display = 'flex';
-            }
-    
-            window.hideSubscriptionRequiredModal = function() { //Correctly scoped.
-                document.getElementById('subscriptionRequiredModal').style.display = 'none';
-            }
-    
-            window.redirectToSubscription = function() { // Correctly scoped.
-                window.location.href = 'index.html';
-            }
-    
-            // MODIFICATION: Adaptation, usage de currentUser.
-            async function checkSubscriptionStatus() {
-               if (!currentUser) {
-                    console.error("User not logged in. Cannot check subscription status.");
-                    return false; // Or redirect
-                }
-                try {
-                     // MODIFICATION: Utilisation de currentUser
-                    const snapshot = await get(ref(db, `users-data/${currentUser}/admin/subscription`));
-                    const subscription = snapshot.val();
-                    const now = new Date();
-    
-                    if (subscription && subscription.status === 'active') {
-                        const endDate = new Date(subscription.endDate);
-                        if (endDate >= now) {
-                            return true; // Active
-                        } else {
-                            // MODIFICATION: Utilisation de currentUser
-                            await update(ref(db, `users-data/${currentUser}/admin/subscription`), { status: 'expired' });
-                            return false; // Expired
-                        }
-                    } else {
-                        return false; // Not active
-                    }
-                } catch (error) {
-                    console.error("Subscription check error:", error);
-                    throw error; // Re-throw to handle it where the function is called
-                }
-            }
-    
-            // MODIFICATION: Fonctions d'authentification, centralisées ici.
-            function showAuthSection() {
-                authSection.style.display = 'block';
-                dashboardContainer.style.display = 'none';
-                // Clear any previous user info
-                userInfoElement.textContent = '';
-                salesForm.reset();
-            }
-    
-            function showLoginForm() {
-                document.getElementById('loginForm').style.display = 'block';
-                document.getElementById('signupForm').style.display = 'none';
-            }
-    
-            function showSignupForm() {
-                document.getElementById('loginForm').style.display = 'none';
-                document.getElementById('signupForm').style.display = 'block';
-            }
-    
-            function setupAuthEventListeners() {
-                const loginForm = document.getElementById('loginForm');
-                const signupForm = document.getElementById('signupForm');
-    
-                loginForm.addEventListener('submit', function(e) {
-                    e.preventDefault(); // Prevent the default form submission
-                    const username = document.getElementById('username').value;
-                    const password = document.getElementById('password').value;
-    
-                    get(ref(db, 'users/' + username)).then((snapshot) => {
-                        if (snapshot.exists()) {
-                            if (snapshot.val().password === password) {
-                                sessionStorage.setItem('isLoggedIn', 'true');
-                                sessionStorage.setItem('currentUserId', username);  // Store the username
-                                loginSuccess(username); // Pass the username
-                            } else {
-                                alert('Mot de passe incorrect');
-                            }
-                        } else {
-                            alert('Utilisateur introuvable');
-                        }
-                    });
-                });
-    
-                signupForm.addEventListener('submit', function(e) {
-                    e.preventDefault(); // Prevent default form submission
-                    const username = document.getElementById('signupUsername').value;
-                    const password = document.getElementById('signupPassword').value;
-    
-                    get(ref(db, 'users/' + username)).then((snapshot) => {
-                        if (snapshot.exists()) {
-                            alert('Ce nom d\'utilisateur est déjà utilisé.');
-                        } else {
-                            // Inscription de l'utilisateur dans 'users'
-                            set(ref(db, 'users/' + username), {
-                                password: password
-                            }).then(() => {
-                                // Création des données initiales dans users-data
-                                const userDataRef = ref(db, `users-data/${username}`);
-                                return set(userDataRef, {
-                                    admin: {
-                                        subscription: { status: 'inactive' }
-                                    },
-                                    TicketsTotal: {},
-                                    TicketsVendus: {},
-                                    TicketsTransit: {},
-                                    TicketConnecté: {},
-                                    Vendors: {},
-                                    VendorsHistory: {},
-                                    sales: {}
-                                });
-                            }).then(() => {
-                                alert('Inscription réussie ! Connectez-vous.');
-                                showLoginForm();
-                            }).catch((error) => {
-                                console.error('Error during signup:', error);
-                                alert('Erreur lors de l\'inscription');
-                            });
-                        }
-                    });
-                });
-                signupButton.addEventListener('click', function() {
-                    showSignupForm();
-                });
-    
-                loginFromSignup.addEventListener('click', function() {
-                    showLoginForm();
-                });
-            }
-    
-    
-            function setupEventListeners() {
-    
-    
-                productSelect.addEventListener('change', function() {
-                    const product = this.value;
-                    // MODIFICATION: Utilisation de currentUser.
-                    get(ref(db, `users-data/${currentUser}/sales`).orderByChild('product').equalTo(product).limitToLast(1)).then((snapshot) => {
-                        if (snapshot.exists()) {
-                            const lastEntry = Object.values(snapshot.val())[0];
-                            document.getElementById('SI').value = lastEntry.SF || 0;
-                        } else {
-                            document.getElementById('SI').value = 0;
-                        }
-                    });
-                    updatePV();
-                });
-    
-                document.getElementById('V').addEventListener('input', updateSF);
-                document.getElementById('APP').addEventListener('input', updateSF);
-    
-                salesForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    if (!currentUser) {
-                        alert("Vous devez être connecté pour ajouter une opération.");
-                        return; // Stop if not logged in
-                    }
-    
-                    const newEntry = {
-                        dateTime: document.getElementById('dateTime').value,
-                        product: document.getElementById('product').value,
-                        SI: parseInt(document.getElementById('SI').value) || 0,
-                        APP: parseInt(document.getElementById('APP').value) || 0,
-                        V: parseInt(document.getElementById('V').value) || 0,
-                        SF: parseInt(document.getElementById('SF').value) || 0,
-                        PV: parseFloat(document.getElementById('PV').value) || 0
-                    };
-    
-                    // MODIFICATION: Utilisation de currentUser.
-                    push(ref(db, `users-data/${currentUser}/sales`), newEntry)
-                    .then(() => {
-                        updateTable();
-                        updateStockTables();
-                        updateAnalysis();
-                        salesForm.reset();
-                        document.getElementById('dateTime').value = new Date().toISOString().slice(0, 16);
-                        })
-                        .catch(error => {
-                            console.error("Error adding entry:", error);
-                            alert("Error adding entry.");
-                        });
-                    });
-    
-    
-                toggleAnalysisButton.addEventListener('click', function() {
-                    if (analysisSection.style.display === 'none' || analysisSection.style.display === '') {
-                        analysisSection.style.display = 'block';
-                        salesDetailsSection.style.display = 'none';
-                        this.textContent = 'Masquer l\'analyse des ventes';
-                        toggleSalesButton.textContent = 'Détail des ventes';
-                        updateAnalysis(salesData); // Update when showing
-                    } else {
-                        analysisSection.style.display = 'none';
-                        this.textContent = 'Analyse des ventes';
-                    }
-                });
-    
-                toggleSalesButton.addEventListener('click', function() {
-                    if (salesDetailsSection.style.display === 'none' || salesDetailsSection.style.display === '') {
-                        salesDetailsSection.style.display = 'block';
-                        analysisSection.style.display = 'none';
-                        this.textContent = 'Masquer le détail des ventes';
-                        toggleAnalysisButton.textContent = 'Analyse des ventes';
-                    } else {
-                        salesDetailsSection.style.display = 'none';
-                        this.textContent = 'Détail des ventes';
-                    }
-                });
-    
-                themeToggle.addEventListener('click', () => {
-                    setTheme(!isDarkTheme);
-                });
-    
-                document.getElementById('filterStockDates').addEventListener('click', function() {
-                    const startDate = new Date(document.getElementById('stockStartDate').value);
-                    const endDate = new Date(document.getElementById('stockEndDate').value);
-                    updateStockTables(startDate, endDate);
-                });
-    
-                document.getElementById('filterSalesDates').addEventListener('click', function() {
-                    const startDate = new Date(document.getElementById('salesStartDate').value);
-                    const endDate = new Date(document.getElementById('salesEndDate').value);
-                    const filteredData = salesData.filter(entry => {
-                        const entryDate = new Date(entry.dateTime);
-                        return (!startDate || entryDate >= startDate) && (!endDate || entryDate <= endDate);
-                    });
-                    renderTable(filteredData);
-                    updateAnalysis(filteredData);
-                });
-            }
-    
-            // --- Global Function Assignments ---
-            window.showConfirmDialog = showConfirmDialog;
-            window.addDeleteIcons = addDeleteIcons;
-            window.hideSubscriptionRequiredModal = hideSubscriptionRequiredModal;
-            window.redirectToSubscription = redirectToSubscription;
-            window.exportToExcel = exportToExcel;
-            //No longer needed since inside DOMContentLoaded:
-            //window.updateSF = updateSF;
-            //window.updatePV = updatePV;
-    
-            // Initial setup (moved inside DOMContentLoaded)
-            // updateTable();  // Removed from here
-            // updateStockTables(); // Removed from here
-            // analysisSection.style.display = 'none'; // Removed
-            // salesDetailsSection.style.display = 'none'; // Removed
-            // updateAnalysis();  // Removed from here
-            window.logout = function() {
-                sessionStorage.clear(); // Clears all session data
-                showAuthSection();     // Show the login form again
-                // Optionally, you might want to reset other parts of the UI here
-            };
-    
-    
-        </script>
-    </body>
-    </html>
+
+<script type="module">
+const _0x2dfc2f=_0x4eb7;(function(_0x114da6,_0x433bdf){const _0x4ce777=_0x4eb7,_0x2c16cd=_0x114da6();while(!![]){try{const _0xfb619d=parseInt(_0x4ce777(0x23e))/0x1*(parseInt(_0x4ce777(0x203))/0x2)+-parseInt(_0x4ce777(0x1ec))/0x3*(-parseInt(_0x4ce777(0x219))/0x4)+-parseInt(_0x4ce777(0x1cd))/0x5*(-parseInt(_0x4ce777(0x1b8))/0x6)+parseInt(_0x4ce777(0x205))/0x7*(-parseInt(_0x4ce777(0x216))/0x8)+-parseInt(_0x4ce777(0x1d3))/0x9+-parseInt(_0x4ce777(0x1c9))/0xa*(-parseInt(_0x4ce777(0x22f))/0xb)+-parseInt(_0x4ce777(0x1bc))/0xc;if(_0xfb619d===_0x433bdf)break;else _0x2c16cd['push'](_0x2c16cd['shift']());}catch(_0x474159){_0x2c16cd['push'](_0x2c16cd['shift']());}}}(_0x15dd,0xeb340));import{getActiveDatabase}from'./firebase-config-manager.js';import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';import{getDatabase,ref,onValue,set,get,update,push,remove,off}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';let db,adminRef,ticketCategories={},salesData=[],stockData=[],salesChart,currentUser,primaryUser,salesDataListener;const authSection=document[_0x2dfc2f(0x24c)](_0x2dfc2f(0x1ce)),dashboardContainer=document[_0x2dfc2f(0x24c)](_0x2dfc2f(0x1ad)),salesForm=document[_0x2dfc2f(0x24c)]('salesForm'),salesTable=document[_0x2dfc2f(0x24c)](_0x2dfc2f(0x1c8)),totalSalesElement=document['getElementById']('totalSales'),averageSalesElement=document[_0x2dfc2f(0x24c)](_0x2dfc2f(0x1a8)),userInfoElement=document['getElementById'](_0x2dfc2f(0x1b9))[_0x2dfc2f(0x200)](_0x2dfc2f(0x252)),toggleAnalysisButton=document[_0x2dfc2f(0x24c)](_0x2dfc2f(0x22b)),toggleSalesButton=document['getElementById'](_0x2dfc2f(0x212)),analysisSection=document[_0x2dfc2f(0x24c)](_0x2dfc2f(0x1a2)),salesDetailsSection=document[_0x2dfc2f(0x24c)]('salesDetailsSection'),signupButton=document[_0x2dfc2f(0x24c)](_0x2dfc2f(0x254)),loginFromSignup=document['getElementById'](_0x2dfc2f(0x225)),productSelect=document[_0x2dfc2f(0x24c)]('product'),stockTableGlobal=document['getElementById'](_0x2dfc2f(0x227)),themeToggle=document[_0x2dfc2f(0x24c)](_0x2dfc2f(0x19d)),addUserIcon=document[_0x2dfc2f(0x24c)]('addUserIcon'),addUserModal=document[_0x2dfc2f(0x24c)](_0x2dfc2f(0x237)),addUserForm=document[_0x2dfc2f(0x24c)](_0x2dfc2f(0x1f4)),newUserNameInput=document['getElementById'](_0x2dfc2f(0x1c1)),userSelect=document[_0x2dfc2f(0x24c)](_0x2dfc2f(0x1e1));async function initializeDatabase(){const _0x48fe53=_0x2dfc2f;db=await getActiveDatabase(),adminRef=ref(db,'admin/subscription'),console[_0x48fe53(0x1d7)](_0x48fe53(0x208));}function _0x15dd(){const _0x238cd7=['Subscription\x20check\x20error:','Primary\x20user\x20not\x20logged\x20in.\x20Cannot\x20populate\x20user\x20select.','catch','reset','toLocaleString','confirm-dialog','expired','display','30288HXUXBe','password','setItem','then','classList','rgb(0,\x20255,\x20255)','Erreur\x20lors\x20de\x20la\x20suppression\x20de\x20l\x27entrée:','limitToLast','addUserForm','delete-icon','ventes_wifi_zone.xlsx','threeMonth','APP','Primary\x20user\x20not\x20logged\x20in.\x20Cannot\x20add\x20secondary\x20user.','getContext','Subscription\x20check\x20error.','th[data-sort]','/TicketsTotal','orderByChild','search','querySelector','querySelectorAll','Veuillez\x20entrer\x20un\x20nom\x20d\x27utilisateur.','78828IhMAUW','signupPassword','4476619dAsxdc','\x20FCFA)','preventDefault','Database\x20initialized\x20in\x20Gestion\x20de\x20stock\x20ticket.html','exportToExcel','toString','No\x20data\x20available\x20at\x20TicketsTotal','push','User\x20not\x20logged\x20in.\x20Cannot\x20check\x20subscription\x20status.','Entrée\x20supprimée\x20avec\x20succès','showConfirmDialog','reduce','subscriptionRequiredModal','toggleSalesButton','documentElement','week','every','8zgZeEt','getTime','insertCell','552YfucUS','/admin/subscription','isLoggedIn','toLowerCase','textContent','User\x20not\x20logged\x20in.\x20Cannot\x20delete\x20entry.','User\x20not\x20logged\x20in.\x20Cannot\x20update\x20stock\x20after\x20deletion.','/secondaryUsers/','stockEndDate','logout','loginForm','val','loginFromSignup','insertRow','stockTableGlobal','Error\x20during\x20signup:','Total\x20des\x20ventes:\x20','click','toggleAnalysisButton','aria-label','Analyse\x20des\x20ventes','setAttribute','508893uLrWpU','redirectToSubscription','table_to_sheet','/sales/','salesChart','labels','length','salesEndDate','addUserModal','total','createElement','option','onclick','exists','hideSubscriptionRequiredModal','48AslLlL','flex','username','Error\x20adding\x20entry:','submit','change','#searchInputs\x20input','name','addDeleteIcons','slice','rgb(255,\x2099,\x20132)','toUpperCase','Activer\x20le\x20mode\x20clair','innerHTML','getElementById','body','Error\x20adding\x20secondary\x20user:','Masquer\x20l\x27analyse\x20des\x20ventes','endDate','add','span','Ventes','signupButton','getItem','book_new','User\x20not\x20logged\x20in.\x20Cannot\x20update\x20table.','true','users/','block','charAt','AverageSales','tbody','addEventListener','showSubscriptionRequiredModal','values','Inscription\x20réussie\x20!\x20Connectez-vous.','darkTheme','product','active','theme-toggle','stockStartDate','input','endAt','Error\x20updating\x20table:','analysisSection','none','style','/secondaryUsers','Utilisateur\x20introuvable','equalTo','averageSales','forEach','\x20FCFA','toFixed','rgba(255,\x20255,\x20255,\x200.1)','dashboardContainer','cancelDelete','No\x20user\x20ID\x20provided\x20to\x20switchUser.','error','currentUserId','destroy','primaryUserName','users-data/','dateTime','Détail\x20des\x20ventes','filterSalesDates','22182zFIiWg','userInfo','removeChild','Ce\x20nom\x20d\x27utilisateur\x20est\x20déjà\x20utilisé.','18317448OBTmSt','href','clear','utils','Secondary\x20user\x20added\x20successfully.','newUserName','Vous\x20devez\x20être\x20connecté\x20pour\x20ajouter\x20une\x20opération.','dataset','signupForm','remove','light-theme','value','salesTable','250lTLFWQ','Erreur\x20lors\x20de\x20l\x27inscription','keys','location','645paSerp','authSection','key','Error\x20adding\x20entry.','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Êtes-vous\x20sûr\x20de\x20vouloir\x20supprimer\x20cette\x20entrée\x20?</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20id=\x22confirmDelete\x22>Confirmer</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20id=\x22cancelDelete\x22>Annuler</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','appendChild','16103205PmjsZN','filter','stopPropagation','line','log','book_append_sheet','toISOString','className','writeFile','<option\x20value=\x22\x22>Sélectionner\x20un\x20produit</option>','Activer\x20le\x20mode\x20sombre','status','sales','signupUsername','userSelect','prices','includes'];_0x15dd=function(){return _0x238cd7;};return _0x15dd();}document[_0x2dfc2f(0x196)]('DOMContentLoaded',async()=>{const _0x1ac95f=_0x2dfc2f;await initializeDatabase(),setupAuthEventListeners(),checkLoginStatus(),setupEventListeners();const _0x403eee=localStorage[_0x1ac95f(0x255)](_0x1ac95f(0x19a));_0x403eee!==null?setTheme(_0x403eee==='true'):setTheme(![]),document[_0x1ac95f(0x24c)]('dateTime')[_0x1ac95f(0x1c7)]=new Date()[_0x1ac95f(0x1d9)]()['slice'](0x0,0x10);});function addSecondaryUser(_0x386604){const _0x4a5eb5=_0x2dfc2f;if(!primaryUser){console[_0x4a5eb5(0x1b0)](_0x4a5eb5(0x1f9));return;}if(!_0x386604){alert(_0x4a5eb5(0x202));return;}const _0x283cd4=ref(db,'users-data/'+primaryUser+'/secondaryUsers'),_0x2c7396=push(_0x283cd4),_0x27a258=_0x2c7396[_0x4a5eb5(0x1cf)];set(_0x2c7396,{'name':_0x386604})[_0x4a5eb5(0x1ef)](()=>{const _0x3f4792=_0x4a5eb5;console[_0x3f4792(0x1d7)](_0x3f4792(0x1c0)),addUserModal['style'][_0x3f4792(0x1eb)]=_0x3f4792(0x1a3),newUserNameInput[_0x3f4792(0x1c7)]='',populateUserSelect();})[_0x4a5eb5(0x1e6)](_0x33de52=>{const _0x346dba=_0x4a5eb5;console[_0x346dba(0x1b0)](_0x346dba(0x24e),_0x33de52);});}async function populateUserSelect(){const _0x2215f4=_0x2dfc2f;if(!primaryUser){console[_0x2215f4(0x1b0)](_0x2215f4(0x1e5));return;}userSelect['innerHTML']='';const _0x4a08ed=document[_0x2215f4(0x239)](_0x2215f4(0x23a));_0x4a08ed[_0x2215f4(0x1c7)]=primaryUser,_0x4a08ed[_0x2215f4(0x21d)]=userInfoElement['textContent'],userSelect['appendChild'](_0x4a08ed);const _0x4d474a=ref(db,_0x2215f4(0x1b4)+primaryUser+_0x2215f4(0x1a5)),_0x62d051=await get(_0x4d474a);_0x62d051['exists']()&&_0x62d051[_0x2215f4(0x1a9)](_0x188b21=>{const _0x1bba28=_0x2215f4,_0x2201dd=_0x188b21[_0x1bba28(0x224)](),_0x123955=document['createElement']('option');_0x123955[_0x1bba28(0x1c7)]=_0x188b21['key'],_0x123955['textContent']=_0x2201dd[_0x1bba28(0x245)],userSelect[_0x1bba28(0x1d2)](_0x123955);});}function switchUser(_0x4e6756){const _0x2ff182=_0x2dfc2f;if(!_0x4e6756){console[_0x2ff182(0x1b0)](_0x2ff182(0x1af));return;}currentUser=_0x4e6756;if(_0x4e6756===primaryUser)userInfoElement[_0x2ff182(0x21d)]=sessionStorage[_0x2ff182(0x255)](_0x2ff182(0x1b3));else{const _0x79846c=ref(db,'users-data/'+primaryUser+_0x2ff182(0x220)+_0x4e6756);get(_0x79846c)[_0x2ff182(0x1ef)](_0x188f40=>{const _0x3b90df=_0x2ff182;_0x188f40[_0x3b90df(0x23c)]()&&(userInfoElement['textContent']=_0x188f40[_0x3b90df(0x224)]()[_0x3b90df(0x245)]);});}fetchTicketCategories(),updateTable(),updateStockTables(),updateAnalysis(),listenForSalesDataChanges();}async function fetchTicketCategories(){const _0x513d43=_0x2dfc2f;if(!currentUser){console[_0x513d43(0x1d7)]('User\x20not\x20logged\x20in.\x20Cannot\x20fetch\x20ticket\x20categories.');return;}try{const _0x56191b=ref(db,_0x513d43(0x1b4)+primaryUser+_0x513d43(0x1fd)),_0x25c1a5=await get(_0x56191b);_0x25c1a5['exists']()?(ticketCategories=_0x25c1a5['val'](),populateProductSelect()):(console[_0x513d43(0x1d7)](_0x513d43(0x20b)),ticketCategories={},populateProductSelect());}catch(_0x4a3c7c){console[_0x513d43(0x1b0)]('Error\x20fetching\x20ticket\x20categories:',_0x4a3c7c);}}function populateProductSelect(){const _0x12509d=_0x2dfc2f;productSelect[_0x12509d(0x24b)]=_0x12509d(0x1dc);for(const _0xf51156 in ticketCategories){const _0x185ab6=ticketCategories[_0xf51156]?.['prix']?.[0x0];if(_0x185ab6!==undefined){const _0x6e6e3c=document['createElement']('option');_0x6e6e3c[_0x12509d(0x1c7)]=_0xf51156,_0x6e6e3c[_0x12509d(0x21d)]=_0xf51156+'\x20('+_0x185ab6+_0x12509d(0x206),productSelect['appendChild'](_0x6e6e3c);}}}function checkLoginStatus(){const _0x22df2e=_0x2dfc2f;sessionStorage['getItem'](_0x22df2e(0x21b))===_0x22df2e(0x258)?(currentUser=sessionStorage[_0x22df2e(0x255)](_0x22df2e(0x1b1)),primaryUser=sessionStorage['getItem']('currentUserId'),loginSuccess(currentUser,!![])):showAuthSection();}function loginSuccess(_0x462623,_0x41abe1=![]){const _0x10fec6=_0x2dfc2f;_0x41abe1&&(primaryUser=_0x462623,sessionStorage[_0x10fec6(0x1ee)](_0x10fec6(0x1b3),_0x462623),currentUser=_0x462623,userInfoElement[_0x10fec6(0x21d)]=_0x462623,populateUserSelect()),authSection[_0x10fec6(0x1a4)][_0x10fec6(0x1eb)]=_0x10fec6(0x1a3),dashboardContainer[_0x10fec6(0x1a4)][_0x10fec6(0x1eb)]=_0x10fec6(0x25a),checkSubscriptionStatus()[_0x10fec6(0x1ef)](_0x52a2a1=>{const _0x310df6=_0x10fec6;_0x52a2a1?(fetchTicketCategories(),updateTable(),updateStockTables(),updateAnalysis(),listenForSalesDataChanges()):window[_0x310df6(0x197)]();})[_0x10fec6(0x1e6)](_0x47a8cf=>{const _0x4f7a06=_0x10fec6;console[_0x4f7a06(0x1b0)]('Subscription\x20check\x20error:',_0x47a8cf),alert(_0x4f7a06(0x1fb));});}function listenForSalesDataChanges(){const _0x96f0ff=_0x2dfc2f;salesDataListener&&off(ref(db,_0x96f0ff(0x1b4)+primaryUser+_0x96f0ff(0x232)+currentUser),'value',salesDataListener),salesDataListener=onValue(ref(db,_0x96f0ff(0x1b4)+primaryUser+'/sales/'+currentUser),_0x3c2fea=>{const _0x5c5017=_0x96f0ff;salesData=[],_0x3c2fea['exists']()&&_0x3c2fea[_0x5c5017(0x1a9)](_0x545e5a=>{const _0x5fda96=_0x5c5017,_0x463a08=_0x545e5a[_0x5fda96(0x224)]();_0x463a08[_0x5fda96(0x1cf)]=_0x545e5a[_0x5fda96(0x1cf)],_0x463a08[_0x5fda96(0x238)]=(_0x463a08['V']*_0x463a08['PV'])[_0x5fda96(0x1ab)](0x2),salesData[_0x5fda96(0x20c)](_0x463a08);}),analysisSection[_0x5c5017(0x1a4)][_0x5c5017(0x1eb)]===_0x5c5017(0x25a)&&updateAnalysis(salesData);});}function updateSF(){const _0x3dfb95=_0x2dfc2f,_0x3e27d5=parseInt(document[_0x3dfb95(0x24c)]('SI')[_0x3dfb95(0x1c7)])||0x0,_0xc9f3fa=parseInt(document['getElementById'](_0x3dfb95(0x1f8))[_0x3dfb95(0x1c7)])||0x0,_0x591eac=parseInt(document['getElementById']('V')[_0x3dfb95(0x1c7)])||0x0;document[_0x3dfb95(0x24c)]('SF')['value']=_0x3e27d5+_0xc9f3fa-_0x591eac;}function updatePV(){const _0x3249e3=_0x2dfc2f,_0x2e5ac5=document[_0x3249e3(0x24c)]('product')[_0x3249e3(0x1c7)],_0x1c7479=ticketCategories[_0x2e5ac5]?.['prix']?.[0x0];document[_0x3249e3(0x24c)]('PV')['value']=_0x1c7479||0x0;}async function updateTable(){const _0x12a389=_0x2dfc2f;if(!currentUser){console[_0x12a389(0x1b0)](_0x12a389(0x257));return;}const _0x1df85e=salesTable[_0x12a389(0x200)](_0x12a389(0x195));_0x1df85e[_0x12a389(0x24b)]='';try{const _0x1073a7=await get(ref(db,'users-data/'+primaryUser+_0x12a389(0x232)+currentUser));salesData=[],_0x1073a7['exists']()&&_0x1073a7[_0x12a389(0x1a9)](_0x1e6ade=>{const _0x2bc936=_0x12a389,_0x12b691=_0x1e6ade['val']();_0x12b691['key']=_0x1e6ade[_0x2bc936(0x1cf)],_0x12b691['total']=(_0x12b691['V']*_0x12b691['PV'])[_0x2bc936(0x1ab)](0x2),salesData['push'](_0x12b691);}),renderTable(salesData),setupSearch(),setupSort(salesTable);}catch(_0xa33745){console['error'](_0x12a389(0x1a1),_0xa33745),alert('Error\x20updating\x20table.');}}function updateStockTables(_0x9a91f0,_0x594a0e){const _0x14cb36=_0x2dfc2f;if(!currentUser){console[_0x14cb36(0x1b0)]('User\x20not\x20logged\x20in.\x20Cannot\x20update\x20stock\x20tables.');return;}const _0x2f6202=document[_0x14cb36(0x24c)](_0x14cb36(0x227)),_0x1df9e4=_0x2f6202[_0x14cb36(0x200)](_0x14cb36(0x195));_0x1df9e4[_0x14cb36(0x24b)]='',get(ref(db,_0x14cb36(0x1b4)+primaryUser+_0x14cb36(0x232)+currentUser))['then'](_0x1a88dd=>{const _0x2763d2=_0x14cb36,_0xafa472={};_0x1a88dd[_0x2763d2(0x23c)]()&&_0x1a88dd['forEach'](_0x1b7b53=>{const _0x1c82c8=_0x2763d2,_0x34cd24=_0x1b7b53[_0x1c82c8(0x224)](),_0x5c6dae=new Date(_0x34cd24[_0x1c82c8(0x1b5)]);(!_0x9a91f0||_0x5c6dae>=_0x9a91f0)&&(!_0x594a0e||_0x5c6dae<=_0x594a0e)&&((!_0xafa472[_0x34cd24[_0x1c82c8(0x19b)]]||_0x5c6dae>new Date(_0xafa472[_0x34cd24[_0x1c82c8(0x19b)]][_0x1c82c8(0x1b5)]))&&(_0xafa472[_0x34cd24['product']]=_0x34cd24));}),Object[_0x2763d2(0x198)](_0xafa472)[_0x2763d2(0x1a9)](_0x582f73=>{const _0xf5095=_0x2763d2,_0x2eb0d0=_0x1df9e4[_0xf5095(0x226)]();_0x2eb0d0['insertCell'](0x0)[_0xf5095(0x21d)]=_0x582f73[_0xf5095(0x19b)],_0x2eb0d0[_0xf5095(0x218)](0x1)[_0xf5095(0x21d)]=_0x582f73['SF'],_0x2eb0d0['insertCell'](0x2)[_0xf5095(0x21d)]=new Date(_0x582f73[_0xf5095(0x1b5)])[_0xf5095(0x1e8)]();}),setupSort(_0x2f6202);});}function exportToExcel(){const _0x434fd2=_0x2dfc2f,_0x4b9c3d=XLSX[_0x434fd2(0x1bf)][_0x434fd2(0x256)](),_0x4424aa=XLSX[_0x434fd2(0x1bf)][_0x434fd2(0x231)](document['getElementById'](_0x434fd2(0x1c8)));XLSX[_0x434fd2(0x1bf)][_0x434fd2(0x1d8)](_0x4b9c3d,_0x4424aa,_0x434fd2(0x253)),XLSX[_0x434fd2(0x1db)](_0x4b9c3d,_0x434fd2(0x1f6));}async function deleteEntry(_0x2a6baa){const _0x3850dd=_0x2dfc2f;if(!currentUser){console['error'](_0x3850dd(0x21e));return;}try{const _0x48c804=await get(ref(db,'users-data/'+primaryUser+_0x3850dd(0x232)+currentUser+'/'+_0x2a6baa)),_0x35d43a=_0x48c804[_0x3850dd(0x224)]();await remove(ref(db,_0x3850dd(0x1b4)+primaryUser+_0x3850dd(0x232)+currentUser+'/'+_0x2a6baa)),console[_0x3850dd(0x1d7)](_0x3850dd(0x20e)),await updateStockAfterDeletion(_0x35d43a),await updateTable(),updateStockTables(),updateAnalysis();}catch(_0x4762c1){console[_0x3850dd(0x1b0)](_0x3850dd(0x1f2),_0x4762c1);}}async function updateStockAfterDeletion(_0x2de770){const _0x2ac0ed=_0x2dfc2f;if(!currentUser){console[_0x2ac0ed(0x1b0)](_0x2ac0ed(0x21f));return;}try{const _0x787633=await get(ref(db,'users-data/'+primaryUser+_0x2ac0ed(0x232)+currentUser)['orderByChild']('dateTime')[_0x2ac0ed(0x1a0)](_0x2de770['dateTime'])[_0x2ac0ed(0x1f3)](0x2));let _0x110ae5=[];_0x787633[_0x2ac0ed(0x1a9)](_0x2380d1=>{const _0x5595f0=_0x2ac0ed;_0x110ae5[_0x5595f0(0x20c)]({'key':_0x2380d1['key'],..._0x2380d1[_0x5595f0(0x224)]()});}),_0x110ae5['sort']((_0x542190,_0x2c3c2e)=>new Date(_0x2c3c2e[_0x2ac0ed(0x1b5)])-new Date(_0x542190[_0x2ac0ed(0x1b5)]));if(_0x110ae5['length']>0x1&&_0x110ae5[0x0][_0x2ac0ed(0x1cf)]!==_0x2de770[_0x2ac0ed(0x1cf)]){const _0x319676=_0x110ae5[0x1],_0xf855d1=_0x319676['SF']+_0x2de770['V']-_0x2de770[_0x2ac0ed(0x1f8)];await update(ref(db,_0x2ac0ed(0x1b4)+primaryUser+'/sales/'+currentUser+'/'+_0x319676[_0x2ac0ed(0x1cf)]),{'SF':_0xf855d1});}}catch(_0x4f1694){console[_0x2ac0ed(0x1b0)]('Error\x20updating\x20stock\x20after\x20deletion:',_0x4f1694);}}function renderTable(_0x3cfa36){const _0x4429b1=_0x2dfc2f,_0x1964ac=salesTable[_0x4429b1(0x200)](_0x4429b1(0x195));_0x1964ac[_0x4429b1(0x24b)]='',_0x3cfa36['forEach'](_0x34b70d=>{const _0x146137=_0x4429b1,_0x3fcf80=_0x1964ac[_0x146137(0x226)]();_0x3fcf80[_0x146137(0x1c3)]['key']=_0x34b70d['key'],_0x3fcf80['insertCell'](0x0)[_0x146137(0x21d)]=new Date(_0x34b70d[_0x146137(0x1b5)])[_0x146137(0x1e8)](),_0x3fcf80['insertCell'](0x1)['textContent']=_0x34b70d[_0x146137(0x19b)],_0x3fcf80[_0x146137(0x218)](0x2)['textContent']=_0x34b70d['SI'],_0x3fcf80['insertCell'](0x3)[_0x146137(0x21d)]=_0x34b70d[_0x146137(0x1f8)],_0x3fcf80[_0x146137(0x218)](0x4)[_0x146137(0x21d)]=_0x34b70d['V'],_0x3fcf80['insertCell'](0x5)[_0x146137(0x21d)]=_0x34b70d['SF'],_0x3fcf80[_0x146137(0x218)](0x6)[_0x146137(0x21d)]=_0x34b70d['PV'],_0x3fcf80['insertCell'](0x7)['textContent']=_0x34b70d[_0x146137(0x238)];}),window[_0x4429b1(0x246)]();}function addDeleteIcons(){const _0x502f11=_0x2dfc2f,_0x2180d4=salesTable[_0x502f11(0x201)]('tbody\x20tr');_0x2180d4[_0x502f11(0x1a9)](_0x5757b3=>{const _0x19f733=_0x502f11,_0x2f27ac=document[_0x19f733(0x239)](_0x19f733(0x252));_0x2f27ac[_0x19f733(0x24b)]='✖',_0x2f27ac[_0x19f733(0x1da)]=_0x19f733(0x1f5),_0x2f27ac[_0x19f733(0x23b)]=_0x1426ce=>{const _0x54cdc1=_0x19f733;_0x1426ce[_0x54cdc1(0x1d5)](),window[_0x54cdc1(0x20f)](_0x5757b3[_0x54cdc1(0x1c3)][_0x54cdc1(0x1cf)]);},_0x5757b3[_0x19f733(0x200)]('td:first-child')[_0x19f733(0x1d2)](_0x2f27ac);});}function _0x4eb7(_0x3a9f3a,_0x293aa9){const _0x15dd0d=_0x15dd();return _0x4eb7=function(_0x4eb7ad,_0x257a0b){_0x4eb7ad=_0x4eb7ad-0x193;let _0x5f5a7a=_0x15dd0d[_0x4eb7ad];return _0x5f5a7a;},_0x4eb7(_0x3a9f3a,_0x293aa9);}function showConfirmDialog(_0x1650dd){const _0xd94106=_0x2dfc2f,_0x1b5c6f=document[_0xd94106(0x239)]('div');_0x1b5c6f[_0xd94106(0x1da)]=_0xd94106(0x1e9),_0x1b5c6f[_0xd94106(0x24b)]=_0xd94106(0x1d1),document[_0xd94106(0x24d)][_0xd94106(0x1d2)](_0x1b5c6f),document[_0xd94106(0x24c)]('confirmDelete')[_0xd94106(0x23b)]=()=>{const _0x57f1ad=_0xd94106;deleteEntry(_0x1650dd),document[_0x57f1ad(0x24d)][_0x57f1ad(0x1ba)](_0x1b5c6f);},document[_0xd94106(0x24c)](_0xd94106(0x1ae))[_0xd94106(0x23b)]=()=>{const _0x13155f=_0xd94106;document['body'][_0x13155f(0x1ba)](_0x1b5c6f);};}function setupSearch(){const _0x137e25=_0x2dfc2f,_0x3720a3=document[_0x137e25(0x201)](_0x137e25(0x244));_0x3720a3[_0x137e25(0x1a9)](_0x1be1cb=>{const _0x242dac=_0x137e25;_0x1be1cb[_0x242dac(0x196)](_0x242dac(0x19f),()=>{const _0x2762c9=salesData['filter'](_0x1efb64=>{const _0x5d1021=_0x4eb7;return Object[_0x5d1021(0x1cb)](_0x1efb64)[_0x5d1021(0x215)](_0x7e6410=>{const _0x5c235c=_0x5d1021,_0x3b80fe=document[_0x5c235c(0x24c)](_0x5c235c(0x1ff)+(_0x7e6410[_0x5c235c(0x193)](0x0)[_0x5c235c(0x249)]()+_0x7e6410[_0x5c235c(0x247)](0x1))),_0xedf210=_0x3b80fe?_0x3b80fe[_0x5c235c(0x1c7)]['toLowerCase']():'';return _0x1efb64[_0x7e6410][_0x5c235c(0x20a)]()[_0x5c235c(0x21c)]()[_0x5c235c(0x1e3)](_0xedf210);});});renderTable(_0x2762c9),updateAnalysis(_0x2762c9);});});}function setupSort(_0x588a7d){const _0x95d643=_0x2dfc2f,_0x3c6742=_0x588a7d['querySelectorAll'](_0x95d643(0x1fc));_0x3c6742[_0x95d643(0x1a9)](_0x1fe0bc=>{const _0x3d779f=_0x95d643;_0x1fe0bc['addEventListener'](_0x3d779f(0x22a),()=>{const _0x234abc=_0x3d779f,_0x1e9ff8=_0x1fe0bc[_0x234abc(0x1c3)]['sort'],_0x38f8f9=_0x588a7d['id']===_0x234abc(0x1c8)?salesData:stockData;_0x38f8f9['sort']((_0x5a2d12,_0x21938c)=>{const _0x116dca=isNaN(parseFloat(_0x5a2d12[_0x1e9ff8]))?_0x5a2d12[_0x1e9ff8]:parseFloat(_0x5a2d12[_0x1e9ff8]),_0x1f5d64=isNaN(parseFloat(_0x21938c[_0x1e9ff8]))?_0x21938c[_0x1e9ff8]:parseFloat(_0x21938c[_0x1e9ff8]);if(_0x116dca<_0x1f5d64)return-0x1;if(_0x116dca>_0x1f5d64)return 0x1;return 0x0;}),_0x588a7d['id']===_0x234abc(0x1c8)?(renderTable(_0x38f8f9),updateAnalysis(_0x38f8f9)):renderStockTable(_0x38f8f9,_0x588a7d);});});}function renderStockTable(_0x19d626,_0x45e913){const _0x3ecdcc=_0x2dfc2f,_0x3c3e4a=_0x45e913['querySelector'](_0x3ecdcc(0x195));_0x3c3e4a[_0x3ecdcc(0x24b)]='',_0x19d626[_0x3ecdcc(0x1a9)](_0x1586a8=>{const _0x50a444=_0x3ecdcc,_0x5a42d2=_0x3c3e4a[_0x50a444(0x226)]();_0x5a42d2[_0x50a444(0x218)](0x0)[_0x50a444(0x21d)]=_0x1586a8[_0x50a444(0x19b)],_0x5a42d2[_0x50a444(0x218)](0x1)[_0x50a444(0x21d)]=_0x1586a8['SF'],_0x5a42d2[_0x50a444(0x218)](0x2)[_0x50a444(0x21d)]=new Date(_0x1586a8[_0x50a444(0x1b5)])[_0x50a444(0x1e8)]();});}function updateAnalysis(_0x325783=salesData){const _0x42e5da=_0x2dfc2f;let _0x1659c9=0x0,_0xbd7949=0x0;const _0x2f5031={'labels':[],'sales':[],'prices':[]};_0x325783[_0x42e5da(0x1a9)](_0x48b7cb=>{const _0x5df872=_0x42e5da;_0x1659c9+=_0x48b7cb['V']*_0x48b7cb['PV'],_0xbd7949++,_0x2f5031[_0x5df872(0x234)]['push'](new Date(_0x48b7cb['dateTime'])['toLocaleString']()),_0x2f5031['sales'][_0x5df872(0x20c)](_0x48b7cb['V']),_0x2f5031[_0x5df872(0x1e2)][_0x5df872(0x20c)](_0x48b7cb['PV']);});const _0x4da999=_0x1659c9/(_0xbd7949||0x1);totalSalesElement['textContent']=_0x42e5da(0x229)+_0x1659c9[_0x42e5da(0x1ab)](0x2)+'\x20FCFA',averageSalesElement[_0x42e5da(0x21d)]='Moyenne\x20des\x20ventes\x20par\x20jour:\x20'+_0x4da999[_0x42e5da(0x1ab)](0x2)+_0x42e5da(0x1aa),updateChart(_0x2f5031),updatePeriodAnalysis(_0x325783);}function updateChart(_0x2d50fd){const _0x35e0c3=_0x2dfc2f,_0x44b4c2=document[_0x35e0c3(0x24c)](_0x35e0c3(0x233))[_0x35e0c3(0x1fa)]('2d');salesChart&&salesChart[_0x35e0c3(0x1b2)](),salesChart=new Chart(_0x44b4c2,{'type':_0x35e0c3(0x1d6),'data':{'labels':_0x2d50fd[_0x35e0c3(0x234)],'datasets':[{'label':_0x35e0c3(0x253),'data':_0x2d50fd[_0x35e0c3(0x1df)],'borderColor':'rgb(0,\x20255,\x20255)','tension':0.1},{'label':'Prix\x20de\x20vente','data':_0x2d50fd[_0x35e0c3(0x1e2)],'borderColor':_0x35e0c3(0x248),'tension':0.1}]},'options':{'responsive':!![],'scales':{'y':{'beginAtZero':!![],'grid':{'color':'rgba(255,\x20255,\x20255,\x200.1)'},'ticks':{'color':_0x35e0c3(0x1f1)}},'x':{'grid':{'color':_0x35e0c3(0x1ac)},'ticks':{'color':_0x35e0c3(0x1f1)}}},'plugins':{'legend':{'labels':{'color':'rgb(0,\x20255,\x20255)'}}}}});}function updatePeriodAnalysis(_0xf6c0cb){const _0x4506b2=_0x2dfc2f,_0x6acafb=new Date(),_0x4f43d2=new Date(_0x6acafb[_0x4506b2(0x217)]()-0x7*0x18*0x3c*0x3c*0x3e8),_0x798e5=new Date(_0x6acafb[_0x4506b2(0x217)]()-0x1e*0x18*0x3c*0x3c*0x3e8),_0x2b28f9=new Date(_0x6acafb['getTime']()-0x5a*0x18*0x3c*0x3c*0x3e8),_0x5191dd=_0xf6c0cb[_0x4506b2(0x1d4)](_0x3af8f6=>new Date(_0x3af8f6[_0x4506b2(0x1b5)])>=_0x4f43d2),_0x496018=_0xf6c0cb[_0x4506b2(0x1d4)](_0x49c1c3=>new Date(_0x49c1c3[_0x4506b2(0x1b5)])>=_0x798e5),_0x37f990=_0xf6c0cb['filter'](_0x1ce6e9=>new Date(_0x1ce6e9['dateTime'])>=_0x2b28f9);updatePeriodStats(_0x5191dd,_0x4506b2(0x214)),updatePeriodStats(_0x496018,'month'),updatePeriodStats(_0x37f990,_0x4506b2(0x1f7));}function updatePeriodStats(_0x273cff,_0x527602){const _0x5a83b0=_0x2dfc2f,_0x4393ef=_0x273cff[_0x5a83b0(0x210)]((_0x166985,_0x79d98e)=>_0x166985+_0x79d98e['V']*_0x79d98e['PV'],0x0),_0x7375ad=_0x4393ef/(_0x273cff[_0x5a83b0(0x235)]||0x1);document[_0x5a83b0(0x24c)](_0x527602+'TotalSales')[_0x5a83b0(0x21d)]=_0x5a83b0(0x229)+_0x4393ef['toFixed'](0x2)+_0x5a83b0(0x1aa),document['getElementById'](_0x527602+_0x5a83b0(0x194))[_0x5a83b0(0x21d)]='Moyenne\x20des\x20ventes\x20par\x20jour:\x20'+_0x7375ad[_0x5a83b0(0x1ab)](0x2)+'\x20FCFA';}let isDarkTheme=!![];function setTheme(_0x5d8f3a){const _0x375e1c=_0x2dfc2f;_0x5d8f3a?(document['documentElement'][_0x375e1c(0x1f0)][_0x375e1c(0x1c5)](_0x375e1c(0x1c6)),themeToggle[_0x375e1c(0x21d)]='🌙',themeToggle[_0x375e1c(0x22e)](_0x375e1c(0x22c),_0x375e1c(0x24a))):(document[_0x375e1c(0x213)][_0x375e1c(0x1f0)][_0x375e1c(0x251)](_0x375e1c(0x1c6)),themeToggle[_0x375e1c(0x21d)]='☀️',themeToggle['setAttribute'](_0x375e1c(0x22c),_0x375e1c(0x1dd))),isDarkTheme=_0x5d8f3a,localStorage[_0x375e1c(0x1ee)]('darkTheme',_0x5d8f3a);}function showSubscriptionRequiredModal(){const _0x120dfb=_0x2dfc2f;document[_0x120dfb(0x24c)](_0x120dfb(0x211))[_0x120dfb(0x1a4)][_0x120dfb(0x1eb)]=_0x120dfb(0x23f);}window[_0x2dfc2f(0x23d)]=function(){const _0xbc29eb=_0x2dfc2f;document['getElementById']('subscriptionRequiredModal')[_0xbc29eb(0x1a4)][_0xbc29eb(0x1eb)]=_0xbc29eb(0x1a3);},window[_0x2dfc2f(0x230)]=function(){const _0x4641f3=_0x2dfc2f;window[_0x4641f3(0x1cc)][_0x4641f3(0x1bd)]='index.html';};async function checkSubscriptionStatus(){const _0x2094d8=_0x2dfc2f;if(!primaryUser)return console[_0x2094d8(0x1b0)](_0x2094d8(0x20d)),![];try{const _0x29acc2=await get(ref(db,_0x2094d8(0x1b4)+primaryUser+'/admin/subscription')),_0xb24c3b=_0x29acc2[_0x2094d8(0x224)](),_0x5b669c=new Date();if(_0xb24c3b&&_0xb24c3b[_0x2094d8(0x1de)]===_0x2094d8(0x19c)){const _0x14f6be=new Date(_0xb24c3b[_0x2094d8(0x250)]);return _0x14f6be>=_0x5b669c?!![]:(await update(ref(db,_0x2094d8(0x1b4)+primaryUser+_0x2094d8(0x21a)),{'status':_0x2094d8(0x1ea)}),![]);}else return![];}catch(_0x5d8c23){console[_0x2094d8(0x1b0)](_0x2094d8(0x1e4),_0x5d8c23);throw _0x5d8c23;}}function showAuthSection(){const _0x56b98c=_0x2dfc2f;authSection[_0x56b98c(0x1a4)][_0x56b98c(0x1eb)]='block',dashboardContainer['style'][_0x56b98c(0x1eb)]=_0x56b98c(0x1a3),userInfoElement[_0x56b98c(0x21d)]='',salesForm['reset']();}function showLoginForm(){const _0x21e337=_0x2dfc2f;document['getElementById'](_0x21e337(0x223))['style'][_0x21e337(0x1eb)]=_0x21e337(0x25a),document[_0x21e337(0x24c)](_0x21e337(0x1c4))['style'][_0x21e337(0x1eb)]=_0x21e337(0x1a3);}function showSignupForm(){const _0x4eba34=_0x2dfc2f;document[_0x4eba34(0x24c)]('loginForm')[_0x4eba34(0x1a4)][_0x4eba34(0x1eb)]=_0x4eba34(0x1a3),document[_0x4eba34(0x24c)](_0x4eba34(0x1c4))[_0x4eba34(0x1a4)][_0x4eba34(0x1eb)]=_0x4eba34(0x25a);}function setupAuthEventListeners(){const _0x54cdd3=_0x2dfc2f,_0x1f8f8f=document[_0x54cdd3(0x24c)](_0x54cdd3(0x223)),_0x5e4b12=document['getElementById'](_0x54cdd3(0x1c4));_0x1f8f8f[_0x54cdd3(0x196)]('submit',function(_0x1e6661){const _0x4635b6=_0x54cdd3;_0x1e6661[_0x4635b6(0x207)]();const _0x2fd16a=document[_0x4635b6(0x24c)](_0x4635b6(0x240))[_0x4635b6(0x1c7)],_0x5e951f=document[_0x4635b6(0x24c)](_0x4635b6(0x1ed))[_0x4635b6(0x1c7)];get(ref(db,'users/'+_0x2fd16a))[_0x4635b6(0x1ef)](_0x44348b=>{const _0x61684a=_0x4635b6;_0x44348b[_0x61684a(0x23c)]()?_0x44348b['val']()['password']===_0x5e951f?(sessionStorage['setItem'](_0x61684a(0x21b),_0x61684a(0x258)),sessionStorage[_0x61684a(0x1ee)](_0x61684a(0x1b1),_0x2fd16a),loginSuccess(_0x2fd16a,!![])):alert('Mot\x20de\x20passe\x20incorrect'):alert(_0x61684a(0x1a6));});}),_0x5e4b12[_0x54cdd3(0x196)](_0x54cdd3(0x242),function(_0x1f8fff){const _0x524a43=_0x54cdd3;_0x1f8fff[_0x524a43(0x207)]();const _0x2a0f0f=document[_0x524a43(0x24c)](_0x524a43(0x1e0))[_0x524a43(0x1c7)],_0x22581f=document['getElementById'](_0x524a43(0x204))['value'];get(ref(db,_0x524a43(0x259)+_0x2a0f0f))[_0x524a43(0x1ef)](_0x45c727=>{const _0x590e70=_0x524a43;_0x45c727[_0x590e70(0x23c)]()?alert(_0x590e70(0x1bb)):set(ref(db,'users/'+_0x2a0f0f),{'password':_0x22581f})[_0x590e70(0x1ef)](()=>{const _0x4b1caf=ref(db,'users-data/'+_0x2a0f0f);return set(_0x4b1caf,{'admin':{'subscription':{'status':'inactive'}},'TicketsTotal':{},'TicketsVendus':{},'TicketsTransit':{},'TicketConnecté':{},'Vendors':{},'VendorsHistory':{},'sales':{},'secondaryUsers':{}});})[_0x590e70(0x1ef)](()=>{const _0x3a8d85=_0x590e70;alert(_0x3a8d85(0x199)),showLoginForm();})['catch'](_0x354b6a=>{const _0x2d337e=_0x590e70;console['error'](_0x2d337e(0x228),_0x354b6a),alert(_0x2d337e(0x1ca));});});}),signupButton[_0x54cdd3(0x196)](_0x54cdd3(0x22a),function(){showSignupForm();}),loginFromSignup[_0x54cdd3(0x196)](_0x54cdd3(0x22a),function(){showLoginForm();});}function setupEventListeners(){const _0x2011a2=_0x2dfc2f;productSelect['addEventListener'](_0x2011a2(0x243),function(){const _0x515f69=_0x2011a2,_0x194777=this[_0x515f69(0x1c7)];get(ref(db,'users-data/'+primaryUser+_0x515f69(0x232)+currentUser)[_0x515f69(0x1fe)]('product')[_0x515f69(0x1a7)](_0x194777)[_0x515f69(0x1f3)](0x1))[_0x515f69(0x1ef)](_0x2e03df=>{const _0x1e3678=_0x515f69;if(_0x2e03df['exists']()){const _0x724188=Object['values'](_0x2e03df[_0x1e3678(0x224)]())[0x0];document[_0x1e3678(0x24c)]('SI')[_0x1e3678(0x1c7)]=_0x724188['SF']||0x0;}else document[_0x1e3678(0x24c)]('SI')[_0x1e3678(0x1c7)]=0x0;}),updatePV(),updateSF();}),document[_0x2011a2(0x24c)]('V')[_0x2011a2(0x196)](_0x2011a2(0x19f),updateSF),document['getElementById'](_0x2011a2(0x1f8))[_0x2011a2(0x196)](_0x2011a2(0x19f),updateSF),salesForm[_0x2011a2(0x196)]('submit',function(_0x496a05){const _0x24907a=_0x2011a2;_0x496a05[_0x24907a(0x207)]();if(!currentUser){alert(_0x24907a(0x1c2));return;}const _0x52e3a7={'dateTime':document['getElementById'](_0x24907a(0x1b5))['value'],'product':document[_0x24907a(0x24c)](_0x24907a(0x19b))['value'],'SI':parseInt(document['getElementById']('SI')[_0x24907a(0x1c7)])||0x0,'APP':parseInt(document[_0x24907a(0x24c)](_0x24907a(0x1f8))[_0x24907a(0x1c7)])||0x0,'V':parseInt(document[_0x24907a(0x24c)]('V')[_0x24907a(0x1c7)])||0x0,'SF':parseInt(document[_0x24907a(0x24c)]('SF')[_0x24907a(0x1c7)])||0x0,'PV':parseFloat(document[_0x24907a(0x24c)]('PV')[_0x24907a(0x1c7)])||0x0};push(ref(db,'users-data/'+primaryUser+_0x24907a(0x232)+currentUser),_0x52e3a7)[_0x24907a(0x1ef)](()=>{const _0x260eae=_0x24907a;updateTable(),updateStockTables(),updateAnalysis(),salesForm[_0x260eae(0x1e7)](),document['getElementById'](_0x260eae(0x1b5))['value']=new Date()[_0x260eae(0x1d9)]()[_0x260eae(0x247)](0x0,0x10);})[_0x24907a(0x1e6)](_0x2bde30=>{const _0x508dea=_0x24907a;console[_0x508dea(0x1b0)](_0x508dea(0x241),_0x2bde30),alert(_0x508dea(0x1d0));});}),toggleAnalysisButton[_0x2011a2(0x196)](_0x2011a2(0x22a),function(){const _0x30bc6c=_0x2011a2;analysisSection[_0x30bc6c(0x1a4)][_0x30bc6c(0x1eb)]===_0x30bc6c(0x1a3)||analysisSection[_0x30bc6c(0x1a4)][_0x30bc6c(0x1eb)]===''?(analysisSection[_0x30bc6c(0x1a4)][_0x30bc6c(0x1eb)]=_0x30bc6c(0x25a),salesDetailsSection[_0x30bc6c(0x1a4)][_0x30bc6c(0x1eb)]=_0x30bc6c(0x1a3),this['textContent']=_0x30bc6c(0x24f),toggleSalesButton['textContent']='Détail\x20des\x20ventes',updateAnalysis(salesData)):(analysisSection[_0x30bc6c(0x1a4)][_0x30bc6c(0x1eb)]=_0x30bc6c(0x1a3),this[_0x30bc6c(0x21d)]=_0x30bc6c(0x22d));}),toggleSalesButton[_0x2011a2(0x196)](_0x2011a2(0x22a),function(){const _0x43bef3=_0x2011a2;salesDetailsSection[_0x43bef3(0x1a4)]['display']===_0x43bef3(0x1a3)||salesDetailsSection['style'][_0x43bef3(0x1eb)]===''?(salesDetailsSection[_0x43bef3(0x1a4)][_0x43bef3(0x1eb)]=_0x43bef3(0x25a),analysisSection[_0x43bef3(0x1a4)]['display']=_0x43bef3(0x1a3),this['textContent']='Masquer\x20le\x20détail\x20des\x20ventes',toggleAnalysisButton[_0x43bef3(0x21d)]=_0x43bef3(0x22d)):(salesDetailsSection[_0x43bef3(0x1a4)][_0x43bef3(0x1eb)]=_0x43bef3(0x1a3),this[_0x43bef3(0x21d)]=_0x43bef3(0x1b6));}),themeToggle[_0x2011a2(0x196)](_0x2011a2(0x22a),()=>{setTheme(!isDarkTheme);}),document['getElementById']('filterStockDates')['addEventListener']('click',function(){const _0x1d0940=_0x2011a2,_0x35b7b3=new Date(document[_0x1d0940(0x24c)](_0x1d0940(0x19e))[_0x1d0940(0x1c7)]),_0x231986=new Date(document[_0x1d0940(0x24c)](_0x1d0940(0x221))['value']);updateStockTables(_0x35b7b3,_0x231986);}),document[_0x2011a2(0x24c)](_0x2011a2(0x1b7))[_0x2011a2(0x196)](_0x2011a2(0x22a),function(){const _0x3cfead=_0x2011a2,_0x3dd651=new Date(document['getElementById']('salesStartDate')['value']),_0x52d1d7=new Date(document[_0x3cfead(0x24c)](_0x3cfead(0x236))[_0x3cfead(0x1c7)]),_0x1ca714=salesData[_0x3cfead(0x1d4)](_0x56df00=>{const _0x4c0958=_0x3cfead,_0x5d0761=new Date(_0x56df00[_0x4c0958(0x1b5)]);return(!_0x3dd651||_0x5d0761>=_0x3dd651)&&(!_0x52d1d7||_0x5d0761<=_0x52d1d7);});renderTable(_0x1ca714),updateAnalysis(_0x1ca714);}),addUserIcon[_0x2011a2(0x196)](_0x2011a2(0x22a),()=>{const _0x18d2db=_0x2011a2;addUserModal[_0x18d2db(0x1a4)][_0x18d2db(0x1eb)]=_0x18d2db(0x25a);}),addUserForm[_0x2011a2(0x196)](_0x2011a2(0x242),_0x298ad0=>{const _0x18921c=_0x2011a2;_0x298ad0[_0x18921c(0x207)](),addSecondaryUser(newUserNameInput[_0x18921c(0x1c7)]);}),userSelect[_0x2011a2(0x196)]('change',()=>{switchUser(userSelect['value']);});}window[_0x2dfc2f(0x20f)]=showConfirmDialog,window[_0x2dfc2f(0x246)]=addDeleteIcons,window['hideSubscriptionRequiredModal']=hideSubscriptionRequiredModal,window[_0x2dfc2f(0x230)]=redirectToSubscription,window[_0x2dfc2f(0x209)]=exportToExcel,window[_0x2dfc2f(0x222)]=function(){const _0x28e4e9=_0x2dfc2f;sessionStorage[_0x28e4e9(0x1be)](),showAuthSection(),currentUser=null,primaryUser=null;};
+
+
+    </script>
+</body>
+</html>
