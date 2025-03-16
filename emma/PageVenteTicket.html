@@ -12,8 +12,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        /* ... (Styles CSS - Les styles de PageVenteTicket.html, tels que fournis précédemment) ... */
-          @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+        /* Styles CSS - Copied from previous version - No changes here */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
 
         * {
             margin: 0;
@@ -218,7 +218,7 @@
         }
         .history-section {
             display: none;
-            background: rgba(26, 42, 108, 0.95);
+            background: rgba(26, 42, 108, 0.95); /* Fond plus opaque avec une teinte bleue foncée */
             border-radius: 12px;
             padding: 20px;
             margin-top: 20px;
@@ -242,7 +242,7 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-
+        /* Amélioration du style de l'en-tête de l'historique pour plus de lisibilité */
         .history-header {
             display: flex;
             justify-content: space-between;
@@ -256,6 +256,7 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        /* Amélioration de la lisibilité des cartes de statistiques */
         .stat-card {
             background: rgba(255, 255, 255, 0.15);
             border-radius: 8px;
@@ -507,8 +508,8 @@
             border-radius: 12px;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            max-height: 300px;
-            overflow-y: auto;
+            max-height: 300px; /* Hauteur maximale pour la section des messages */
+            overflow-y: auto; /* Permettre le défilement vertical si le contenu dépasse la hauteur maximale */
         }
 
         .messages-section h2 {
@@ -547,8 +548,8 @@
             margin: 0;
             z-index: 100;
             background-color: white;
-            width: 100%;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            width: 100%; /* Assurez-vous que la liste a la même largeur que le champ de saisie */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Ombre pour un effet visuel */
         }
 
         .autocomplete-suggestions li {
@@ -671,6 +672,7 @@
         .subscription-required-content button:hover {
             background-color: #e6a727;
         }
+
     </style>
 </head>
 
@@ -682,25 +684,22 @@
     <div class="loader-wrapper" id="loaderWrapper">
         <div class="loader"></div>
     </div>
-
-    <!-- La section de connexion est cachée par défaut -->
-   <section class="login-section" id="loginSection" style="display: none;">
-    <h2>Connexion Partenaire</h2>
-    <form id="loginForm">
-        <div class="autocomplete-container">
-            <input type="text" id="username" placeholder="Nom d'utilisateur" required>
-            <ul class="autocomplete-suggestions" id="autocompleteSuggestions" style="display: none;"></ul>
-        </div>
-        <input type="password" id="password" placeholder="Mot de passe" required>
-        <div style="display: flex; align-items: center; margin-bottom: 10px;">
-            <input type="checkbox" id="rememberMe">
-            <label for="rememberMe" style="color: white; margin-left: 5px;">Se souvenir de moi (24h)</label>
-        </div>
-        <button type="submit">Se connecter</button>
-    </form>
-    <div class="error-message" id="loginError" style="display: none; color: red;"></div>
-</section>
-
+    <section class="login-section" id="loginSection">
+        <h2>Connexion Partenaire</h2>
+        <form id="loginForm">
+            <div class="autocomplete-container">
+                <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+                <ul class="autocomplete-suggestions" id="autocompleteSuggestions" style="display: none;"></ul>
+            </div>
+            <input type="password" id="password" placeholder="Mot de passe" required>
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <input type="checkbox" id="rememberMe">
+                <label for="rememberMe" style="color: white; margin-left: 5px;">Se souvenir de moi (24h)</label>
+            </div>
+            <button type="submit">Se connecter</button>
+        </form>
+        <div class="error-message" id="loginError" style="display: none; color: red;"></div>
+    </section>
 
     <div class="container">
         <section class="rates-section" style="display: none;">
@@ -820,156 +819,155 @@
 
         let db;
         let adminRef;
-        let currentUserId;
-        // MODIFICATION: Ajout des variables pour les paramètres d'URL
-        let urlParams;
-        let partnerId;
-        let adminIdFromUrl;
-
+        let currentUserIdAdmin; // ADDED: to store admin's userId
+        let currentVendorId;
 
         async function initializeDatabase() {
             db = await getActiveDatabase();
             console.log("Database initialized in PageVenteTicket.html");
         }
 
-        // MODIFICATION: Fonction pour récupérer les paramètres de l'URL
-        function getUrlParameters() {
-            urlParams = new URLSearchParams(window.location.search);
-            partnerId = urlParams.get('partnerId');
-            adminIdFromUrl = urlParams.get('adminId'); // Nom différent pour éviter la confusion
-
-             if (!partnerId || !adminIdFromUrl) {
-                console.error("Missing URL parameters: partnerId and adminId are required.");
-                alert("Lien invalide.  Manque d'informations sur le partenaire ou l'administrateur.");
-                // Rediriger, ou afficher une erreur, ou un autre comportement par défaut.
-                return false;  // Important : Indique une erreur
-            }
-              return true; // Indique que tout s'est bien passé.
-        }
-
-
-
       let ticketToSell = null;
       let localTickets = {};
       let currentReservedTicket = null;
-      //let currentVendorId = ''; // MODIFICATION: Plus besoin de currentVendorId ici
       let vendors = {};
       let availableUsernames = [];
       window.jsPDF = window.jspdf.jsPDF;
 
       async function fetchVendors() {
-        if (!adminIdFromUrl) {
-            console.error("Admin ID is not found. Cannot fetch vendors.");
-            return;
-        }
-        try {
-            // On va chercher le partenaire de vente a partir de users-data du user connecté
-            const vendorsRef = ref(db, `users-data/${adminIdFromUrl}/Vendors`); // MODIFICATION: adminId
-            const snapshot = await get(vendorsRef);
-            if (snapshot.exists()) {
-                vendors = snapshot.val();
-                availableUsernames = Object.keys(vendors);
-            } else {
-                console.log("Aucun vendeur trouvé.");
-            }
-        } catch (error) {
-            console.error("Erreur lors de la récupération des vendeurs:", error);
-        }
+          try {
+                const adminId = getAdminIdFromUrl(); // Get adminId from URL
+                if (!adminId) {
+                    console.error("Admin ID is missing from URL.");
+                    return;
+                }
+                currentUserIdAdmin = adminId; // Set global admin ID
+
+                const vendorsRef = ref(db, `users-data/${adminId}/Vendors`);
+                const snapshot = await get(vendorsRef);
+                if (snapshot.exists()) {
+                    vendors = snapshot.val();
+                    availableUsernames = Object.keys(vendors);
+                } else {
+                    console.log("Aucun vendeur trouvé.");
+                }
+          } catch (error) {
+              console.error("Erreur lors de la récupération des vendeurs:", error);
+          }
+      }
+
+// --- Autocomplétion ---
+const usernameInput = document.getElementById('username');
+const passwordInput = document.getElementById('password');
+const suggestionsList = document.getElementById('autocompleteSuggestions');
+
+usernameInput.addEventListener('input', () => {
+    const inputValue = usernameInput.value.toLowerCase();
+    const suggestions = availableUsernames.filter(username => username.toLowerCase().startsWith(inputValue));
+
+    suggestionsList.innerHTML = '';
+    if (inputValue.length === 0 || suggestions.length === 0) {
+        suggestionsList.style.display = 'none';
+        return;
     }
 
-        // --- Autocomplétion ---
-        const usernameInput = document.getElementById('username');
-        const passwordInput = document.getElementById('password');
-        const suggestionsList = document.getElementById('autocompleteSuggestions');
-
-        usernameInput.addEventListener('input', () => {
-            const inputValue = usernameInput.value.toLowerCase();
-            const suggestions = availableUsernames.filter(username => username.toLowerCase().startsWith(inputValue));
-
+    suggestions.forEach(suggestion => {
+        const listItem = document.createElement('li');
+        listItem.textContent = suggestion;
+        listItem.addEventListener('click', () => {
+            usernameInput.value = suggestion;
             suggestionsList.innerHTML = '';
-            if (inputValue.length === 0 || suggestions.length === 0) {
-                suggestionsList.style.display = 'none';
-                return;
-            }
-
-            suggestions.forEach(suggestion => {
-                const listItem = document.createElement('li');
-                listItem.textContent = suggestion;
-                listItem.addEventListener('click', () => {
-                    usernameInput.value = suggestion;
-                    suggestionsList.innerHTML = '';
-                    suggestionsList.style.display = 'none';
-                });
-                suggestionsList.appendChild(listItem);
-            });
-
-            suggestionsList.style.display = 'block';
+            suggestionsList.style.display = 'none';
         });
+        suggestionsList.appendChild(listItem);
+    });
 
-        document.addEventListener('click', (event) => {
-            if (!usernameInput.contains(event.target) && !suggestionsList.contains(event.target)) {
-                suggestionsList.style.display = 'none';
-            }
-        });
+    suggestionsList.style.display = 'block';
+});
 
-        // --- Mémorisation de l'ID et du MOT DE PASSE (DÉCONSEILLÉ) ---
-        const rememberMeCheckbox = document.getElementById('rememberMe');
+document.addEventListener('click', (event) => {
+    if (!usernameInput.contains(event.target) && !suggestionsList.contains(event.target)) {
+        suggestionsList.style.display = 'none';
+    }
+});
 
-        // MODIFICATION:  Plus besoin de charger ici, on utilise les paramètres d'URL
-                // --- Gestion du formulaire de connexion (simplifié, car l'authentification principale se fait via l'URL) ---
-                const loginForm = document.getElementById('loginForm');
-        const loginError = document.getElementById('loginError');
-        const ratesSection = document.querySelector('.rates-section');
-        const historySection = document.getElementById('historySection');
-        const loginSection = document.getElementById('loginSection');
-        const messagesSection = document.getElementById('messagesSection');
+// --- Mémorisation de l'ID et du MOT DE PASSE (DÉCONSEILLÉ) ---
+const rememberMeCheckbox = document.getElementById('rememberMe');
 
-        loginForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            showLoader();
-            const username = usernameInput.value;
-            const password = passwordInput.value;
+const storedUsername = localStorage.getItem('vendorUsername'); // Changed key
+const storedPassword = localStorage.getItem('vendorPassword'); // Changed key
+const storedTimestamp = localStorage.getItem('vendorUsernameTimestamp'); // Changed key
+const now = Date.now();
+const twentyFourHours = 24 * 60 * 60 * 1000;
 
-            // Vérification *locale* du mot de passe (moins sécurisé, mais nécessaire ici)
-            if (vendors[username] && vendors[username].password === password) {
-                // Connexion "locale" réussie (pour l'autocomplétion, etc.)
-                loginError.style.display = 'none';
-                ratesSection.style.display = 'block';
-                historySection.style.display = 'none'; // Historique masqué par défaut
-                loginSection.style.display = 'none'; // Cacher le formulaire
-                messagesSection.style.display = 'block';
-                // currentVendorId = username; // MODIFICATION : Plus besoin de currentVendorId
+if (storedUsername && storedPassword && storedTimestamp && (now - storedTimestamp < twentyFourHours)) {
+    usernameInput.value = storedUsername;
+    passwordInput.value = storedPassword;
+    rememberMeCheckbox.checked = true;
+}
 
-                // Mémoriser l'ID et le MOT DE PASSE si la case est cochée (DÉCONSEILLÉ)
-                if (rememberMeCheckbox.checked) {
-                    localStorage.setItem('username', username);
-                    localStorage.setItem('password', password); // Stocker le mot de passe
-                    localStorage.setItem('usernameTimestamp', Date.now());
-                } else {
-                    localStorage.removeItem('username');
-                    localStorage.removeItem('password');
-                    localStorage.removeItem('usernameTimestamp');
-                }
+//MODIFICATION: Adaptation du login pour la connexion des partenaire de vente
+// Gestion du formulaire de connexion
+const loginForm = document.getElementById('loginForm');
+const loginError = document.getElementById('loginError');
+const ratesSection = document.querySelector('.rates-section');
+const historySection = document.getElementById('historySection');
+const loginSection = document.getElementById('loginSection');
+const messagesSection = document.getElementById('messagesSection');
 
-                await syncTickets();
-                loadHistory();
-                listenForNewMessages();
-                hideLoader();
+loginForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    showLoader();
+    const username = usernameInput.value;
+    const password = passwordInput.value;
+    const adminId = getAdminIdFromUrl(); // Get adminId from URL
 
-            } else {
-                // Identifiants incorrects
-                loginError.style.display = 'block';
-                loginError.textContent = "Nom d'utilisateur ou mot de passe incorrect.";
-                hideLoader();
-            }
-        });
+    if (!adminId) {
+        hideLoader();
+        loginError.style.display = 'block';
+        loginError.textContent = "Admin user ID is missing.";
+        return;
+    }
+
+    if (vendors[username] && vendors[username].password === password) {
+        // Connexion réussie
+        loginError.style.display = 'none';
+        ratesSection.style.display = 'block';
+        historySection.style.display = 'none';
+        loginSection.style.display = 'none';
+        messagesSection.style.display = 'block';
+        currentVendorId = username; // Mettre à jour l'ID du vendeur actuel
+
+        // Mémoriser l'ID et le MOT DE PASSE si la case est cochée (DÉCONSEILLÉ)
+        if (rememberMeCheckbox.checked) {
+            localStorage.setItem('vendorUsername', username); // Changed key
+            localStorage.setItem('vendorPassword', password); // Changed key
+            localStorage.setItem('vendorUsernameTimestamp', Date.now()); // Changed key
+        } else {
+            localStorage.removeItem('vendorUsername'); // Changed key
+            localStorage.removeItem('vendorPassword'); // Changed key
+            localStorage.removeItem('vendorUsernameTimestamp'); // Changed key
+        }
+
+        // Charger les données et initialiser l'interface
+        await syncTickets();
+        loadHistory();
+        listenForNewMessages();
+        hideLoader();
+    } else {
+        // Identifiants incorrects
+        loginError.style.display = 'block';
+        loginError.textContent = "Nom d'utilisateur ou mot de passe incorrect.";
+        hideLoader();
+    }
+});
 
 
         // Fonction pour synchroniser les tickets et gérer l'affichage
         async function syncTickets() {
-          //MODIFICATION: Utilisation de adminId
-            if (!adminIdFromUrl) {
-                console.error("Admin ID is not found. Cannot sync tickets.");
+            const adminId = getAdminIdFromUrl();
+            if (!adminId) {
+                console.error("Admin ID is missing from URL. Cannot sync tickets.");
                 return;
             }
             try {
@@ -979,8 +977,7 @@
                 loadingMessage.style.display = 'block';
                 table.style.display = 'none';
 
-                // MODIFICATION: Utilisation de adminId
-                const ticketsTotalRef = ref(db, `users-data/${adminIdFromUrl}/TicketsTotal`);
+                const ticketsTotalRef = ref(db, `users-data/${adminId}/TicketsTotal`);
                 const snapshot = await get(ticketsTotalRef);
 
                 if (snapshot.exists()) {
@@ -998,7 +995,7 @@
         }
 
         // Mise à jour de la création du tableau pour afficher uniquement les tickets disponibles avec leur nombre restant
-       async function createTicketTable() {
+        async function createTicketTable() {
             const table = document.querySelector('.rates-section table');
             table.innerHTML = `
                 <tr>
@@ -1028,16 +1025,15 @@
         }
 
         // Modification de la fonction initTicketSale pour demander confirmation
-    // MODIFICATION: Adaptation de la fonction initTicketSale()
-    window.initTicketSale = async function(category) {
+        window.initTicketSale = async function(category) {
         showLoader();
         try {
-            // MODIFICATION : Utilisation de adminId
-            if (!adminIdFromUrl) {
-                console.error("adminIdFromUrl is null. User might not be logged in.");
+            const adminId = getAdminIdFromUrl();
+            if (!adminId) {
+                console.error("Admin ID is missing from URL. Cannot init ticket sale.");
                 return;
             }
-            const ticketsTotalRef = ref(db, `users-data/${adminIdFromUrl}/TicketsTotal/${category}`);  // MODIFICATION
+            const ticketsTotalRef = ref(db, `users-data/${adminId}/TicketsTotal/${category}`);
             const snapshot = await get(ticketsTotalRef);
 
             if (snapshot.exists()) {
@@ -1089,61 +1085,60 @@
             notification.style.display = 'block';
         }
 
-    //MODIFICATION: adaptation de proceedWithSale
-    window.proceedWithSale = async function() {
-        showLoader();
-        if (!ticketToSell) {
-            showNotification("Erreur", "Aucun ticket à vendre");
-            hideLoader();
-            return;
-        }
+window.proceedWithSale = async function() {
+    showLoader();
+    if (!ticketToSell) {
+        showNotification("Erreur", "Aucun ticket à vendre");
+        hideLoader();
+        return;
+    }
 
-        // MODIFICATION: Utilisation de adminId
-        if (!adminIdFromUrl) {
-            console.error("Admin ID not found. Cannot proceed with sale.");
-            hideLoader();
-            return;
-        }
+    const adminId = getAdminIdFromUrl();
+    if (!adminId) {
+        console.error("Admin ID missing from URL. Cannot proceed with sale.");
+        hideLoader();
+        return;
+    }
 
-        try {
-            // Mettre à jour la base de données
-            const ticketsTotalRef = ref(db, `users-data/${adminIdFromUrl}/TicketsTotal/${ticketToSell.category}`); // MODIFICATION
-            await set(ticketsTotalRef, ticketToSell.updatedData);
+    try {
+        // Mettre à jour la base de données
+        const ticketsTotalRef = ref(db, `users-data/${adminId}/TicketsTotal/${ticketToSell.category}`);
+        await set(ticketsTotalRef, ticketToSell.updatedData);
 
-            // Ajouter aux tickets vendus
-            const ticketsVendusRef = ref(db, `users-data/${adminIdFromUrl}/TicketsVendus`); // MODIFICATION
-            await push(ticketsVendusRef, {
-                category: ticketToSell.category,
-                user: ticketToSell.user,
-                password: ticketToSell.password,
-                price: ticketToSell.price,
-                soldAt: Date.now(),
-                vendorId: partnerId // Utilisez l'ID du partenaire (via URL)
-            });
+        // Ajouter aux tickets vendus
+        const ticketsVendusRef = ref(db, `users-data/${adminId}/TicketsVendus`);
+        await push(ticketsVendusRef, {
+            category: ticketToSell.category,
+            user: ticketToSell.user,
+            password: ticketToSell.password,
+            price: ticketToSell.price,
+            soldAt: Date.now(),
+            vendorId: currentVendorId
+        });
 
-            // Ajouter à l'historique du vendeur, en utilisant partnerId et adminId
-            const vendorHistoryRef = ref(db, `users-data/${adminIdFromUrl}/VendorsHistory/${partnerId}`);  // MODIFICATION
-            await push(vendorHistoryRef, {
-                category: ticketToSell.category,
-                user: ticketToSell.user,
-                password: ticketToSell.password,
-                price: ticketToSell.price,
-                soldAt: Date.now()
-            });
+        // Ajouter à l'historique du vendeur
+        const vendorHistoryRef = ref(db, `users-data/${adminId}/VendorsHistory/${currentVendorId}`);
+        await push(vendorHistoryRef, {
+            category: ticketToSell.category,
+            user: ticketToSell.user,
+            password: ticketToSell.password,
+            price: ticketToSell.price,
+            soldAt: Date.now()
+        });
 
-            // Afficher les détails du ticket vendu
-            showTicketDetails(ticketToSell);
-            await syncTickets(); // Recharger la liste des tickets
-            hideLoader();
+        // Afficher les détails du ticket vendu
+        showTicketDetails(ticketToSell);
+        await syncTickets(); // Recharger la liste des tickets
+        hideLoader();
 
-        } catch (error) {
-            console.error("Erreur lors de la vente:", error);
-            showNotification("Erreur", "Impossible de finaliser la vente");
-            hideLoader();
-        }
+    } catch (error) {
+        console.error("Erreur lors de la vente:", error);
+        showNotification("Erreur", "Impossible de finaliser la vente");
+        hideLoader();
+    }
 
-        ticketToSell = null; // Réinitialiser pour la prochaine vente
-    };
+    ticketToSell = null; // Réinitialiser pour la prochaine vente
+};
 
 
         // Fonction pour afficher les détails après la vente
@@ -1191,32 +1186,32 @@
         }
 
         // Confirmation de la vente
-     //MODIFICATION: Adaptation de la fonction confirmSale()
-        window.confirmSale = async function() {
-            showLoader();
-            if (!currentReservedTicket) {
-                showNotification("Erreur", "Aucun ticket en cours de vente");
-                hideLoader();
-                return;
-            }
-        // MODIFICATION: Utilisation de adminId
-        if (!adminIdFromUrl) {
-            console.error("Admin ID not found.  Cannot confirm sale.");
+    window.confirmSale = async function() {
+        showLoader();
+        if (!currentReservedTicket) {
+            showNotification("Erreur", "Aucun ticket en cours de vente");
             hideLoader();
             return;
         }
 
         try {
+            const adminId = getAdminIdFromUrl();
+            if (!adminId) {
+                console.error("Admin ID missing from URL. Cannot confirm sale.");
+                hideLoader();
+                return;
+            }
+
             // Ajouter aux tickets vendus
-            const ticketsVendusRef = ref(db, `users-data/${adminIdFromUrl}/TicketsVendus`); // MODIFICATION
+            const ticketsVendusRef = ref(db, `users-data/${adminId}/TicketsVendus`);
             await push(ticketsVendusRef, {
                 ...currentReservedTicket,
                 soldAt: Date.now(),
-                vendorId: partnerId  // MODIFICATION : Utilisation de partnerId
+                vendorId: currentVendorId
             });
 
-            // Ajouter à l'historique du vendeur, en utilisant partnerId
-            const vendorHistoryRef = ref(db, `users-data/${adminIdFromUrl}/VendorsHistory/${partnerId}`); // MODIFICATION
+            // Ajouter à l'historique du vendeur
+            const vendorHistoryRef = ref(db, `users-data/${adminId}/VendorsHistory/${currentVendorId}`);
             await push(vendorHistoryRef, {
                 ...currentReservedTicket,
                 soldAt: Date.now()
@@ -1267,37 +1262,35 @@
             document.getElementById('notification').style.display = 'none';
         };
 
-    //MODIFICATION: Adaptation de la fonction loadHistory()
-    async function loadHistory() {
-        showLoader();
-        // MODIFICATION: Utilisation de adminId
-        if (!adminIdFromUrl) {
-            console.error("Admin ID not found. Cannot load history.");
-            hideLoader();
-            return;
-        }
-        try {
-            // MODIFICATION : Utilisation de adminId et partnerId
-            const historyRef = ref(db, `users-data/${adminIdFromUrl}/VendorsHistory/${partnerId}`);
-            const snapshot = await get(historyRef);
-
-            let salesHistory = [];
-            if (snapshot.exists()) {
-                salesHistory = Object.entries(snapshot.val()).map(([id, data]) => ({
-                    id,
-                    ...data
-                }));
-            }
-            // Appliquer les filtres par défaut (Aujourd'hui)
-            filterHistory(salesHistory);
-
-            hideLoader();
-        } catch (error) {
-            console.error("Erreur lors du chargement de l'historique:", error);
-            showNotification("Erreur", "Impossible de charger l'historique");
-            hideLoader();
-        }
+async function loadHistory() {
+    showLoader();
+    const adminId = getAdminIdFromUrl();
+    if (!adminId) {
+        console.error("Admin ID is missing from URL. Cannot load history.");
+        hideLoader();
+        return;
     }
+    try {
+        const historyRef = ref(db, `users-data/${adminId}/VendorsHistory/${currentVendorId}`);
+        const snapshot = await get(historyRef);
+
+        let salesHistory = [];
+        if (snapshot.exists()) {
+            salesHistory = Object.entries(snapshot.val()).map(([id, data]) => ({
+                id,
+                ...data
+            }));
+        }
+          // Appliquer les filtres par défaut (Aujourd'hui)
+          filterHistory(salesHistory);
+
+          hideLoader();
+      } catch (error) {
+          console.error("Erreur lors du chargement de l'historique:", error);
+          showNotification("Erreur", "Impossible de charger l'historique");
+          hideLoader();
+      }
+  }
 
 
         // Filtrage de l'historique par période
@@ -1322,42 +1315,41 @@
             updateStats(filteredSales);
             updateHistoryTable(filteredSales);
         }
-    //MODIFICATION: Adaptation de la fonction filterHistoryByDateRange
-    window.filterHistoryByDateRange = function() {
-        const startDate = new Date(document.getElementById('startDate').value);
-        const endDate = new Date(document.getElementById('endDate').value);
-        endDate.setHours(23, 59, 59);
-        // MODIFICATION: Utilisation de adminId
-        if (!adminIdFromUrl) {
-            console.error("Admin ID not found. Cannot filter history.");
-            return;
+
+window.filterHistoryByDateRange = function() {
+    const startDate = new Date(document.getElementById('startDate').value);
+    const endDate = new Date(document.getElementById('endDate').value);
+    endDate.setHours(23, 59, 59);
+    const adminId = getAdminIdFromUrl();
+    if (!adminId) {
+        console.error("Admin ID is missing from URL. Cannot filter history by date range.");
+        return;
+    }
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        showNotification("Erreur", "Veuillez sélectionner une date de début et une date de fin.");
+        return;
+    }
+
+    const historyRef = ref(db, `users-data/${adminId}/VendorsHistory/${currentVendorId}`);
+    get(historyRef).then((snapshot) => {
+        let salesHistory = [];
+        if (snapshot.exists()) {
+            salesHistory = Object.entries(snapshot.val()).map(([id, data]) => ({
+                id,
+                ...data
+            }));
         }
 
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-            showNotification("Erreur", "Veuillez sélectionner une date de début et une date de fin.");
-            return;
-        }
-
-        // MODIFICATION: On utilise adminId et partnerId
-        const historyRef = ref(db, `users-data/${adminIdFromUrl}/VendorsHistory/${partnerId}`);
-        get(historyRef).then((snapshot) => {
-            let salesHistory = [];
-            if (snapshot.exists()) {
-                salesHistory = Object.entries(snapshot.val()).map(([id, data]) => ({
-                    id,
-                    ...data
-                }));
-            }
-
-            const filteredSales = salesHistory.filter(sale => {
-                const saleDate = new Date(sale.soldAt);
-                return saleDate >= startDate && saleDate <= endDate;
-            });
-
-            updateStats(filteredSales);
-            updateHistoryTable(filteredSales);
+        const filteredSales = salesHistory.filter(sale => {
+            const saleDate = new Date(sale.soldAt);
+            return saleDate >= startDate && saleDate <= endDate;
         });
-    };
+
+        updateStats(filteredSales);
+        updateHistoryTable(filteredSales);
+    });
+};
 
 
         // Mise à jour des statistiques
@@ -1396,34 +1388,32 @@
                     </tr>
                 `).join('');
         }
-    //MODIFICATION : Adaptation de la fonction showTicketDetailsFromHistory()
-    window.showTicketDetailsFromHistory = async function(saleId){
-        showLoader();
-        try{
-            // MODIFICATION: Utilisation de adminId
-            if (!adminIdFromUrl) {
-            console.error("Admin ID not found. Cannot show ticket details.");
+window.showTicketDetailsFromHistory = async function(saleId){
+    showLoader();
+    try{
+        const adminId = getAdminIdFromUrl();
+        if (!adminId) {
+          console.error("Admin ID is missing from URL. Cannot show ticket details from history.");
+          hideLoader();
+          return;
+        }
+        const historyRef = ref(db, `users-data/${adminId}/VendorsHistory/${currentVendorId}/${saleId}`);
+        const snapshot = await get(historyRef);
+        if (snapshot.exists()) {
+            const sale = snapshot.val();
+            window.closeHistory();
+            showTicketDetails(sale);  // Montre les détails (déjà adaptée)
             hideLoader();
-            return;
-            }
-            // MODIFICATION : Utilisation de adminId et partnerId
-            const historyRef = ref(db, `users-data/${adminIdFromUrl}/VendorsHistory/${partnerId}/${saleId}`);
-            const snapshot = await get(historyRef);
-            if (snapshot.exists()) {
-                const sale = snapshot.val();
-                window.closeHistory();
-                showTicketDetails(sale);  // Montre les détails (déjà adaptée)
-                hideLoader();
-            } else {
-                showNotification("Erreur", "Ticket introuvable dans l'historique");
-                hideLoader();
-            }
-        }catch (error){
-            console.error("Erreur lors de la récupération du ticket:", error);
-            showNotification("Erreur", "Impossible de récupérer les détails du ticket");
+        } else {
+            showNotification("Erreur", "Ticket introuvable dans l'historique");
             hideLoader();
         }
+    }catch (error){
+        console.error("Erreur lors de la récupération du ticket:", error);
+        showNotification("Erreur", "Impossible de récupérer les détails du ticket");
+        hideLoader();
     }
+}
 
 
         // Gestionnaire pour le bouton d'historique
@@ -1445,22 +1435,20 @@
             loadHistory();
         };
 
-    //MODIFICATION: Adaptation de listenForNewMessages()
-    function listenForNewMessages() {
-        // MODIFICATION: Utilisation de adminId
-        if (!adminIdFromUrl) {
-            console.error("Admin ID is not found.  Cannot listen for messages.");
-            return;
-        }
-
-        // MODIFICATION: Utilisation de adminId et partnerId
-        const messagesRef = ref(db, `users-data/${adminIdFromUrl}/Vendors/${partnerId}/messages`);
-
-        onChildAdded(messagesRef, (snapshot) => {
-            const message = snapshot.val();
-            displayNewMessage(message);
-        });
+function listenForNewMessages() {
+    const adminId = getAdminIdFromUrl();
+    if (!adminId) {
+        console.error("Admin ID is missing from URL. Cannot listen for messages.");
+        return;
     }
+
+    const messagesRef = ref(db, `users-data/${adminId}/Vendors/${currentVendorId}/messages`);
+
+    onChildAdded(messagesRef, (snapshot) => {
+        const message = snapshot.val();
+        displayNewMessage(message);
+    });
+}
 
         // Fonction pour afficher un nouveau message
         function displayNewMessage(message) {
@@ -1526,187 +1514,66 @@
             window.print();
         };
 
-       window.exportToPDFHistory = function() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const table = document.getElementById("historyTableBody");
+        window.exportToPDFHistory = function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const table = document.getElementById("historyTableBody");
 
-        // Récupérer les données filtrées actuelles
-        const periodFilter = document.getElementById('periodFilter').value;
-        const startDate = new Date(document.getElementById('startDate').value);
-        const endDate = new Date(document.getElementById('endDate').value);
-        endDate.setHours(23, 59, 59);
+            // Personnalisation du header du tableau
+            const headerStyles = {
+                fillColor: [42, 58, 108],
+                textColor: [255, 255, 255],
+                fontStyle: 'bold',
+                halign: 'center'
+            };
 
-        let filteredSales = [];
+            // Personnalisation des cellules du tableau
+            const bodyStyles = {
+                halign: 'left'
+            };
 
-        // Appliquer les mêmes filtres qu'à l'affichage
-        const historyRef = ref(db, `users-data/${adminIdFromUrl}/VendorsHistory/${partnerId}`);
-        get(historyRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                filteredSales = Object.entries(snapshot.val()).map(([id, data]) => ({
-                    id,
-                    ...data
-                }));
-
-                if (periodFilter !== 'all') {
-                    const now = new Date();
-                    const startOf = {
-                        today: new Date(now.setHours(0, 0, 0, 0)),
-                        week: new Date(now.setDate(now.getDate() - now.getDay())),
-                        month: new Date(now.setDate(1)),
-                        all: new Date(0)
-                    };
-                    filteredSales = filteredSales.filter(sale => new Date(sale.soldAt) >= startOf[periodFilter]);
+            // Personnalisation du style du tableau
+            const styles = {
+                theme: 'grid',
+                headStyles: headerStyles,
+                bodyStyles: bodyStyles,
+                margin: { top: 20 },
+                startY: 30,
+                didDrawPage: function(data) {
+                    // Ajout d'un titre au document
+                    doc.text("Historique des ventes", 14, 15);
+                    // Ajout de la date et de l'heure en bas de page
+                    const str = "Page " + doc.internal.getNumberOfPages();
+                    doc.setFontSize(10);
+                    const pageSize = doc.internal.pageSize;
+                    const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+                    doc.text(str, data.settings.margin.left, pageHeight - 10);
+                    doc.text(new Date().toLocaleString(), pageSize.width - data.settings.margin.right - 40, pageHeight - 10);
                 }
+            };
 
-                if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-                    filteredSales = filteredSales.filter(sale => {
-                        const saleDate = new Date(sale.soldAt);
-                        return saleDate >= startDate && saleDate <= endDate;
-                    });
-                }
+            // Génération du tableau avec autoTable
+            doc.autoTable({
+                html: '#historyTableBody',
+                ...styles
+            });
 
-                // Convertir les données filtrées en un tableau pour autoTable
-                const tableData = filteredSales.map(sale => [
-                    new Date(sale.soldAt).toLocaleString(),
-                    sale.category,
-                    sale.user,
-                    sale.price + ' FCFA'
-                ]);
+            doc.save("historique_ventes.pdf");
+        };
 
-                // Personnalisation du header du tableau
-                const headerStyles = {
-                    fillColor: [42, 58, 108],
-                    textColor: [255, 255, 255],
-                    fontStyle: 'bold',
-                    halign: 'center'
-                };
+        window.exportToExcelHistory = function() {
+            const wb = XLSX.utils.table_to_book(document.getElementById('historyTableBody'), { sheet: "Ventes" });
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
 
-                // Personnalisation des cellules du tableau
-                const bodyStyles = {
-                    halign: 'left'
-                };
-
-                // Personnalisation du style du tableau
-                const styles = {
-                    theme: 'grid',
-                    headStyles: headerStyles,
-                    bodyStyles: bodyStyles,
-                    margin: { top: 30 },
-                    startY: 30,
-                    didDrawPage: function(data) {
-                        // Ajout d'un titre au document
-                        doc.setFontSize(18);
-                        doc.text("Historique des ventes", 14, 15);
-
-                        // Ajouter des informations sur les filtres
-                        let filterInfo = "Filtres : ";
-                        if (periodFilter !== 'all') filterInfo += `Période: ${periodFilter}, `;
-                        if (!isNaN(startDate.getTime())) filterInfo += `Début: ${startDate.toLocaleDateString()}, `;
-                        if (!isNaN(endDate.getTime())) filterInfo += `Fin: ${endDate.toLocaleDateString()}, `;
-
-                        doc.setFontSize(10);
-                        doc.text(filterInfo, 14, 22);
-
-                        // Ajout de la date et de l'heure en bas de page
-                        const str = "Page " + doc.internal.getNumberOfPages();
-                        doc.setFontSize(10);
-                        const pageSize = doc.internal.pageSize;
-                        const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
-                        doc.text(str, data.settings.margin.left, pageHeight - 10);
-                        doc.text(new Date().toLocaleString(), pageSize.width - data.settings.margin.right - 40, pageHeight - 10);
-                    }
-                };
-
-                // Génération du tableau avec autoTable
-                doc.autoTable({
-                    head: [['Date', 'Catégorie', 'Utilisateur', 'Prix']],
-                    body: tableData,
-                    ...styles
-                });
-
-                doc.save("historique_ventes.pdf");
-            } else {
-                console.log("Aucune donnée d'historique à exporter.");
-            }
-        }).catch(error => {
-            console.error("Erreur lors de la récupération de l'historique pour l'export PDF:", error);
-        });
-    };
-
-
-    window.exportToExcelHistory = function() {
-        // Récupérer les données filtrées, de la même manière que pour le PDF
-        const periodFilter = document.getElementById('periodFilter').value;
-        const startDate = new Date(document.getElementById('startDate').value);
-        const endDate = new Date(document.getElementById('endDate').value);
-        endDate.setHours(23, 59, 59);
-
-        let filteredSales = [];
-
-        // Appliquer les mêmes filtres qu'à l'affichage
-        const historyRef = ref(db, `users-data/${adminIdFromUrl}/VendorsHistory/${partnerId}`);
-        get(historyRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                 filteredSales = Object.entries(snapshot.val()).map(([id, data]) => ({
-                    id,
-                    ...data
-                }));
-
-                if (periodFilter !== 'all') {
-                    const now = new Date();
-                    const startOf = {
-                        today: new Date(now.setHours(0, 0, 0, 0)),
-                        week: new Date(now.setDate(now.getDate() - now.getDay())),
-                        month: new Date(now.setDate(1)),
-                        all: new Date(0)
-                    };
-                    filteredSales = filteredSales.filter(sale => new Date(sale.soldAt) >= startOf[periodFilter]);
-                }
-
-                if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-                    filteredSales = filteredSales.filter(sale => {
-                        const saleDate = new Date(sale.soldAt);
-                        return saleDate >= startDate && saleDate <= endDate;
-                    });
-                }
-
-                // Convertir les données en format JSON pour l'export Excel
-                const excelData = filteredSales.map(sale => ({
-                    Date: new Date(sale.soldAt).toLocaleString(),
-                    Catégorie: sale.category,
-                    Utilisateur: sale.user,
-                    Prix: sale.price
-                }));
-
-                const ws = XLSX.utils.json_to_sheet(excelData);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Ventes");
-
-                 // Ajouter des en-têtes de colonnes *après* avoir converti les données
-                const header = ["Date", "Catégorie", "Utilisateur", "Prix"];
-                XLSX.utils.sheet_add_aoa(ws, [header], { origin: "A1" });
-
-
-                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
-
-                function s2ab(s) {
-                    const buf = new ArrayBuffer(s.length);
-                    const view = new Uint8Array(buf);
-                    for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
-                    return buf;
-                }
-
-                saveAs(new Blob([s2ab(wbout)], { type: "application/octet-stream" }), "historique_ventes.xlsx");
-            }
-             else {
-                console.log("Aucune donnée d'historique à exporter.");
+            function s2ab(s) {
+                const buf = new ArrayBuffer(s.length);
+                const view = new Uint8Array(buf);
+                for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+                return buf;
             }
 
-        }).catch(error => {
-            console.error("Erreur lors de la récupération de l'historique pour l'export Excel :", error);
-        });
-    };
+            saveAs(new Blob([s2ab(wbout)], { type: "application/octet-stream" }), "historique_ventes.xlsx");
+        };
 
         function showLoader() {
             document.getElementById('loaderWrapper').style.display = 'block';
@@ -1736,20 +1603,25 @@
             window.location.href = 'index.html';
 
         }
-    //MODIFICATION: adaptation de checkSubscriptionStatus()
+
+        function getAdminIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('adminId');
+        }
+
+    // MODIFICATION: adaptation de checkSubscriptionStatus()
     async function checkSubscriptionStatus() {
         const pageLoaderMessage = document.getElementById('pageLoaderMessage');
         pageLoaderMessage.textContent = "Vérification de l'abonnement...";
-         // MODIFICATION: Utilisation de adminId
-        if (!adminIdFromUrl) {
+        const adminId = getAdminIdFromUrl();
+        if (!adminId) {
             hidePageLoader();
             showSubscriptionRequiredModal();
-            console.error("adminId is null. Subscription check failed.");
+            console.error("Admin ID is missing from URL. Subscription check failed.");
             return false;
         }
         try {
-            // MODIFICATION : Utilisation de adminId pour partitionnement
-            adminRef = ref(db, `users-data/${adminIdFromUrl}/admin/subscription`); // MODIFICATION: Initialiser adminRef
+            adminRef = ref(db, `users-data/${adminId}/admin/subscription`);
             const snapshot = await get(adminRef);
             const subscription = snapshot.val();
             const now = new Date();
@@ -1789,57 +1661,67 @@
     }
 
 
-    // MODIFICATION : Adaptation de DOMContentLoaded
-    // MODIFICATION: Adaptation de la fonction principale d'initialisation
-    async function initializePage() {
-        if (!getUrlParameters()) return;  // Vérifier les paramètres d'URL
+    document.addEventListener('DOMContentLoaded', async () => {
         showPageLoader();
-        await initializeDatabase();  // Initialiser la base de données
+        await initializeDatabase();
 
-        // Vérifier l'abonnement *avant* de charger les données
-        const isSubscribed = await checkSubscriptionStatus();
-        if (!isSubscribed) {
+        const adminId = getAdminIdFromUrl();
+        const partnerId = new URLSearchParams(window.location.search).get('partnerId');
+
+        if (!adminId) {
             hidePageLoader();
-            showSubscriptionRequiredModal();  // Afficher le modal si pas d'abonnement
-            return; // Arr
+            loginSection.style.display = 'block'; // Afficher la section de connexion si adminId manquant
+            return;
+        }
+        currentUserIdAdmin = adminId; // Set admin ID globally
+        if (partnerId) {
+            currentVendorId = partnerId; // Set vendor ID if in URL
         }
 
-// Si l'abonnement est valide, continuer avec le chargement des données
-await fetchVendors(); // Charger les vendeurs (pour l'autocomplétion, etc.)
-// Vérifier si le partenaire existe dans la liste des vendeurs de l'admin.
-if (vendors && vendors[partnerId]) {
-        // Le partenaire est valide, afficher la section de connexion et masquer le reste
-        loginSection.style.display = 'block';
-        ratesSection.style.display = 'none'; // Cacher initialement
-        historySection.style.display = 'none';
-        messagesSection.style.display = 'none';
+        await fetchVendors(); // Charger les vendeurs (nécessaire pour autocomplétion et login)
 
-        // Pré-remplir le champ "username" avec l'ID du partenaire (si l'utilisateur n'est pas déjà connecté)
-        const storedUsername = localStorage.getItem('username');
-        const storedTimestamp = localStorage.getItem('usernameTimestamp');
-        const now = Date.now();
-        const twentyFourHours = 24 * 60 * 60 * 1000;
-
-        if (!storedUsername || !storedTimestamp || (now - storedTimestamp > twentyFourHours)) {
-            usernameInput.value = partnerId;
+        // Tentative de connexion automatique si les informations sont mémorisées
+        if (rememberMeCheckbox.checked) {
+            if (usernameInput.value && passwordInput.value) {
+                await loginForm.dispatchEvent(new Event('submit')); // Déclencher la soumission du formulaire de connexion
+            } else {
+                hidePageLoader(); // Masquer le loader si la connexion auto ne peut pas être tentée
+            }
+        } else {
+             hidePageLoader(); // Masquer le loader si pas de connexion automatique
         }
 
-    } else {
-        // Partenaire invalide, afficher un message d'erreur et/ou rediriger
-        console.error("Invalid partner ID:", partnerId);
-        alert("Lien de partenaire invalide.");
-        // Redirection, par exemple, vers la page d'accueil ou une page d'erreur.
-        window.location.href = 'index.html'; //  rediriger vers la page d'accueil
-    }
 
-    hidePageLoader();
-}
+        // Écouteurs d'événements pour les formulaires
+        document.getElementById('loginForm').addEventListener('submit', login);
 
+        // Initialiser l'interface après la connexion ou directement si auto-connecté
+        if (ratesSection.style.display === 'block') {
+            await syncTickets();
+            loadHistory();
+            listenForNewMessages();
+        }
+    });
 
-document.addEventListener('DOMContentLoaded', initializePage); // Point d'entrée principal
-
-window.redirectToSubscription = redirectToSubscription;
-window.hideSubscriptionRequiredModal = redirectToSubscription;
+    // Expose functions to window
+    window.redirectToSubscription = redirectToSubscription;
+    window.hideSubscriptionRequiredModal = redirectToSubscription;
+    window.hideNotification = hideNotification;
+    window.proceedWithSale = proceedWithSale;
+    window.confirmSale = confirmSale;
+    window.cancelSale = cancelSale;
+    window.toggleHistory = toggleHistory;
+    window.closeHistory = closeHistory;
+    window.filterHistory = filterHistory;
+    window.filterHistoryByDateRange = filterHistoryByDateRange;
+    window.shareTicket = shareTicket;
+    window.copyTicket = copyTicket;
+    window.exportToPDF = exportToPDF;
+    window.exportToPDFHistory = exportToPDFHistory;
+    window.exportToExcelHistory = exportToExcelHistory;
+    window.initTicketSale = initTicketSale;
+    window.showTicketDetailsFromHistory = showTicketDetailsFromHistory;
+    window.filterHistory = filterHistory;
 
 </script>
 </body>
