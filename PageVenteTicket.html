@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vente Tickets Cyber Campus</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        /* Styles CSS - Copied from previous version - No changes here */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg,  #424242, #073018, #553a01);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #fff;
+            overflow-x: hidden;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        section:hover{
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+            margin-top: 16px;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        td{
+            transition: background-color 0.3s ease;
+        }
+        tr:hover td{
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            touch-action: manipulation;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+            color: #1a2a6c;
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .notification h3 {
+            margin-bottom: 16px;
+            color: #1a2a6c;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .ticket-details {
+            margin: 16px 0;
+            font-size: 0.95rem;
+        }
+
+        .ticket-details p {
+            margin: 8px 0;
+            word-break: break-word;
+        }
+
+        .action-icons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .action-icon {
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+        }
+
+        .action-icon:active {
+            transform: scale(0.9);
+        }
+
+        .icon-share { color: #4CAF50; }
+        .icon-copy { color: #2196F3; }
+        .icon-pdf { color: #f44336; }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sell {
+            background-color: #4CAF50;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-cancel {
+            background-color: #f44336;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .close-icon {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            cursor: pointer;
+            font-size: 24px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            display: none;
+            z-index: 1001;
+            text-align: center;
+            max-width: 200px;
+            left: 50% !important;
+            transform: translateX(-50%);
+            bottom: 24px;
+        }
+        .history-section {
+            display: none;
+            background: rgba(26, 42, 108, 0.95); /* Fond plus opaque avec une teinte bleue foncée */
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .history-section:hover{
+            transform: translate(-50%, -50%) translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Amélioration du style de l'en-tête de l'historique pour plus de lisibilité */
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            background: inherit;
+            padding: 10px 0;
+            z-index: 1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Amélioration de la lisibilité des cartes de statistiques */
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover{
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card h4 {
+            color: #fdbb2d;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .toggle-history {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #fdbb2d;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .toggle-history i{
+            transition: transform 0.3s ease;
+        }
+        .toggle-history:hover{
+            transform: scale(1.1);
+        }
+        .toggle-history:hover i{
+            transform: rotate(180deg);
+        }
+
+        .toggle-history:active {
+            transform: scale(0.95);
+        }
+        .export-buttons {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .export-buttons button {
+            margin: 0 10px;
+        }
+
+        .date-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .date-filter input[type="date"] {
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+        .date-filter button{
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+        .date-filter select {
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 16px;
+            background-color: rgba(0, 0, 0, 0.5);
+            font-size: 0.9rem;
+        }
+
+        /* Media Queries */
+        @media (max-width: 480px) {
+            body {
+                font-size: 14px;
+            }
+
+            .container {
+                padding: 12px;
+            }
+
+            section {
+                padding: 12px;
+                margin: 12px 0;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 8px 6px;
+            }
+
+            td:last-child {
+                text-align: right;
+            }
+
+            button {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .notification {
+                padding: 20px 16px;
+                width: 95%;
+            }
+
+            .action-icons {
+                gap: 16px;
+            }
+
+            .action-icon {
+                width: 40px;
+                height: 40px;
+                padding: 10px;
+            }
+
+            .buttons button {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .close-icon {
+                top: 8px;
+                right: 8px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .history-table {
+                font-size: 0.8rem;
+            }
+
+            .date-filter {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .buttons {
+                flex-direction: column;
+            }
+
+            .action-icons {
+                gap: 12px;
+            }
+
+            .action-icon {
+                width: 36px;
+                height: 36px;
+            }
+        }
+
+        .login-section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .login-section h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .login-section input[type="text"],
+        .login-section input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .login-section button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .login-section button:active {
+            transform: scale(0.95);
+        }
+
+        .error-message {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .messages-section {
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            max-height: 300px; /* Hauteur maximale pour la section des messages */
+            overflow-y: auto; /* Permettre le défilement vertical si le contenu dépasse la hauteur maximale */
+        }
+
+        .messages-section h2 {
+            color: #fdbb2d;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .message {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .message .timestamp {
+            font-size: 0.7rem;
+            color: #ccc;
+            margin-top: 5px;
+        }
+
+        /* Styles pour l'autocomplétion */
+        .autocomplete-container {
+            position: relative;
+        }
+
+        .autocomplete-suggestions {
+            position: absolute;
+            border: 1px solid #ccc;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            z-index: 100;
+            background-color: white;
+            width: 100%; /* Assurez-vous que la liste a la même largeur que le champ de saisie */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Ombre pour un effet visuel */
+        }
+
+        .autocomplete-suggestions li {
+            padding: 5px;
+            cursor: pointer;
+            color: #000;
+        }
+
+        .autocomplete-suggestions li:hover {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+        }
+        .loader-wrapper {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+        }
+
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .page-loader-wrapper {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1002;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .page-loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        .loader-message {
+            color: white;
+            margin-top: 16px;
+            font-size: 1rem;
+            text-align: center;
+            max-width: 80%;
+        }
+        .subscription-required {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .subscription-required-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .subscription-required-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .subscription-required-content p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .subscription-required-content button {
+            background-color: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0 10px;
+        }
+
+        .subscription-required-content button:hover {
+            background-color: #e6a727;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="page-loader-wrapper" id="pageLoaderWrapper">
+        <div class="page-loader"></div>
+        <div class="loader-message" id="pageLoaderMessage">Initialisation...</div>
+    </div>
+    <div class="loader-wrapper" id="loaderWrapper">
+        <div class="loader"></div>
+    </div>
+    <section class="login-section" id="loginSection">
+        <h2>Connexion Partenaire</h2>
+        <form id="loginForm">
+            <div class="autocomplete-container">
+                <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+                <ul class="autocomplete-suggestions" id="autocompleteSuggestions" style="display: none;"></ul>
+            </div>
+            <input type="password" id="password" placeholder="Mot de passe" required>
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <input type="checkbox" id="rememberMe">
+                <label for="rememberMe" style="color: white; margin-left: 5px;">Se souvenir de moi (24h)</label>
+            </div>
+            <button type="submit">Se connecter</button>
+        </form>
+        <div class="error-message" id="loginError" style="display: none; color: red;"></div>
+    </section>
+
+    <div class="container">
+        <section class="rates-section" style="display: none;">
+            <h2>Vente de tickets WiFi</h2>
+            <div class="loading-message">Chargement des tickets...</div>
+            <table style="display: none;"></table>
+        </section>
+    </div>
+
+    <div class="notification" id="notification">
+        <span class="close-icon" onclick="hideNotification()"><i class="fas fa-times"></i></span>
+        <h3 id="notification-title">Confirmation de vente</h3>
+        <div class="ticket-details" id="notification-message"></div>
+        <div class="buttons" id="confirmation-buttons">
+            <button class="btn-sell" onclick="window.proceedWithSale()">Confirmer</button>
+            <button class="btn-cancel" onclick="hideNotification()">Annuler</button>
+        </div>
+        <div class="action-icons" id="ticket-actions" style="display: none;">
+            <div class="action-icon icon-share" onclick="shareTicket()" title="Partager">
+                <i class="fas fa-share-alt"></i>
+            </div>
+            <div class="action-icon icon-pdf" onclick="exportToPDF()" title="Exporter en PDF">
+                <i class="fas fa-file-pdf"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="toggle-history" onclick="toggleHistory()">
+        <i class="fas fa-history"></i>
+    </div>
+
+    <div class="history-section" id="historySection" style="display: none;">
+        <div class="history-header">
+            <h2>Historique des ventes</h2>
+            <button onclick="closeHistory()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="date-filter">
+            <select id="periodFilter" onchange="filterHistory()">
+                <option value="today">Aujourd'hui</option>
+                <option value="week">Cette semaine</option>
+                <option value="month">Ce mois</option>
+                <option value="all">Tout l'historique</option>
+            </select>
+            <input type="date" id="startDate">
+            <input type="date" id="endDate">
+            <button onclick="filterHistoryByDateRange()">Filtrer par date</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4>Tickets vendus</h4>
+                <div id="totalTickets" class="value">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Chiffre d'affaires</h4>
+                <div id="totalRevenue" class="value">0 FCFA</div>
+            </div>
+            <div class="stat-card">
+                <h4>Ticket le plus vendu</h4>
+                <div id="topCategory" class="value">-</div>
+            </div>
+            <div class="stat-card">
+                <h4>Moyenne par jour</h4>
+                <div id="avgDaily" class="value">0</div>
+            </div>
+        </div>
+        <div class="export-buttons">
+            <button onclick="printHistory()"><i class="fas fa-print"></i> Imprimer</button>
+            <button onclick="exportToPDFHistory()"><i class="fas fa-file-pdf"></i> Exporter en PDF</button>
+        </div>
+
+        <div class="history-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Catégorie</th>
+                        <th>Utilisateur</th>
+                        <th>Prix</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <section class="messages-section" id="messagesSection" style="display: none;">
+        <h2>Messages Reçus</h2>
+        <div id="messagesContainer">
+            <!-- Les messages seront ajoutés ici -->
+        </div>
+    </section>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <footer>
+        <div class="anitext">PROPULSE PAR EVISIONS</div>
+    </footer>
+
+    <div id="subscriptionRequiredModal" class="subscription-required" style="display: none;">
+        <div class="subscription-required-content">
+            <h2>Abonnement Requis</h2>
+            <p>Un abonnement actif est nécessaire pour accéder à cette fonctionnalité.</p>
+            <button onclick="redirectToSubscription()">S'abonner</button>
+            <button onclick="hideSubscriptionRequiredModal()">Fermer</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getActiveDatabase } from './firebase-config-manager.js';
+        import { ref, get, set, push, remove, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        let db;
+        let adminRef;
+        let currentUserIdAdmin; // ADDED: to store admin's userId
+        let currentVendorId;
+
+        async function initializeDatabase() {
+            db = await getActiveDatabase();
+            console.log("Database initialized in PageVenteTicket.html");
+        }
+
+      let ticketToSell = null;
+      let localTickets = {};
+      let currentReservedTicket = null;
+      let vendors = {};
+      let availableUsernames = [];
+      window.jsPDF = window.jspdf.jsPDF;
+
+      async function fetchVendors() {
+          try {
+                const adminId = getAdminIdFromUrl(); // Get adminId from URL
+                if (!adminId) {
+                    console.error("Admin ID is missing from URL.");
+                    return;
+                }
+                currentUserIdAdmin = adminId; // Set global admin ID
+
+                const vendorsRef = ref(db, `users-data/${adminId}/Vendors`);
+                const snapshot = await get(vendorsRef);
+                if (snapshot.exists()) {
+                    vendors = snapshot.val();
+                    availableUsernames = Object.keys(vendors);
+                } else {
+                    console.log("Aucun vendeur trouvé.");
+                }
+          } catch (error) {
+              console.error("Erreur lors de la récupération des vendeurs:", error);
+          }
+      }
+
+// --- Autocomplétion ---
+const usernameInput = document.getElementById('username');
+const passwordInput = document.getElementById('password');
+const suggestionsList = document.getElementById('autocompleteSuggestions');
+
+usernameInput.addEventListener('input', () => {
+    const inputValue = usernameInput.value.toLowerCase();
+    const suggestions = availableUsernames.filter(username => username.toLowerCase().startsWith(inputValue));
+
+    suggestionsList.innerHTML = '';
+    if (inputValue.length === 0 || suggestions.length === 0) {
+        suggestionsList.style.display = 'none';
+        return;
+    }
+
+    suggestions.forEach(suggestion => {
+        const listItem = document.createElement('li');
+        listItem.textContent = suggestion;
+        listItem.addEventListener('click', () => {
+            usernameInput.value = suggestion;
+            suggestionsList.innerHTML = '';
+            suggestionsList.style.display = 'none';
+        });
+        suggestionsList.appendChild(listItem);
+    });
+
+    suggestionsList.style.display = 'block';
+});
+
+document.addEventListener('click', (event) => {
+    if (!usernameInput.contains(event.target) && !suggestionsList.contains(event.target)) {
+        suggestionsList.style.display = 'none';
+    }
+});
+
+// --- Mémorisation de l'ID et du MOT DE PASSE (DÉCONSEILLÉ) ---
+const rememberMeCheckbox = document.getElementById('rememberMe');
+
+const storedUsername = localStorage.getItem('vendorUsername'); // Changed key
+const storedPassword = localStorage.getItem('vendorPassword'); // Changed key
+const storedTimestamp = localStorage.getItem('vendorUsernameTimestamp'); // Changed key
+const now = Date.now();
+const twentyFourHours = 24 * 60 * 60 * 1000;
+
+if (storedUsername && storedPassword && storedTimestamp && (now - storedTimestamp < twentyFourHours)) {
+    usernameInput.value = storedUsername;
+    passwordInput.value = storedPassword;
+    rememberMeCheckbox.checked = true;
+}
+
+//MODIFICATION: Adaptation du login pour la connexion des partenaire de vente
+// Gestion du formulaire de connexion
+const loginForm = document.getElementById('loginForm');
+const loginError = document.getElementById('loginError');
+const ratesSection = document.querySelector('.rates-section');
+const historySection = document.getElementById('historySection');
+const loginSection = document.getElementById('loginSection');
+const messagesSection = document.getElementById('messagesSection');
+
+loginForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    showLoader();
+    const username = usernameInput.value;
+    const password = passwordInput.value;
+    const adminId = getAdminIdFromUrl(); // Get adminId from URL
+
+    if (!adminId) {
+        hideLoader();
+        loginError.style.display = 'block';
+        loginError.textContent = "Admin user ID is missing.";
+        return;
+    }
+
+    if (vendors[username] && vendors[username].password === password) {
+        // Connexion réussie
+        loginError.style.display = 'none';
+        ratesSection.style.display = 'block';
+        historySection.style.display = 'none';
+        loginSection.style.display = 'none';
+        messagesSection.style.display = 'block';
+        currentVendorId = username; // Mettre à jour l'ID du vendeur actuel
+
+        // Mémoriser l'ID et le MOT DE PASSE si la case est cochée (DÉCONSEILLÉ)
+        if (rememberMeCheckbox.checked) {
+            localStorage.setItem('vendorUsername', username); // Changed key
+            localStorage.setItem('vendorPassword', password); // Changed key
+            localStorage.setItem('vendorUsernameTimestamp', Date.now()); // Changed key
+        } else {
+            localStorage.removeItem('vendorUsername'); // Changed key
+            localStorage.removeItem('vendorPassword'); // Changed key
+            localStorage.removeItem('vendorUsernameTimestamp'); // Changed key
+        }
+
+        // Charger les données et initialiser l'interface
+        await syncTickets();
+        loadHistory();
+        listenForNewMessages();
+        hideLoader();
+    } else {
+        // Identifiants incorrects
+        loginError.style.display = 'block';
+        loginError.textContent = "Nom d'utilisateur ou mot de passe incorrect.";
+        hideLoader();
+    }
+});
+
+
+        // Fonction pour synchroniser les tickets et gérer l'affichage
+        async function syncTickets() {
+            const adminId = getAdminIdFromUrl();
+            if (!adminId) {
+                console.error("Admin ID is missing from URL. Cannot sync tickets.");
+                return;
+            }
+            try {
+                const loadingMessage = document.querySelector('.loading-message');
+                const table = document.querySelector('.rates-section table');
+
+                loadingMessage.style.display = 'block';
+                table.style.display = 'none';
+
+                const ticketsTotalRef = ref(db, `users-data/${adminId}/TicketsTotal`);
+                const snapshot = await get(ticketsTotalRef);
+
+                if (snapshot.exists()) {
+                    localTickets = snapshot.val();
+                    createTicketTable();
+                    loadingMessage.style.display = 'none';
+                    table.style.display = 'table';
+                } else {
+                    loadingMessage.textContent = 'Aucun ticket disponible.';
+                }
+            } catch (error) {
+                console.error("Erreur de synchronisation:", error);
+                loadingMessage.textContent = "Erreur de synchronisation des tickets.";
+            }
+        }
+
+        // Mise à jour de la création du tableau pour afficher uniquement les tickets disponibles avec leur nombre restant
+        async function createTicketTable() {
+            const table = document.querySelector('.rates-section table');
+            table.innerHTML = `
+                <tr>
+                    <th>Catégorie</th>
+                    <th>Prix (FCFA)</th>
+                    <th>Restants</th>
+                    <th>Action</th>
+                </tr>
+            `;
+
+            for (const [category, data] of Object.entries(localTickets)) {
+                const remaining = data.utilisateur ? data.utilisateur.length : 0;
+                if (remaining > 0) {
+                    const price = data.prix[0];
+                    const row = table.insertRow();
+                    row.innerHTML = `
+                        <td>${category}</td>
+                        <td>${price}</td>
+                        <td>${remaining}</td>
+                        <td><button onclick="window.initTicketSale('${category}')">Vendre</button></td>
+                    `;
+                }
+            }
+
+            document.querySelector('.loading-message').style.display = 'none';
+            table.style.display = 'table';
+        }
+
+        // Modification de la fonction initTicketSale pour demander confirmation
+        window.initTicketSale = async function(category) {
+        showLoader();
+        try {
+            const adminId = getAdminIdFromUrl();
+            if (!adminId) {
+                console.error("Admin ID is missing from URL. Cannot init ticket sale.");
+                return;
+            }
+            const ticketsTotalRef = ref(db, `users-data/${adminId}/TicketsTotal/${category}`);
+            const snapshot = await get(ticketsTotalRef);
+
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                if (!data.utilisateur || data.utilisateur.length === 0) {
+                    throw new Error("Plus de tickets disponibles");
+                }
+
+                ticketToSell = {
+                    category: category,
+                    user: data.utilisateur[0],
+                    password: data.motDePasse[0],
+                    price: data.prix[0],
+                    updatedData: {
+                        ...data,
+                        utilisateur: data.utilisateur.slice(1),
+                        motDePasse: data.motDePasse.slice(1),
+                        prix: data.prix.slice(1)
+                    }
+                };
+
+                showConfirmation(ticketToSell);
+                hideLoader();
+            }
+        } catch (error) {
+            console.error("Erreur:", error);
+            showNotification("Erreur", "Impossible de récupérer le ticket");
+            hideLoader();
+        }
+    };
+
+
+        // Fonction pour afficher la confirmation
+        function showConfirmation(ticket) {
+            const notification = document.getElementById('notification');
+            const message = document.getElementById('notification-message');
+            const ticketActions = document.getElementById('ticket-actions');
+            const confirmationButtons = document.getElementById('confirmation-buttons');
+
+            document.getElementById('notification-title').textContent = 'Confirmation de vente';
+            message.innerHTML = `
+                <p>Voulez-vous vendre ce ticket ?</p>
+                <p><strong>Catégorie:</strong> ${ticket.category}</p>
+                <p><strong>Prix:</strong> ${ticket.price} FCFA</p>
+            `;
+
+            confirmationButtons.style.display = 'flex';
+            ticketActions.style.display = 'none';
+            notification.style.display = 'block';
+        }
+
+window.proceedWithSale = async function() {
+    showLoader();
+    if (!ticketToSell) {
+        showNotification("Erreur", "Aucun ticket à vendre");
+        hideLoader();
+        return;
+    }
+
+    const adminId = getAdminIdFromUrl();
+    if (!adminId) {
+        console.error("Admin ID missing from URL. Cannot proceed with sale.");
+        hideLoader();
+        return;
+    }
+
+    try {
+        // Mettre à jour la base de données
+        const ticketsTotalRef = ref(db, `users-data/${adminId}/TicketsTotal/${ticketToSell.category}`);
+        await set(ticketsTotalRef, ticketToSell.updatedData);
+
+        // Ajouter aux tickets vendus
+        const ticketsVendusRef = ref(db, `users-data/${adminId}/TicketsVendus`);
+        await push(ticketsVendusRef, {
+            category: ticketToSell.category,
+            user: ticketToSell.user,
+            password: ticketToSell.password,
+            price: ticketToSell.price,
+            soldAt: Date.now(),
+            vendorId: currentVendorId
+        });
+
+        // Ajouter à l'historique du vendeur
+        const vendorHistoryRef = ref(db, `users-data/${adminId}/VendorsHistory/${currentVendorId}`);
+        await push(vendorHistoryRef, {
+            category: ticketToSell.category,
+            user: ticketToSell.user,
+            password: ticketToSell.password,
+            price: ticketToSell.price,
+            soldAt: Date.now()
+        });
+
+        // Afficher les détails du ticket vendu
+        showTicketDetails(ticketToSell);
+        await syncTickets(); // Recharger la liste des tickets
+        hideLoader();
+
+    } catch (error) {
+        console.error("Erreur lors de la vente:", error);
+        showNotification("Erreur", "Impossible de finaliser la vente");
+        hideLoader();
+    }
+
+    ticketToSell = null; // Réinitialiser pour la prochaine vente
+};
+
+
+        // Fonction pour afficher les détails après la vente
+        function showTicketDetails(ticket) {
+            const notification = document.getElementById('notification');
+            const message = document.getElementById('notification-message');
+            const ticketActions = document.getElementById('ticket-actions');
+            const confirmationButtons = document.getElementById('confirmation-buttons');
+
+            document.getElementById('notification-title').textContent = 'Ticket vendu avec succès';
+            message.innerHTML = `
+                <p><strong>Catégorie:</strong> ${ticket.category}</p>
+                <p><strong>Nom d'utilisateur:</strong> ${ticket.user}</p>
+                <p><strong>Mot de passe:</strong> ${ticket.password}</p>
+                <p><strong>Prix:</strong> ${ticket.price} FCFA</p>
+            `;
+
+            confirmationButtons.style.display = 'none';
+            ticketActions.style.display = 'flex';
+            notification.style.display = 'block';
+        }
+        // Afficher la confirmation de vente
+        function showSaleConfirmation(ticket) {
+            const notification = document.getElementById('notification');
+            const message = document.getElementById('notification-message');
+            const buttons = document.getElementById('notification-buttons');
+
+            message.innerHTML = `
+                <p><strong>Catégorie:</strong> ${ticket.category}</p>
+                <p><strong>Nom d'utilisateur:</strong> ${ticket.user}</p>
+                <p><strong>Mot de passe:</strong> ${ticket.password}</p>
+                <p><strong>Prix:</strong> ${ticket.price} FCFA</p>
+            `;
+
+            buttons.innerHTML = `
+                <button class="btn-sell" onclick="window.confirmSale()">
+                    Confirmer la vente
+                </button>
+                <button class="btn-cancel" onclick="window.cancelSale()">
+                    Annuler
+                </button>
+            `;
+
+            notification.style.display = 'block';
+        }
+
+        // Confirmation de la vente
+    window.confirmSale = async function() {
+        showLoader();
+        if (!currentReservedTicket) {
+            showNotification("Erreur", "Aucun ticket en cours de vente");
+            hideLoader();
+            return;
+        }
+
+        try {
+            const adminId = getAdminIdFromUrl();
+            if (!adminId) {
+                console.error("Admin ID missing from URL. Cannot confirm sale.");
+                hideLoader();
+                return;
+            }
+
+            // Ajouter aux tickets vendus
+            const ticketsVendusRef = ref(db, `users-data/${adminId}/TicketsVendus`);
+            await push(ticketsVendusRef, {
+                ...currentReservedTicket,
+                soldAt: Date.now(),
+                vendorId: currentVendorId
+            });
+
+            // Ajouter à l'historique du vendeur
+            const vendorHistoryRef = ref(db, `users-data/${adminId}/VendorsHistory/${currentVendorId}`);
+            await push(vendorHistoryRef, {
+                ...currentReservedTicket,
+                soldAt: Date.now()
+            });
+
+            showNotification("Succès", "Ticket vendu avec succès!");
+            currentReservedTicket = null;
+            hideNotification();
+            await syncTickets(); // Recharger la liste des tickets
+            hideLoader();
+        } catch (error) {
+            console.error("Erreur de confirmation:", error);
+            showNotification("Erreur", "Erreur lors de la confirmation de la vente");
+            hideLoader();
+        }
+    };
+
+
+        // Annulation de la vente
+        window.cancelSale = function() {
+            currentReservedTicket = null;
+            hideNotification();
+        };
+
+        // Notifications
+        function showNotification(title, message) {
+            const notification = document.getElementById('notification');
+            const notificationTitle = document.getElementById('notification-title');
+            const notificationMessage = document.getElementById('notification-message');
+            const buttons = document.getElementById('notification-buttons');
+            const ticketActions = document.getElementById('ticket-actions');
+
+            notificationTitle.textContent = title;
+            notificationMessage.innerHTML = message;
+
+            if (title === "Succès" || title === "Erreur") {
+                buttons.style.display = 'none';
+                ticketActions.style.display = 'none';
+            } else {
+                buttons.style.display = 'flex';
+                ticketActions.style.display = 'none';
+            }
+
+            notification.style.display = 'block';
+        }
+
+        window.hideNotification = function() {
+            document.getElementById('notification').style.display = 'none';
+        };
+
+async function loadHistory() {
+    showLoader();
+    const adminId = getAdminIdFromUrl();
+    if (!adminId) {
+        console.error("Admin ID is missing from URL. Cannot load history.");
+        hideLoader();
+        return;
+    }
+    try {
+        const historyRef = ref(db, `users-data/${adminId}/VendorsHistory/${currentVendorId}`);
+        const snapshot = await get(historyRef);
+
+        let salesHistory = [];
+        if (snapshot.exists()) {
+            salesHistory = Object.entries(snapshot.val()).map(([id, data]) => ({
+                id,
+                ...data
+            }));
+        }
+          // Appliquer les filtres par défaut (Aujourd'hui)
+          filterHistory(salesHistory);
+
+          hideLoader();
+      } catch (error) {
+          console.error("Erreur lors du chargement de l'historique:", error);
+          showNotification("Erreur", "Impossible de charger l'historique");
+          hideLoader();
+      }
+  }
+
+
+        // Filtrage de l'historique par période
+        function filterHistory(salesHistory) {
+            const period = document.getElementById('periodFilter').value;
+            const now = new Date();
+            const startOf = {
+                today: new Date(now.setHours(0, 0, 0, 0)),
+                week: new Date(now.setDate(now.getDate() - now.getDay())),
+                month: new Date(now.setDate(1)),
+                all: new Date(0)
+            };
+
+            let filteredSales = salesHistory;
+
+            if (period !== 'all') {
+                filteredSales = salesHistory.filter(sale =>
+                    new Date(sale.soldAt) >= startOf[period]
+                );
+            }
+
+            updateStats(filteredSales);
+            updateHistoryTable(filteredSales);
+        }
+
+window.filterHistoryByDateRange = function() {
+    const startDate = new Date(document.getElementById('startDate').value);
+    const endDate = new Date(document.getElementById('endDate').value);
+    endDate.setHours(23, 59, 59);
+    const adminId = getAdminIdFromUrl();
+    if (!adminId) {
+        console.error("Admin ID is missing from URL. Cannot filter history by date range.");
+        return;
+    }
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        showNotification("Erreur", "Veuillez sélectionner une date de début et une date de fin.");
+        return;
+    }
+
+    const historyRef = ref(db, `users-data/${adminId}/VendorsHistory/${currentVendorId}`);
+    get(historyRef).then((snapshot) => {
+        let salesHistory = [];
+        if (snapshot.exists()) {
+            salesHistory = Object.entries(snapshot.val()).map(([id, data]) => ({
+                id,
+                ...data
+            }));
+        }
+
+        const filteredSales = salesHistory.filter(sale => {
+            const saleDate = new Date(sale.soldAt);
+            return saleDate >= startDate && saleDate <= endDate;
+        });
+
+        updateStats(filteredSales);
+        updateHistoryTable(filteredSales);
+    });
+};
+
+
+        // Mise à jour des statistiques
+        function updateStats(sales) {
+            const totalTickets = sales.length;
+            const totalRevenue = sales.reduce((sum, sale) => sum + parseFloat(sale.price), 0);
+
+            const categoryCounts = sales.reduce((acc, sale) => {
+                acc[sale.category] = (acc[sale.category] || 0) + 1;
+                return acc;
+            }, {});
+            const topCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
+
+            const days = sales.length > 0 ?
+                Math.max(1, Math.ceil((Date.now() - Math.min(...sales.map(s => s.soldAt))) / (1000 * 60 * 60 * 24))) : 1;
+            const avgDaily = (totalTickets / days).toFixed(1);
+
+            document.getElementById('totalTickets').textContent = totalTickets;
+            document.getElementById('totalRevenue').textContent = `${totalRevenue.toLocaleString()} FCFA`;
+            document.getElementById('topCategory').textContent = topCategory;
+            document.getElementById('avgDaily').textContent = avgDaily;
+        }
+
+        // Mise à jour du tableau d'historique
+        function updateHistoryTable(sales) {
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = sales
+                .sort((a, b) => b.soldAt - a.soldAt)
+                .map(sale => `
+                    <tr onclick="window.showTicketDetailsFromHistory('${sale.id}')" style="cursor: pointer;">
+                        <td>${new Date(sale.soldAt).toLocaleString()}</td>
+                        <td>${sale.category}</td>
+                        <td>${sale.user}</td>
+                        <td>${sale.price} FCFA</td>
+                        <td><i class="fas fa-arrow-right"></i></td>
+                    </tr>
+                `).join('');
+        }
+window.showTicketDetailsFromHistory = async function(saleId){
+    showLoader();
+    try{
+        const adminId = getAdminIdFromUrl();
+        if (!adminId) {
+          console.error("Admin ID is missing from URL. Cannot show ticket details from history.");
+          hideLoader();
+          return;
+        }
+        const historyRef = ref(db, `users-data/${adminId}/VendorsHistory/${currentVendorId}/${saleId}`);
+        const snapshot = await get(historyRef);
+        if (snapshot.exists()) {
+            const sale = snapshot.val();
+            window.closeHistory();
+            showTicketDetails(sale);  // Montre les détails (déjà adaptée)
+            hideLoader();
+        } else {
+            showNotification("Erreur", "Ticket introuvable dans l'historique");
+            hideLoader();
+        }
+    }catch (error){
+        console.error("Erreur lors de la récupération du ticket:", error);
+        showNotification("Erreur", "Impossible de récupérer les détails du ticket");
+        hideLoader();
+    }
+}
+
+
+        // Gestionnaire pour le bouton d'historique
+        window.toggleHistory = function() {
+            const historySection = document.getElementById('historySection');
+            const isVisible = historySection.style.display === 'block';
+            historySection.style.display = isVisible ? 'none' : 'block';
+            if (!isVisible) {
+                loadHistory();
+            }
+        };
+
+        window.closeHistory = function() {
+            document.getElementById('historySection').style.display = 'none';
+        };
+
+        // Ajouter la fonction de filtrage à window pour l'accès depuis le HTML
+        window.filterHistory = function() {
+            loadHistory();
+        };
+
+function listenForNewMessages() {
+    const adminId = getAdminIdFromUrl();
+    if (!adminId) {
+        console.error("Admin ID is missing from URL. Cannot listen for messages.");
+        return;
+    }
+
+    const messagesRef = ref(db, `users-data/${adminId}/Vendors/${currentVendorId}/messages`);
+
+    onChildAdded(messagesRef, (snapshot) => {
+        const message = snapshot.val();
+        displayNewMessage(message);
+    });
+}
+
+        // Fonction pour afficher un nouveau message
+        function displayNewMessage(message) {
+            const messagesContainer = document.getElementById('messagesContainer');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.innerHTML = `
+                <p>${message.content}</p>
+                <span class="timestamp">${new Date(message.timestamp).toLocaleString()}</span>
+            `;
+            messagesContainer.appendChild(messageElement);
+
+            // Scroll vers le bas pour afficher le dernier message
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        // Fonction pour partager un ticket
+        window.shareTicket = function() {
+            const ticketDetails = document.getElementById('notification-message').innerText;
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Détails du Ticket',
+                    text: ticketDetails,
+                })
+                .then(() => console.log('Partage réussi'))
+                .catch((error) => console.error('Erreur lors du partage:', error));
+            } else {
+                // Méthode alternative si navigator.share n'est pas supporté
+                alert("Le partage n'est pas supporté sur votre navigateur. Veuillez copier manuellement les détails du ticket.");
+            }
+        };
+
+        // Fonction pour copier un ticket dans le presse-papiers
+        window.copyTicket = function() {
+            const ticketDetails = document.getElementById('notification-message').innerText;
+            navigator.clipboard.writeText(ticketDetails)
+                .then(() => {
+                    showNotification("Succès", "Ticket copié dans le presse-papiers!");
+                })
+                .catch(err => {
+                    console.error("Erreur lors de la copie:", err);
+                    showNotification("Erreur", "Impossible de copier le ticket");
+                });
+        };
+
+        // Fonction pour exporter un ticket en PDF
+        window.exportToPDF = async function() {
+            showLoader();
+            const ticketDetails = document.getElementById('notification-message');
+            const pdf = new jsPDF();
+
+            // Convertir le HTML en canvas
+            const canvas = await html2canvas(ticketDetails);
+            const imgData = canvas.toDataURL('image/png');
+
+            // Ajouter l'image au PDF
+            pdf.addImage(imgData, 'PNG', 10, 10, 190, 0);
+
+            // Sauvegarder le PDF
+            pdf.save('ticket.pdf');
+            hideLoader();
+        };
+        window.printHistory = function() {
+            window.print();
+        };
+
+        window.exportToPDFHistory = function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const table = document.getElementById("historyTableBody");
+
+            // Personnalisation du header du tableau
+            const headerStyles = {
+                fillColor: [42, 58, 108],
+                textColor: [255, 255, 255],
+                fontStyle: 'bold',
+                halign: 'center'
+            };
+
+            // Personnalisation des cellules du tableau
+            const bodyStyles = {
+                halign: 'left'
+            };
+
+            // Personnalisation du style du tableau
+            const styles = {
+                theme: 'grid',
+                headStyles: headerStyles,
+                bodyStyles: bodyStyles,
+                margin: { top: 20 },
+                startY: 30,
+                didDrawPage: function(data) {
+                    // Ajout d'un titre au document
+                    doc.text("Historique des ventes", 14, 15);
+                    // Ajout de la date et de l'heure en bas de page
+                    const str = "Page " + doc.internal.getNumberOfPages();
+                    doc.setFontSize(10);
+                    const pageSize = doc.internal.pageSize;
+                    const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+                    doc.text(str, data.settings.margin.left, pageHeight - 10);
+                    doc.text(new Date().toLocaleString(), pageSize.width - data.settings.margin.right - 40, pageHeight - 10);
+                }
+            };
+
+            // Génération du tableau avec autoTable
+            doc.autoTable({
+                html: '#historyTableBody',
+                ...styles
+            });
+
+            doc.save("historique_ventes.pdf");
+        };
+
+        window.exportToExcelHistory = function() {
+            const wb = XLSX.utils.table_to_book(document.getElementById('historyTableBody'), { sheet: "Ventes" });
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+
+            function s2ab(s) {
+                const buf = new ArrayBuffer(s.length);
+                const view = new Uint8Array(buf);
+                for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+                return buf;
+            }
+
+            saveAs(new Blob([s2ab(wbout)], { type: "application/octet-stream" }), "historique_ventes.xlsx");
+        };
+
+        function showLoader() {
+            document.getElementById('loaderWrapper').style.display = 'block';
+        }
+
+        function hideLoader() {
+            document.getElementById('loaderWrapper').style.display = 'none';
+        }
+
+        function showPageLoader() {
+            document.getElementById('pageLoaderWrapper').style.display = 'flex';
+        }
+
+        function hidePageLoader() {
+            document.getElementById('pageLoaderWrapper').style.display = 'none';
+        }
+
+        function showSubscriptionRequiredModal() {
+            subscriptionRequiredModal.style.display = 'flex';
+        }
+
+        function hideSubscriptionRequiredModal() {
+            subscriptionRequiredModal.style.display = 'none';
+        }
+
+        function redirectToSubscription() {
+            window.location.href = 'index.html';
+
+        }
+
+        function getAdminIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('adminId');
+        }
+
+    // MODIFICATION: adaptation de checkSubscriptionStatus()
+    async function checkSubscriptionStatus() {
+        const pageLoaderMessage = document.getElementById('pageLoaderMessage');
+        pageLoaderMessage.textContent = "Vérification de l'abonnement...";
+        const adminId = getAdminIdFromUrl();
+        if (!adminId) {
+            hidePageLoader();
+            showSubscriptionRequiredModal();
+            console.error("Admin ID is missing from URL. Subscription check failed.");
+            return false;
+        }
+        try {
+            adminRef = ref(db, `users-data/${adminId}/admin/subscription`);
+            const snapshot = await get(adminRef);
+            const subscription = snapshot.val();
+            const now = new Date();
+
+            if (subscription && subscription.status === 'active') {
+                const endDate = new Date(subscription.endDate);
+                if (endDate < now) {
+                    // Abonnement expiré
+                    pageLoaderMessage.textContent = "Abonnement expiré";
+                    hidePageLoader();
+
+                    showSubscriptionRequiredModal();
+
+                    await update(adminRef, { status: 'expired' });
+                    return false;
+                } else {
+                    // Abonnement actif
+                    pageLoaderMessage.textContent = "Abonnement actif";
+                    hidePageLoader();
+                    return true;
+                }
+            } else {
+                // Pas d'abonnement
+                pageLoaderMessage.textContent = "Pas d'abonnement actif";
+                hidePageLoader();
+
+                showSubscriptionRequiredModal();
+                return false;
+            }
+        } catch (error) {
+            hidePageLoader();
+            console.error("Erreur lors de la vérification de l'abonnement :", error);
+            pageLoaderMessage.textContent = "Erreur lors de la vérification de l'abonnement";
+            showNotification("Erreur", "Erreur lors de la vérification de l'abonnement.");
+            return false;
+        }
+    }
+
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        showPageLoader();
+        await initializeDatabase();
+
+        const adminId = getAdminIdFromUrl();
+        const partnerId = new URLSearchParams(window.location.search).get('partnerId');
+
+        if (!adminId) {
+            hidePageLoader();
+            loginSection.style.display = 'block'; // Afficher la section de connexion si adminId manquant
+            return;
+        }
+        currentUserIdAdmin = adminId; // Set admin ID globally
+        if (partnerId) {
+            currentVendorId = partnerId; // Set vendor ID if in URL
+        }
+
+        await fetchVendors(); // Charger les vendeurs (nécessaire pour autocomplétion et login)
+
+        // Tentative de connexion automatique si les informations sont mémorisées
+        if (rememberMeCheckbox.checked) {
+            if (usernameInput.value && passwordInput.value) {
+                await loginForm.dispatchEvent(new Event('submit')); // Déclencher la soumission du formulaire de connexion
+            } else {
+                hidePageLoader(); // Masquer le loader si la connexion auto ne peut pas être tentée
+            }
+        } else {
+             hidePageLoader(); // Masquer le loader si pas de connexion automatique
+        }
+
+
+        // Écouteurs d'événements pour les formulaires
+        document.getElementById('loginForm').addEventListener('submit', login);
+
+        // Initialiser l'interface après la connexion ou directement si auto-connecté
+        if (ratesSection.style.display === 'block') {
+            await syncTickets();
+            loadHistory();
+            listenForNewMessages();
+        }
+    });
+
+    // Expose functions to window
+    window.redirectToSubscription = redirectToSubscription;
+    window.hideSubscriptionRequiredModal = redirectToSubscription;
+    window.hideNotification = hideNotification;
+    window.proceedWithSale = proceedWithSale;
+    window.confirmSale = confirmSale;
+    window.cancelSale = cancelSale;
+    window.toggleHistory = toggleHistory;
+    window.closeHistory = closeHistory;
+    window.filterHistory = filterHistory;
+    window.filterHistoryByDateRange = filterHistoryByDateRange;
+    window.shareTicket = shareTicket;
+    window.copyTicket = copyTicket;
+    window.exportToPDF = exportToPDF;
+    window.exportToPDFHistory = exportToPDFHistory;
+    window.exportToExcelHistory = exportToExcelHistory;
+    window.initTicketSale = initTicketSale;
+    window.showTicketDetailsFromHistory = showTicketDetailsFromHistory;
+    window.filterHistory = filterHistory;
+
+</script>
+</body>
+</html>

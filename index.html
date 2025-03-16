@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBER CAMPUS - WIFI ZONE</title>
+    <link rel="stylesheet" href="styleA.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
+
+    <style>
+        /* ... (Styles CSS - Pas de modifications majeures, juste des ajustements pour le formulaire) ... */
+       /* Style pour le modal de paiement */
+       .payment-modal {
+           display: none;
+           position: fixed;
+           top: 50%;
+           left: 50%;
+           transform: translate(-50%, -50%);
+           background-color: white;
+           padding: 30px;
+           border-radius: 10px;
+           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+           z-index: 1000;
+           max-width: 400px;
+           width: 90%;
+           text-align: center;
+       }
+
+       .payment-modal h2 {
+           color: #333;
+           margin-bottom: 20px;
+       }
+
+       .payment-modal p {
+           color: #666;
+           margin-bottom: 30px;
+       }
+
+       .payment-modal button {
+           background-color: #fdbb2d;
+           color: #1a2a6c;
+           border: none;
+           padding: 12px 20px;
+           border-radius: 25px;
+           cursor: pointer;
+           transition: all 0.3s;
+           font-weight: 600;
+           font-size: 0.9rem;
+           margin: 0 10px;
+       }
+
+       .payment-modal button:hover {
+           background-color: #e6a727;
+       }
+
+       .close-modal {
+           position: absolute;
+           top: 10px;
+           right: 10px;
+           cursor: pointer;
+           font-size: 1.2rem;
+           color: #333;
+       }
+
+       /* Style pour l'overlay */
+       .overlay {
+           display: none;
+           position: fixed;
+           top: 0;
+           left: 0;
+           width: 100%;
+           height: 100%;
+           background-color: rgba(0, 0, 0, 0.5);
+           z-index: 999;
+       }
+       #subscriptionSection {
+           text-align: center;
+           margin-bottom: 30px;
+       }
+
+       #subscriptionSection h2 {
+           font-size: 24px;
+           color: #fdbb2d;
+           margin-bottom: 20px;
+       }
+
+       #subscriptionStatus {
+           font-size: 18px;
+           color: #fff;
+           margin-bottom: 20px;
+       }
+
+       .subscription-buttons {
+           display: flex;
+           justify-content: center;
+           gap: 20px;
+       }
+
+       .subscription-buttons button {
+           background-color: #fdbb2d;
+           color: #1a2a6c;
+           border: none;
+           padding: 12px 20px;
+           border-radius: 25px;
+           cursor: pointer;
+           transition: all 0.3s;
+           font-weight: 600;
+           font-size: 0.9rem;
+       }
+
+       .subscription-buttons button:hover {
+           background-color: #e6a727;
+       }
+
+       /* Style pour le message d'abonnement requis */
+       .subscription-required {
+           display: none;
+           position: fixed;
+           top: 0;
+           left: 0;
+           width: 100%;
+           height: 100%;
+           background-color: rgba(0, 0, 0, 0.5);
+           z-index: 1000;
+           justify-content: center;
+           align-items: center;
+           color: white;
+           text-align: center;
+           padding: 20px;
+       }
+
+       .subscription-required-content {
+           background-color: white;
+           padding: 30px;
+           border-radius: 10px;
+           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+           max-width: 400px;
+           width: 90%;
+       }
+
+       .subscription-required-content h2 {
+           color: #333;
+           margin-bottom: 20px;
+       }
+
+       .subscription-required-content p {
+           color: #666;
+           margin-bottom: 30px;
+       }
+
+       .subscription-required-content button {
+           background-color: #fdbb2d;
+           color: #1a2a6c;
+           border: none;
+           padding: 12px 20px;
+           border-radius: 25px;
+           cursor: pointer;
+           transition: all 0.3s;
+           font-weight: 600;
+           font-size: 0.9rem;
+           margin: 0 10px;
+       }
+
+       .subscription-required-content button:hover {
+           background-color: #e6a727;
+       }
+        .loader-wrapper {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+        }
+
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .page-loader-wrapper {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1002;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .page-loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #fdbb2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        .loader-message {
+            color: white;
+            margin-top: 16px;
+            font-size: 1rem;
+            text-align: center;
+            max-width: 80%;
+        }
+
+        .header {
+            display: flex; /* Added to align items */
+            justify-content: center; /* MODIFICATION: Center content horizontally */
+            align-items: center; /* Added to vertically align items */
+            flex-direction: column; /* MODIFICATION: Stack items vertically */
+            text-align: center; /* MODIFICATION: Center text within header */
+        }
+
+        .header h1 {
+            margin: 0; /* Reset margin for h1 inside header */
+        }
+
+        .logout-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .logout-button:hover {
+            background-color: #c0392b;
+        }
+       /* Styles pour le formulaire de portail captif */
+      #portalForm {
+          display: none; /*Caché par défaut*/
+          flex-direction: column;
+          gap: 10px;
+          max-width: 600px; /* Limite la largeur du formulaire */
+          margin: 20px auto;
+          padding: 20px;
+          background-color: rgba(255, 255, 255, 0.1); /* Léger fond pour le formulaire */
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Ombre légère */
+      }
+      #portalForm label {
+          color: #fdbb2d; /* Couleur pour les labels */
+      }
+      #portalForm input[type="text"],
+      #portalForm input[type="number"],
+      #portalForm textarea {
+          width: 100%;
+          padding: 10px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          background-color: rgba(255,255,255,0.2); /* Fond transparent */
+          color: white; /* Couleur du texte */
+      }
+
+      #portalForm button {
+          padding: 10px 15px;
+          background-color: #fdbb2d;
+          color: #1a2a6c;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 16px;
+      }
+
+      #portalForm button:hover {
+          background-color: #e6a727;
+      }
+      #portalForm .list-input-container {
+          display: flex;
+          flex-direction: column;
+      }
+
+      #portalForm .list-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+      #portalForm .list-item input {
+          flex: 1; /* Permet à l'input de prendre l'espace disponible */
+          margin-right: 5px; /* Marge entre l'input et le bouton */
+      }
+        #portalForm .list-item button {
+           padding: 5px 10px;
+           background-color: #e74c3c; /* Couleur différente pour le bouton de suppression */
+           color: white;
+           border: none;
+           border-radius: 4px;
+           cursor: pointer;
+           font-size: 14px;
+        }
+
+        #portalForm .list-item button:hover {
+           background-color: #c0392b;
+        }
+
+        #configSection {
+          margin-bottom: 20px;
+          text-align: center; /* Center-align the buttons */
+      }
+        #configSection .config-buttons {
+          display: inline-block;
+          margin: 0 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="page-loader-wrapper" id="pageLoaderWrapper">
+        <div class="page-loader"></div>
+        <div class="loader-message" id="pageLoaderMessage">Initialisation...</div>
+    </div>
+    <div class="loader-wrapper" id="loaderWrapper">
+        <div class="loader"></div>
+    </div>
+    <div class="container" id="contentContainer" style="display:none;">
+        <header class="header">
+            <h1>CYBER CAMPUS - WIFI ZONE</h1>
+            <div class="wave"></div>
+        </header>
+
+
+        <main>
+            <div id="subscriptionSection">
+                <h2>Statut de l'Abonnement</h2>
+                <div id="subscriptionStatus"></div>
+                <div class="subscription-button">
+                    <button id="subscribeMonthly">S'abonner (Mensuel - 1000 FCFA)</button>
+                    <button id="subscribeYearly">S'abonner (Annuel - 10 000 FCFA)</button>
+                </div>
+            </div>
+
+            <div id="configSection">
+              <button onclick="togglePortalForm()" id="togglePortalFormBtn">Configurer le portail captif</button>
+              <button onclick="downloadLoginFile()" id="downloadLoginBtn" style="display: none;">Télécharger le portail captif</button>
+             </div>
+
+
+            <form id="portalForm" style="display: none;">
+                <label for="networkName">Nom du réseau:</label>
+                <input type="text" id="networkName" name="networkName" required>
+
+                <label for="contactNumber">Numéro à contacter:</label>
+                <input type="text" id="contactNumber" name="contactNumber" required>
+
+                <label for="fedapayApiKey">Clé API FedaPay:</label>
+                <input type="text" id="fedapayApiKey" name="fedapayApiKey" required>
+
+                <div class="list-input-container">
+                    <label>Tarifs:</label>
+                    <div id="tariffsList">
+                        <div class="list-item">
+                            <input type="text" placeholder="Nom du tarif" data-type="tariffName">
+                            <input type="number" placeholder="Prix" data-type="tariffPrice">
+                            <button type="button" onclick="addListItem('tariffsList')">Ajouter</button>
+                         </div>
+                      </div>
+                 </div>
+
+                 <div class="list-input-container">
+                      <label>Adresses de connexion:</label>
+                      <div id="connectionsList">
+                         <div class="list-item">
+                            <input type="text" placeholder="Adresse" data-type="connection">
+                            <button type="button" onclick="addListItem('connectionsList')">Ajouter</button>
+                           </div>
+                      </div>
+                  </div>
+
+                  <div class="list-input-container">
+                      <label>Services et produits:</label>
+                      <div id="productsList">
+                         <div class="list-item">
+                             <input type="text" placeholder="Service/Produit" data-type="product">
+                             <button type="button" onclick="addListItem('productsList')">Ajouter</button>
+                         </div>
+                     </div>
+                 </div>
+
+                 <button type="submit">Enregistrer la configuration</button>
+             </form>
+
+            <div class="menu">
+                <a href="PageVenteTicket.html" class="menu-item" id="vente">
+                    <i class="fas fa-ticket-alt"></i> <!-- Font Awesome Ticket Icon -->
+                    <h2>Vente de Tickets</h2>
+                    <p>Procédez à la vente de nouveaux tickets Wifi.</p>
+                </a>
+                <a href="AdminVentePartenaires.html" class="menu-item" id="inventaire">
+                    <i class="fas fa-clipboard-list"></i> <!-- Font Awesome Clipboard List Icon -->
+                    <h2>Inventaire des Tickets</h2>
+                    <p>Consultez l'état des ventes de vos partenaires.</p>
+                </a>
+                <a href="Stock.html" class="menu-item" id="stock">
+                    <i class="fas fa-boxes"></i> <!-- Font Awesome Boxes Icon -->
+                    <h2>Gestion des Stocks Partenaire</h2>
+                    <p>Suivez les stocks de tickets de vos partenaires.</p>
+                </a>
+                <a href="a3.html" class="menu-item" id="administration">
+                    <i class="fas fa-cog"></i> <!-- Font Awesome Settings Cog Icon -->
+                    <h2>Administration des Tickets</h2>
+                    <p>Gérez les tickets, activez ou désactivez-les.</p>
+                </a>
+                <button onclick="logout()" class="logout-button">Déconnexion</button>
+            </div>
+
+        </main>
+
+    </div>
+
+
+    <div id="paymentModal" class="payment-modal" style="display: none;">
+        <span class="close-modal" onclick="closePaymentModal()">×</span>
+        <h2>Paiement de l'Abonnement</h2>
+        <p>Choisissez votre plan d'abonnement et procédez au paiement via FedaPay.</p>
+        <!-- Les boutons de paiement seront ajoutés ici par le script -->
+    </div>
+
+    <div id="subscriptionRequiredModal" class="subscription-required" style="display: none;">
+        <div class="subscription-required-content">
+            <h2>Abonnement Requis</h2>
+            <p>Un abonnement actif est nécessaire pour accéder à cette fonctionnalité.</p>
+            <button onclick="redirectToSubscription()">S'abonner</button>
+            <button onclick="hideSubscriptionRequiredModal()">Fermer</button>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay" style="display: none;" onclick="closePaymentModal()"></div>
+
+    <script type="module">
+        import { getActiveDatabase } from './firebase-config-manager.js';
+        import { ref, get, set, push, remove, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        let db;
+        let adminRef;  // Conserver la référence, mais elle sera initialisée plus tard.
+        let connectedTicketsRef;
+
+        async function initializeDatabase() {
+            db = await getActiveDatabase();
+            // connectedTicketsRef reste ici car il n'est pas lié à l'abonnement.
+            connectedTicketsRef = ref(db, 'TicketConnecté');
+            console.log("Database initialized in index.html");
+        }
+
+        async function checkLoginStatus() {
+            if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+                redirectToLogin();
+            } else {
+                const currentUserId = sessionStorage.getItem('currentUserId');
+                if (!currentUserId) {
+                    console.error("Current user ID is not found in sessionStorage.");
+                    redirectToLogin();
+                    return;
+                }
+                document.getElementById('contentContainer').style.display = 'block';
+                 // Initialisez adminRef ici, après la vérification de l'ID utilisateur.
+                 adminRef = ref(db, `users-data/${currentUserId}/admin/subscription`);
+            }
+        }
+
+        function redirectToLogin() {
+            window.location.href = 'loginAccueil.html';
+        }
+
+        window.logout = function() {
+            sessionStorage.clear();
+            redirectToLogin();
+        };
+
+        const venteMenuItem = document.getElementById('vente');
+        const inventaireMenuItem = document.getElementById('inventaire');
+        const stockMenuItem = document.getElementById('stock');
+        const administrationMenuItem = document.getElementById('administration');
+        const subscriptionStatus = document.getElementById('subscriptionStatus');
+        const subscribeMonthlyButton = document.getElementById('subscribeMonthly');
+        const subscribeYearlyButton = document.getElementById('subscribeYearly');
+        const paymentModal = document.getElementById('paymentModal');
+        const overlay = document.getElementById('overlay');
+        const subscriptionRequiredModal = document.getElementById('subscriptionRequiredModal');
+
+        function showLoader() {
+            document.getElementById('loaderWrapper').style.display = 'block';
+        }
+
+        function hideLoader() {
+            document.getElementById('loaderWrapper').style.display = 'none';
+        }
+
+        function showPageLoader() {
+            document.getElementById('pageLoaderWrapper').style.display = 'flex';
+        }
+
+        function hidePageLoader() {
+            document.getElementById('pageLoaderWrapper').style.display = 'none';
+        }
+
+        function showSubscriptionRequiredModal() {
+            subscriptionRequiredModal.style.display = 'flex';
+        }
+
+        function hideSubscriptionRequiredModal() {
+            subscriptionRequiredModal.style.display = 'none';
+        }
+
+        function redirectToSubscription() {
+            hideSubscriptionRequiredModal();
+            // Mettre l'accent sur la section d'abonnement
+        }
+
+    // MODIFICATION: Adaptation de la fonction checkSubscriptionStatus pour le partitionnement
+    function checkSubscriptionStatus() {
+        const currentUserId = sessionStorage.getItem('currentUserId');
+        if (!currentUserId) {
+            console.error("User ID not found. Cannot check subscription status.");
+            return; // Ou rediriger vers la connexion, selon le besoin
+        }
+
+        // MODIFICATION: Utilisez currentUserId dans le chemin de la référence
+        const userAdminRef = ref(db, `users-data/${currentUserId}/admin/subscription`);
+
+        get(userAdminRef).then((snapshot) => {
+            const subscription = snapshot.val();
+            const now = new Date();
+
+            if (subscription && subscription.status === 'active') {
+                const endDate = new Date(subscription.endDate);
+                if (endDate < now) {
+                    subscriptionStatus.textContent = "Statut de l'abonnement: Expiré";
+                    subscriptionStatus.style.color = 'red';
+                    subscribeMonthlyButton.style.display = 'inline-block';
+                    subscribeYearlyButton.style.display = 'inline-block';
+                    set(userAdminRef, { ...subscription, status: 'expired' });
+                } else {
+                    subscriptionStatus.textContent = `Statut de l'abonnement: Actif jusqu'au ${endDate.toLocaleDateString()}`;
+                    subscriptionStatus.style.color = 'green';
+                    subscribeMonthlyButton.style.display = 'none';
+                    subscribeYearlyButton.style.display = 'none';
+                }
+            } else {
+                subscriptionStatus.textContent = "Statut de l'abonnement: Inactif";
+                subscriptionStatus.style.color = 'red';
+                subscribeMonthlyButton.style.display = 'inline-block';
+                subscribeYearlyButton.style.display = 'inline-block';
+            }
+        }).catch(error => {
+            console.error("Erreur lors de la vérification du statut d'abonnement:", error);
+            // Gérer l'erreur, par exemple, afficher un message à l'utilisateur
+        });
+    }
+
+
+
+    function checkUserAccess() {
+        get(adminRef).then((snapshot) => {
+            const subscription = snapshot.val();
+            // Vérifiez si l'utilisateur a un abonnement *et* s'il est actif.
+            if (!subscription || subscription.status !== 'active') {
+                showSubscriptionRequiredModal();
+            }
+        });
+    }
+
+
+        venteMenuItem.addEventListener('click', (event) => {
+            event.preventDefault();
+            checkUserAccess(); // Vérifie *avant* la redirection.
+            window.location.href = 'PageVenteTicket.html';
+        });
+
+        inventaireMenuItem.addEventListener('click', (event) => {
+            event.preventDefault();
+            checkUserAccess();
+            window.location.href = 'AdminVentePartenaires.html';
+        });
+
+        stockMenuItem.addEventListener('click', (event) => {
+            event.preventDefault();
+            checkUserAccess();
+            window.location.href = 'Stock.html';
+        });
+
+        administrationMenuItem.addEventListener('click', (event) => {
+            event.preventDefault();
+            checkUserAccess();
+            window.location.href = 'a3.html';
+        });
+
+        subscribeMonthlyButton.addEventListener('click', () => {
+            initiatePayment('monthly');
+        });
+
+        subscribeYearlyButton.addEventListener('click', () => {
+            initiatePayment('yearly');
+        });
+
+
+    // MODIFICATION: Adaptation de initiatePayment et handleSuccessfulPayment
+    function initiatePayment(plan) {
+        const amount = plan === 'monthly' ? 1000 : 10000;
+        const planDescription = plan === 'monthly' ? 'Abonnement mensuel' : 'Abonnement annuel';
+        const currentUserId = sessionStorage.getItem('currentUserId'); // Récupérer l'ID
+
+        if (!currentUserId) {
+            console.error("User ID not found. Cannot initiate payment.");
+            alert("Vous devez être connecté pour vous abonner."); // Message convivial
+            return; // Arrêter la fonction si pas d'ID utilisateur
+        }
+
+        FedaPay.init({
+            public_key: 'pk_live_TfSz212W0xSMKK7oPEogkFmp', // Votre clé publique FedaPay
+            transaction: {
+                amount: amount,
+                description: planDescription,
+            },
+            customer: {
+                // Vous *pourriez* potentiellement utiliser l'ID utilisateur ici, mais
+                // FedaPay attend généralement un email, un nom, etc.  Si vous avez
+                // stocké ces infos lors de l'inscription, utilisez-les ici.
+                // Pour cet exemple, je vais laisser un email statique, mais adaptez-le.
+                email: 'admin@example.com', // À remplacer par des données utilisateur réelles si disponibles
+            },
+           onComplete: async function(response) {
+            if (response.reason === FedaPay.DIALOG_DISMISSED) {
+                alert('Paiement échoué.');
+            } else if (response.reason === FedaPay.CHECKOUT_COMPLETED) {
+                handleSuccessfulPayment(plan, response, currentUserId); // Passer currentUserId
+            }
+        }
+        }).open();
+    }
+
+    // MODIFICATION: Adaptation de la fonction pour utiliser currentUserId
+    async function handleSuccessfulPayment(plan, response, currentUserId) {
+        const startDate = new Date();
+        const endDate = new Date(startDate);
+        if (plan === 'monthly') {
+            endDate.setMonth(endDate.getMonth() + 1);
+        } else {
+            endDate.setFullYear(endDate.getFullYear() + 1);
+        }
+
+        const subscriptionData = {
+            status: 'active',
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+            transactionId: response.transaction.id,
+            plan: plan
+        };
+
+        try {
+            // MODIFICATION: Utilisez currentUserId dans le chemin
+            const userAdminRef = ref(db, `users-data/${currentUserId}/admin/subscription`);
+            await set(userAdminRef, subscriptionData);
+            checkSubscriptionStatus(); // Vérifiez et mettez à jour l'affichage
+            alert(`Abonnement ${plan === 'monthly' ? 'mensuel' : 'annuel'} réussi!`);
+        } catch (error) {
+            console.error('Erreur lors de la mise à jour de l\'abonnement:', error);
+            alert('Erreur lors de la mise à jour de l\'abonnement.');
+        }
+    }
+
+        async function cancelSubscription() {
+              const currentUserId = sessionStorage.getItem('currentUserId');
+              if (!currentUserId) {
+                console.error("User ID not found. Cannot cancel subscription.");
+                alert("Vous devez être connecté pour annuler un abonnement."); // Message convivial
+                return;
+              }
+            try {
+                //MODIFICATION: On utilise le currentUserId dans le ref
+                const userAdminRef = ref(db, `users-data/${currentUserId}/admin/subscription`);
+                await set(userAdminRef, { ... (await get(userAdminRef)).val(), status: 'cancelled' });
+                checkSubscriptionStatus();
+                alert('Abonnement annulé.');
+            } catch (error) {
+                console.error('Erreur lors de l\'annulation de l\'abonnement:', error);
+                alert('Erreur lors de l\'annulation de l\'abonnement.');
+            }
+        }
+
+
+         async function processConnectedTickets() {
+            const pageLoaderMessage = document.getElementById('pageLoaderMessage');
+            const currentUserId = sessionStorage.getItem('currentUserId'); // Récupérer l'ID de l'utilisateur
+            if (!currentUserId) {
+                console.error("Current user ID is not found in sessionStorage.");
+                return; // Quitter si l'ID utilisateur n'est pas trouvé.
+            }
+            try {
+                pageLoaderMessage.textContent = "Vérification des tickets connectés...";
+                const snapshot = await get(connectedTicketsRef);
+                let connectedTickets = snapshot.val() || {};
+
+                // Supprimer les doublons et récupérer les informations complètes des tickets
+                const uniqueTickets = {};
+                for (const ticketId in connectedTickets) {
+                    const user = connectedTickets[ticketId].username;
+                    if (!uniqueTickets[user]) {
+                        uniqueTickets[user] = connectedTickets[ticketId];
+                    }
+                }
+
+                pageLoaderMessage.textContent = "Traitement des tickets uniques...";
+                for (const user in uniqueTickets) {
+                    await processTicket(uniqueTickets[user], currentUserId); // Passer currentUserId
+                }
+
+                pageLoaderMessage.textContent = "Nettoyage des tickets traités...";
+
+                // Nettoyer tous les tickets de TicketConnecté
+                await remove(connectedTicketsRef);
+
+            } catch (error) {
+                console.error("Erreur lors du traitement des tickets connectés :", error);
+                showNotification("Erreur", "Une erreur est survenue lors du traitement des tickets.");
+            }
+        }
+
+        async function processTicket(ticket, currentUserId) {  // Accepter currentUserId
+            const pageLoaderMessage = document.getElementById('pageLoaderMessage');
+            if (!currentUserId) {
+                console.error("Current user ID is not provided to processTicket.");
+                return; // Quitter si currentUserId n'est pas fourni.
+            }
+            try {
+                pageLoaderMessage.textContent = `Vérification du ticket pour ${ticket.username}...`;
+
+                // Vérifier dans VendorsHistory
+                const vendorsHistoryRef = ref(db, `users-data/${currentUserId}/VendorsHistory`);
+                const vendorsHistorySnapshot = await get(vendorsHistoryRef);
+                const vendorsHistory = vendorsHistorySnapshot.val() || {};
+
+                let foundInHistory = false;
+                for (const vendorId in vendorsHistory) {
+                    const vendorHistory = vendorsHistory[vendorId];
+                    for (const saleId in vendorHistory) {
+                        if (vendorHistory[saleId].user === ticket.username) {
+                            foundInHistory = true;
+                            break;
+                        }
+                    }
+                    if (foundInHistory) break;
+                }
+
+                if (!foundInHistory) {
+                    pageLoaderMessage.textContent = `Traitement du ticket ${ticket.username}...`;
+
+                    // Vérifier dans TicketsTotal et TicketsTransit
+                    const ticketsTotalRef = ref(db, `users-data/${currentUserId}/TicketsTotal`);
+                    const ticketsTransitRef = ref(db, `users-data/${currentUserId}/TicketsTransit`);
+                    const totalSnapshot = await get(ticketsTotalRef);
+                    const transitSnapshot = await get(ticketsTransitRef);
+                    const totalTickets = totalSnapshot.val() || {};
+                    const transitTickets = transitSnapshot.val() || {};
+
+                    let foundTicket = null;
+                    let foundTicketRef = null;
+                    let foundInCategory = null;
+
+                    // Chercher dans TicketsTotal
+                    for (const category in totalTickets) {
+                        const ticketIndex = (totalTickets[category].utilisateur || []).indexOf(ticket.username);
+
+                        if (ticketIndex > -1) {
+                            foundTicket = {
+                                category: category,
+                                user: totalTickets[category].utilisateur[ticketIndex],
+                                password: totalTickets[category].motDePasse[ticketIndex],
+                                price: totalTickets[category].prix[ticketIndex],
+                                updatedData: {
+                                    ...totalTickets[category],
+                                    utilisateur: totalTickets[category].utilisateur.filter((_, index) => index !== ticketIndex),
+                                    motDePasse: totalTickets[category].motDePasse.filter((_, index) => index !== ticketIndex),
+                                    prix: totalTickets[category].prix.filter((_, index) => index !== ticketIndex)
+                                }
+                            };
+                            foundTicketRef = ref(db, `users-data/${currentUserId}/TicketsTotal/${category}`);
+                            foundInCategory = "TicketsTotal";
+                            break;
+                        }
+                    }
+
+                    // Si non trouvé dans TicketsTotal, chercher dans TicketsTransit
+                    if (!foundTicket) {
+                        for (const transitId in transitTickets) {
+                            if (transitTickets[transitId].user === ticket.username) {
+                                foundTicket = {
+                                    category: transitTickets[transitId].category,
+                                    user: transitTickets[transitId].user,
+                                    password: transitTickets[transitId].password,
+                                    price: transitTickets[transitId].price
+                                };
+                                foundTicketRef = ref(db, `users-data/${currentUserId}/TicketsTransit/${transitId}`);
+                                foundInCategory = "TicketsTransit";
+                                break;
+                            }
+                        }
+                    }
+
+                    if (foundTicket) {
+                        pageLoaderMessage.textContent = `Vente du ticket ${ticket.username}...`;
+                        await sellTicketAutomatically(foundTicket, foundTicketRef, foundInCategory, currentUserId); // Passer currentUserId
+                    }
+                }
+            } catch (error) {
+                console.error("Erreur lors du traitement du ticket :", error);
+                showNotification("Erreur", `Erreur lors du traitement du ticket ${ticket.username}.`);
+            }
+        }
+
+      async function sellTicketAutomatically(ticket, ticketRef, foundInCategory, currentUserId) { // Accepter currentUserId
+        if (!currentUserId) {
+            console.error("Current user ID is not provided to sellTicketAutomatically.");
+            return;  // Quitter si currentUserId n'est pas fourni
+        }
+        try {
+            const automaticVendorId = "Vendeur automatique";
+
+
+
+            // Enregistrement de la vente dans TicketsVendus
+            const ticketsVendusRef = ref(db, `users-data/${currentUserId}/TicketsVendus`);
+            await push(ticketsVendusRef, {
+                category: ticket.category,
+                user: ticket.user,
+                password: ticket.password,
+                price: ticket.price,
+                soldAt: Date.now(),
+                vendorId: automaticVendorId
+            });
+
+            // Suppression du ticket de la source (TicketsTotal ou TicketsTransit)
+            if(foundInCategory === "TicketsTotal"){
+                await set(ticketRef, ticket.updatedData);
+            } else {
+                await remove(ticketRef);
+            }
+
+            console.log(`Ticket ${ticket.user} vendu automatiquement.`);
+        } catch (error) {
+            console.error("Erreur lors de la vente automatique du ticket :", error);
+            showNotification("Erreur", "Erreur lors de la vente automatique du ticket.");
+        }
+    }
+
+    // Fonction de déconnexion améliorée
+    window.logout = function() {
+        sessionStorage.clear(); // Nettoie toutes les données de session
+        window.location.replace('loginAccueil.html');
+    }
+
+    // --- Gestion du formulaire de configuration du portail captif ---
+
+    window.togglePortalForm = function() {
+        const form = document.getElementById('portalForm');
+        const btn = document.getElementById('togglePortalFormBtn');
+        const downloadBtn = document.getElementById('downloadLoginBtn');
+
+        if (form.style.display === 'none' || form.style.display === '') {
+            form.style.display = 'flex';  // Utilise 'flex' pour appliquer la flexbox
+            downloadBtn.style.display = 'inline-block'; // Affiche en ligne, à côté de l'autre bouton
+            btn.textContent = 'Masquer le formulaire';
+        } else {
+            form.style.display = 'none';
+            downloadBtn.style.display = 'none';
+            btn.textContent = 'Configurer le portail captif';
+        }
+
+    }
+
+    window.addListItem = function(listId) {
+        const listContainer = document.getElementById(listId);
+        const newItem = document.createElement('div');
+        newItem.className = 'list-item';
+
+        // Déterminer le type d'input en fonction de la liste
+        let inputType = "text";
+        if (listId === 'tariffsList') {
+          newItem.innerHTML = `
+                <input type="text" placeholder="Nom du tarif" data-type="tariffName">
+                <input type="number" placeholder="Prix" data-type="tariffPrice">
+                <button type="button" onclick="removeListItem(this)">Supprimer</button>`;
+
+        } else {
+           let placeholder = "";
+           if(listId === 'connectionsList'){
+                placeholder = "Adresse";
+           } else if (listId === "productsList"){
+                placeholder = "Service/Produit";
+           }
+
+            newItem.innerHTML = `
+                <input type="${inputType}" placeholder="${placeholder}" data-type="${listId.slice(0,-4)}">
+                <button type="button" onclick="removeListItem(this)">Supprimer</button>`;
+        }
+        listContainer.appendChild(newItem);
+    }
+
+
+    window.removeListItem = function(button) {
+        button.parentNode.remove();
+    }
+
+    document.getElementById('portalForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    showLoader();
+
+     const currentUserId = sessionStorage.getItem('currentUserId');
+      if (!currentUserId) {
+        console.error("User ID not found. Cannot save portal configuration.");
+        alert("Vous devez être connecté pour configurer le portail."); // User-friendly message
+        hideLoader();
+        return;
+     }
+
+    const portalConfig = {
+        networkName: document.getElementById('networkName').value,
+        contactNumber: document.getElementById('contactNumber').value,
+        fedapayApiKey: document.getElementById('fedapayApiKey').value,
+        tariffs: [],
+        connections: [],
+        products: []
+    };
+
+    // Récupération des tarifs
+    document.querySelectorAll('#tariffsList .list-item').forEach(item => {
+      const nameInput = item.querySelector('[data-type="tariffName"]');
+      const priceInput = item.querySelector('[data-type="tariffPrice"]');
+
+      if (nameInput && priceInput) { // Check if both inputs exist
+        const name = nameInput.value.trim();
+        const price = parseFloat(priceInput.value); // Parse price as float
+
+        if (name && !isNaN(price)) { // Make sure name is not empty and price is a number
+            portalConfig.tariffs.push({ name, price });
+        }
+      }
+    });
+
+     // Récupération des adresses de connexion
+     document.querySelectorAll('#connectionsList .list-item input').forEach(input => {
+         const value = input.value.trim();
+         if(value){
+            portalConfig.connections.push(value);
+         }
+     });
+
+     // Récupération des services/produits
+     document.querySelectorAll('#productsList .list-item input').forEach(input => {
+        const value = input.value.trim();
+        if(value){
+            portalConfig.products.push(value);
+        }
+     });
+
+    // Enregistrement de la configuration dans Firebase
+    try {
+        const configRef = ref(db, `users-data/${currentUserId}/portalConfig`); // Stored per user
+        await set(configRef, portalConfig);
+        alert('Configuration du portail captif enregistrée avec succès!');
+        hideLoader();
+        document.getElementById('portalForm').reset(); // Optionally reset form
+         document.getElementById('portalForm').style.display = 'none'; // Hide the form
+        document.getElementById('togglePortalFormBtn').textContent = 'Configurer le portail captif'; // Reset button text
+        document.getElementById('downloadLoginBtn').style.display = 'none';// cacher le bouton telecharger
+
+    } catch (error) {
+        console.error("Erreur lors de l'enregistrement de la configuration:", error);
+        alert("Erreur lors de l'enregistrement de la configuration.");
+        hideLoader();
+    }
+    });
+
+    // Fonction pour télécharger le fichier login.html (mise à jour)
+  async function downloadLoginFile() {
+    showLoader();
+    const currentUserId = sessionStorage.getItem('currentUserId');
+    if (!currentUserId) {
+        console.error("User ID not found. Cannot download login file.");
+        hideLoader();
+        alert("Vous devez être connecté pour télécharger le portail.");
+        return;
+     }
+
+    try {
+        const configRef = ref(db, `users-data/${currentUserId}/portalConfig`); // Use adminUserId here
+        const snapshot = await get(configRef);
+        if (!snapshot.exists()) {
+            alert("Aucune configuration de portail captif trouvée.");
+            hideLoader();
+            return;
+        }
+        const config = snapshot.val();
+
+      // Fetch the login.html content
+      const response = await fetch('login.html'); // Make sure login.html is in the same directory
+      let htmlContent = await response.text();
+
+    //   Injection des configurations
+        htmlContent = htmlContent.replace(/let adminUserId = '[^']*';/, `let adminUserId = '${currentUserId}';`);
+
+      // Function to generate the HTML for the rates table
+      function generateRatesTableHTML(tariffs) {
+          let tableHTML = `
+              <table style="width: 100%; border-collapse: collapse;">
+                  <thead>
+                      <tr>
+                          <th style="padding: 8px; border-bottom: 1px solid #ddd; text-align: left;">Catégorie</th>
+                          <th style="padding: 8px; border-bottom: 1px solid #ddd; text-align: left;">Prix (FCFA)</th>
+                          <th style="padding: 8px; border-bottom: 1px solid #ddd; text-align: left;">Action</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+          `;
+          tariffs.forEach(tariff => {
+              tableHTML += `
+                  <tr>
+                      <td style="padding: 8px; border-bottom: 1px solid #ddd;">${tariff.name}</td>
+                      <td style="padding: 8px; border-bottom: 1px solid #ddd;">${tariff.price}</td>
+                      <td style="padding: 8px; border-bottom: 1px solid #ddd;"><button onclick="initPayment('${tariff.name}', ${tariff.price})">Payer</button></td>
+                  </tr>
+              `;
+          });
+          tableHTML += `
+                  </tbody>
+              </table>
+          `;
+          return tableHTML;
+        }
+
+        // Function to generate HTML for a list
+        function generateListHTML(items) {
+            let listHTML = '<ul>';
+            items.forEach(item => {
+                listHTML += `<li>${item}</li>`;
+            });
+            listHTML += '</ul>';
+            return listHTML;
+        }
+
+      // Replace placeholders with actual content, with fallback to default content.
+      htmlContent = htmlContent.replace(
+        /<table style="display: none;"><\/table>/,
+        generateRatesTableHTML(config.tariffs || [])
+      );
+
+      // Remplacement des listes (avec fallback)
+        htmlContent = htmlContent.replace(
+            /<ul>\s*<li>Récupérer les ID du ticket en contactant le \+229 60374877<\/li>\s*<\/ul>/,
+            generateListHTML(config.connections && config.connections.length > 0 ? config.connections : ["Récupérer les ID du ticket en contactant le " + (config.contactNumber || "+229 60374877")])
+        );
+
+        htmlContent = htmlContent.replace(
+            /<ul>\s*<li>Cyber Campus Arafat1<\/li>\s*<li>Cyber Campus Arafat2<\/li>[\s\S]*?<\/ul>/,  //[\s\S]*? pour multiline
+            generateListHTML(config.connections && config.connections.length > 0 ? config.connections : [
+                    "Cyber Campus Arafat1",
+                    "Cyber Campus Arafat2",
+                    "Cyber Campus Rose croix",
+                    "Cyber Campus Marché Tchakitibam",
+                    "Cyber Campus Baka 1",
+                    "Cyber Campus Baka 2"
+                ])
+        );
+        htmlContent = htmlContent.replace(
+            /<ul>\s*<li>Maintenance réseau<\/li>\s*<li>Installation Wi-Fi Zone<\/li>[\s\S]*?<\/ul>/,
+             generateListHTML(config.products && config.products.length > 0 ? config.products : [
+                "Maintenance réseau",
+                "Installation Wi-Fi Zone",
+                "Maintenance informatique",
+                "Creation de Site web et Application mobile",
+                "Copie de Films/Series/Jeux..."
+             ])
+        );
+
+
+        // Remplacement du numéro de contact
+        htmlContent = htmlContent.replace(/\+229 60374877/g, config.contactNumber || '+229 60374877');
+
+
+        // Create a Blob and trigger download
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'login.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        hideLoader();
+
+    } catch (error) {
+        console.error("Erreur lors du téléchargement du portail captif:", error);
+        alert("Erreur lors du téléchargement du portail captif.");
+        hideLoader();
+    }
+}
+    window.downloadLoginFile = downloadLoginFile;
+
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', async () => {
+            showPageLoader();
+            await initializeDatabase(); // Initialize database first
+            await checkLoginStatus();
+            processConnectedTickets()
+                .then(() => checkSubscriptionStatus())
+                .then(() => {
+                  hidePageLoader();
+                })
+                .catch((error) => {
+                    console.error("Erreur lors du traitement des tickets :", error);
+                    hidePageLoader();
+                    showNotification("Erreur", "Une erreur est survenue lors de l'initialisation.");
+                });
+        });
+        window.redirectToSubscription = redirectToSubscription;
+        window.hideSubscriptionRequiredModal = redirectToSubscription;
+
+        function closePaymentModal() {
+            paymentModal.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+         window.onload = () => {
+        };
+    </script>
+
+</body>
+</html>
