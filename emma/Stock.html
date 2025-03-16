@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -5,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord des ventes WiFi Zone</title>
     <style>
+        /* ... (Your CSS - No changes needed here) ... */
         :root {
             --primary-color: #00ffff;
             --secondary-color: #ff00ff;
@@ -143,7 +145,8 @@
             padding: 20px;
         }
 
-        #loginForm {
+        /* Styles pour la section de connexion/inscription */
+        #authSection {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -151,10 +154,12 @@
             height: 100vh;
         }
 
-        #loginForm input {
+        #authSection input {
             margin-bottom: 10px;
             width: 200px;
         }
+
+
 
         #dashboardHeader {
             display: flex;
@@ -472,40 +477,92 @@
         .subscription-required-content button:hover {
             background-color: var(--secondary-color);
         }
+        .logout-button {
+            position: relative; /* Changed from fixed to relative */
+            top: auto; /* Reset top */
+            right: auto; /* Reset right */
+            margin-left: 10px; /* Add some space from the title */
+            z-index: auto;
+            background-color: #e74c3c;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .logout-button:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .logout-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .logout-button i {
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .logout-button {
+                top: 10px;
+                right: 10px;
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-database-compat.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
     <button id="theme-toggle" aria-label="Toggle theme">🌙</button>
 
-    <div id="loginContainer" class="container">
-        <h1>Connexion</h1>
+     <!-- Section d'authentification -->
+     <div id="authSection" class="container" style="display: block;">
+        <h1>Connexion / Inscription</h1>
         <form id="loginForm">
             <input type="text" id="username" placeholder="Nom d'utilisateur" required>
             <input type="password" id="password" placeholder="Mot de passe" required>
-            <button type="submit">Se connecter</button>
+            <div class="auth-buttons">
+                <button type="submit">Se connecter</button>
+                <button type="button" id="signupButton">S'inscrire</button>
+            </div>
         </form>
-        <p>Vous n'avez pas de compte ? <button id="signupButton">S'inscrire</button></p>
-    </div>
-
-    <div id="signupContainer" class="container" style="display: none;">
-        <h1>Inscription</h1>
-        <form id="signupForm">
+        <form id="signupForm" style="display: none;">
             <input type="text" id="signupUsername" placeholder="Nom d'utilisateur" required>
             <input type="password" id="signupPassword" placeholder="Mot de passe" required>
-            <button type="submit">S'inscrire</button>
+            <div class="auth-buttons">
+                <button type="submit">S'inscrire</button>
+                <button type="button" id="loginFromSignup">Se connecter</button>
+            </div>
         </form>
-        <p>Vous avez déjà un compte ? <button id="loginFromSignup">Se connecter</button></p>
     </div>
 
     <div id="dashboardContainer" class="container" style="display: none;">
-        <div id="dashboardHeader">
-            <h1>CYBER CAMPUS - WIFI ZONE</h1>
-            <div id="userInfo"></div>
-        </div>
+    <div id="dashboardHeader">
+    <h1>CYBER CAMPUS - WIFI ZONE</h1>
+    <div id="userInfo"></div>
+    <button onclick="logout()" class="logout-button">
+        <i class="fas fa-sign-out-alt"></i> Déconnexion
+    </button>
+</div>
+
 
         <h2>Enregistrer une nouvelle opération</h2>
         <form id="salesForm">
@@ -575,68 +632,68 @@
                         <th data-sort="APP">APP</th>
                         <th data-sort="V">V</th>
                         <th data-sort="SF">SF</th>
-                        <th data-sort="PV (FCFA)</th>
+                        <th data-sort="PV">PV (FCFA)</th>
                         <th data-sort="total">Total (FCFA)</th>
                     </tr>
                 </thead>
-                <tbody></tbody>
-            </table>
-            <button id="exportExcel" class="export-button">Exporter vers Excel</button>
-        </div>
-
-        <div id="analysisSection">
-            <h2>Analyse des ventes</h2>
-            <p id="totalSales"></p>
-            <p id="averageSales"></p>
-            <canvas id="salesChart"></canvas>
-
-            <div class="period-analysis" id="weekAnalysis">
-                <h3>Analyse de la semaine</h3>
-                <p id="weekTotalSales"></p>
-                <p id="weekAverageSales"></p>
+                <tbody></tbody>            </table>
+                <button id="exportExcel" class="export-button">Exporter vers Excel</button>
             </div>
-
-            <div class="period-analysis" id="monthAnalysis">
-                <h3>Analyse du mois</h3>
-                <p id="monthTotalSales"></p>
-                <p id="monthAverageSales"></p>
-            </div>
-
-            <div class="period-analysis" id="threeMonthAnalysis">
-                <h3>Analyse des 3 derniers mois</h3>
-                <p id="threeMonthTotalSales"></p>
-                <p id="threeMonthAverageSales"></p>
+    
+            <div id="analysisSection">
+                <h2>Analyse des ventes</h2>
+                <p id="totalSales"></p>
+                <p id="averageSales"></p>
+                <canvas id="salesChart"></canvas>
+    
+                <div class="period-analysis" id="weekAnalysis">
+                    <h3>Analyse de la semaine</h3>
+                    <p id="weekTotalSales"></p>
+                    <p id="weekAverageSales"></p>
+                </div>
+    
+                <div class="period-analysis" id="monthAnalysis">
+                    <h3>Analyse du mois</h3>
+                    <p id="monthTotalSales"></p>
+                    <p id="monthAverageSales"></p>
+                </div>
+    
+                <div class="period-analysis" id="threeMonthAnalysis">
+                    <h3>Analyse des 3 derniers mois</h3>
+                    <p id="threeMonthTotalSales"></p>
+                    <p id="threeMonthAverageSales"></p>
+                </div>
             </div>
         </div>
-    </div>
-    <div id="subscriptionRequiredModal" class="subscription-required" style="display: none;">
-        <div class="subscription-required-content">
-            <h2>Abonnement Requis</h2>
-            <p>Un abonnement actif est nécessaire pour accéder à cette fonctionnalité.</p>
-            <button onclick="redirectToSubscription()">S'abonner</button>
-            <button onclick="redirectToSubscription()">Fermer</button>
+        <div id="subscriptionRequiredModal" class="subscription-required" style="display: none;">
+            <div class="subscription-required-content">
+                <h2>Abonnement Requis</h2>
+                <p>Un abonnement actif est nécessaire pour accéder à cette fonctionnalité.</p>
+                <button onclick="window.redirectToSubscription()">S'abonner</button>
+                <button onclick="window.hideSubscriptionRequiredModal()">Fermer</button>
+            </div>
         </div>
-    </div>
-    <script type="module">
-        import { getActiveDatabase } from './firebase-config-manager.js';
-
-        let db;
-
-        getActiveDatabase().then(database => {
-            db = database;
-            initializeDashboard();
-        }).catch(error => {
-            console.error("Erreur lors de l'initialisation de Firebase :", error);
-            alert("Erreur lors du démarrage de l'application. Veuillez réessayer plus tard.");
-        });
-
-        function initializeDashboard() {
-            const adminRef = db.ref('admin/subscription');
-
-            const loginForm = document.getElementById('loginForm');
-            const signupForm = document.getElementById('signupForm');
-            const loginContainer = document.getElementById('loginContainer');
-            const signupContainer = document.getElementById('signupContainer');
+    
+        <script type="module">
+            import { getActiveDatabase } from './firebase-config-manager.js';
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+            import { getDatabase, ref, onValue, set, get, update, push, remove, off } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    
+            let db;
+            let adminRef;
+            let ticketCategories = {};
+            let salesData = [];
+            let stockData = [];
+            let salesChart;
+            let currentUser;
+            let salesDataListener;
+    
+            // --- DOM Element References ---
+            //const loginForm = document.getElementById('loginForm');  // Removed
+            //const signupForm = document.getElementById('signupForm'); // Removed
+            //const loginContainer = document.getElementById('loginContainer'); // Removed
+            //const signupContainer = document.getElementById('signupContainer'); // Removed
+            const authSection = document.getElementById('authSection'); // New auth section
             const dashboardContainer = document.getElementById('dashboardContainer');
             const salesForm = document.getElementById('salesForm');
             const salesTable = document.getElementById('salesTable');
@@ -651,122 +708,113 @@
             const loginFromSignup = document.getElementById('loginFromSignup');
             const productSelect = document.getElementById('product');
             const stockTableGlobal = document.getElementById('stockTableGlobal');
-            let salesChart;
-            let currentUser;
-            let salesData = [];
-            let stockData = [];
-            let ticketCategories = {};
-            let salesDataListener; // Variable pour stocker la référence à la fonction d'écoute
-
-            // Set default date and time to now
-            document.getElementById('dateTime').value = new Date().toISOString().slice(0, 16);
-
-            // Fetch ticket categories from Firebase
-            function fetchTicketCategories() {
-                db.ref('TicketsTotal').once('value').then((snapshot) => {
-                    ticketCategories = snapshot.val() || {};
-                    populateProductSelect();
-                });
+            const themeToggle = document.getElementById('theme-toggle');  // Moved here
+    
+    
+            // --- Initialization ---
+            async function initializeDatabase() {
+                db = await getActiveDatabase();
+                adminRef = ref(db, 'admin/subscription');
+                console.log("Database initialized in Gestion de stock ticket.html");
             }
-
-            // Populate product select with ticket categories and their prices
+    
+            // --- DOMContentLoaded Event ---
+            document.addEventListener('DOMContentLoaded', async () => {
+                await initializeDatabase();
+                setupAuthEventListeners(); // Set up auth event listeners *before* checking login
+                checkLoginStatus();  // Now check login status
+                setupEventListeners(); // Set up all event listeners here
+    
+                // Initialisation du thème basé sur les préférences sauvegardées ou clair par défaut
+                const savedTheme = localStorage.getItem('darkTheme');
+                if (savedTheme !== null) {
+                    setTheme(savedTheme === 'true');
+                } else {
+                    setTheme(false); // Appliquer le thème clair par défaut
+                }
+                document.getElementById('dateTime').value = new Date().toISOString().slice(0, 16);
+            });
+    
+            // --- Function Definitions ---
+            // Fetch ticket categories.  MODIFICATION: Partition par utilisateur.
+            async function fetchTicketCategories() {
+                if (!currentUser) {
+                    console.log("User not logged in. Cannot fetch ticket categories.");
+                    return; // Early exit
+                }
+              try {
+                // MODIFICATION: Ajout de currentUser
+                const ticketsTotalRef = ref(db, `users-data/${currentUser}/TicketsTotal`);
+                const snapshot = await get(ticketsTotalRef);
+    
+                if (snapshot.exists()) {
+                    ticketCategories = snapshot.val();
+                    populateProductSelect();
+                } else {
+                    console.log("No data available at TicketsTotal");
+                    ticketCategories = {}; // Initialize as empty object
+                    populateProductSelect(); // Still call this to clear/prepare the select
+                }
+              } catch (error) {
+                console.error("Error fetching ticket categories:", error);
+                // Handle the error appropriately, e.g., display a message to the user.
+              }
+            }
+    
+            // Populate product select
             function populateProductSelect() {
                 productSelect.innerHTML = '<option value="">Sélectionner un produit</option>';
                 for (const category in ticketCategories) {
-                    const price = ticketCategories[category].prix[0]; // Get the price from Firebase
-                    const option = document.createElement('option');
-                    option.value = category;
-                    option.textContent = `${category} (${price} FCFA)`;
-                    productSelect.appendChild(option);
+                    const price = ticketCategories[category]?.prix?.[0]; // Optional chaining and nullish coalescing
+                    if (price !== undefined) { // Check if price is not undefined
+                        const option = document.createElement('option');
+                        option.value = category;
+                        option.textContent = `${category} (${price} FCFA)`;
+                        productSelect.appendChild(option);
+                    }
                 }
             }
-
-            // Initialize ticket categories fetch
-            fetchTicketCategories();
-
-            loginForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-
-                db.ref('users/' + username).once('value').then((snapshot) => {
-                    if (snapshot.exists()) {
-                        // User exists, check password
-                        if (snapshot.val().password === password) {
-                            loginSuccess(username);
-                        } else {
-                            alert('Mot de passe incorrect');
-                        }
-                    } else {
-                        alert('Utilisateur introuvable');
-                    }
-                });
-            });
-
-            signupForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const username = document.getElementById('signupUsername').value;
-                const password = document.getElementById('signupPassword').value;
-
-                db.ref('users/' + username).once('value').then((snapshot) => {
-                    if (snapshot.exists()) {
-                        alert('Ce nom d\'utilisateur est déjà utilisé.');
-                    } else {
-                        db.ref('users/' + username).set({
-                            password: password
-                        }).then(() => {
-                            alert('Inscription réussie ! Connectez-vous.');
-                            signupContainer.style.display = 'none';
-                            loginContainer.style.display = 'block';
-                        }).catch((error) => {
-                            console.error('Error creating user:', error);
-                            alert('Erreur lors de la création du compte');
-                        });
-                    }
-                });
-            });
-
-            signupButton.addEventListener('click', function() {
-                loginContainer.style.display = 'none';
-                signupContainer.style.display = 'block';
-            });
-
-            loginFromSignup.addEventListener('click', function() {
-                signupContainer.style.display = 'none';
-                loginContainer.style.display = 'block';
-            });
-
-            function loginSuccess(username) {
+    
+            function checkLoginStatus() {
+                if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                    currentUser = sessionStorage.getItem('currentUserId'); // Set currentUser
+                    loginSuccess(currentUser); // Use the retrieved username
+                } else {
+                    showAuthSection();
+                }
+            }
+    
+           function loginSuccess(username) {
                 currentUser = username;
-                loginContainer.style.display = 'none';
-                signupContainer.style.display = 'none';
+                authSection.style.display = 'none';  // Hide auth
                 dashboardContainer.style.display = 'block';
                 userInfoElement.textContent = `Utilisateur: ${username}`;
+    
                 checkSubscriptionStatus()
                     .then(isSubscribed => {
                         if (isSubscribed) {
-                            // Continuer avec les opérations normales si l'utilisateur est abonné
+                            fetchTicketCategories();  // Fetch after login.
                             updateTable();
                             updateStockTables();
                             updateAnalysis();
-
-                            // Attacher la fonction d'écoute des modifications
                             listenForSalesDataChanges();
                         } else {
-                            // Afficher la modale si l'utilisateur n'est pas abonné
-                            showSubscriptionRequiredModal();
+                            window.showSubscriptionRequiredModal();
                         }
                     })
                     .catch(error => {
-                        console.error("Erreur lors de la vérification de l'abonnement :", error);
-                        // Gérer l'erreur, par exemple en affichant un message à l'utilisateur
-                        alert("Erreur lors de la vérification de l'abonnement.");
+                        console.error("Subscription check error:", error);
+                        alert("Subscription check error.");
                     });
             }
-
-            // Fonction pour écouter les modifications en temps réel dans Firebase
+    
+    
             function listenForSalesDataChanges() {
-                salesDataListener = db.ref('sales/' + currentUser).on('value', (snapshot) => {
+                if (salesDataListener) { // Check if a listener already exists
+                    off(ref(db, 'sales/' + currentUser), 'value', salesDataListener); // Detach the old one
+                }
+                // MODIFICATION: Ajout de currentUser
+                salesDataListener = onValue(ref(db, `users-data/${currentUser}/sales`), (snapshot) => {
                     salesData = [];
                     snapshot.forEach((childSnapshot) => {
                         const entry = childSnapshot.val();
@@ -774,199 +822,165 @@
                         entry.total = (entry.V * entry.PV).toFixed(2);
                         salesData.push(entry);
                     });
-
-                    // Mettre à jour l'analyse et le graphique uniquement si la section est visible
+    
                     if (analysisSection.style.display === 'block') {
                         updateAnalysis(salesData);
                     }
                 });
             }
-
-            // Fetch last entry's stock final for the selected product
-            document.getElementById('product').addEventListener('change', function() {
-                const product = this.value;
-                db.ref('sales/' + currentUser).orderByChild('product').equalTo(product).limitToLast(1).once('value').then((snapshot) => {
-                    if (snapshot.exists()) {
-                        const lastEntry = Object.values(snapshot.val())[0];
-                        document.getElementById('SI').value = lastEntry.SF || 0;
-                    } else {
-                        document.getElementById('SI').value = 0;
-                    }
-                });
-                updatePV();
-            });
-
-            // Auto-calculate SF and set PV
-            document.getElementById('V').addEventListener('input', updateSF);
-            document.getElementById('APP').addEventListener('input', updateSF);
-
+    
             function updateSF() {
                 const si = parseInt(document.getElementById('SI').value) || 0;
                 const app = parseInt(document.getElementById('APP').value) || 0;
                 const v = parseInt(document.getElementById('V').value) || 0;
                 document.getElementById('SF').value = si + app - v;
             }
-
+    
             function updatePV() {
                 const product = document.getElementById('product').value;
-                const price = ticketCategories[product]?.prix[0]; // Get price from fetched categories
+                const price = ticketCategories[product]?.prix?.[0];
                 document.getElementById('PV').value = price || 0;
             }
-
-            salesForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const newEntry = {
-                    dateTime: document.getElementById('dateTime').value,
-                    product: document.getElementById('product').value,
-                    SI: parseInt(document.getElementById('SI').value) || 0,
-                    APP: parseInt(document.getElementById('APP').value) || 0,
-                    V: parseInt(document.getElementById('V').value) || 0,
-                    SF: parseInt(document.getElementById('SF').value) || 0,
-                    PV: parseFloat(document.getElementById('PV').value) || 0
-                };
-
-                // Save to Firebase
-                db.ref('sales/' + currentUser).push(newEntry).then(() => {
-                    updateTable();
-                    updateStockTables();
-                    updateAnalysis();
-                    salesForm.reset();
-                    document.getElementById('dateTime').value = new Date().toISOString().slice(0, 16);
-                }).catch(error => {
-                    console.error("Erreur lors de l'ajout de l'entrée :", error);
-                    alert("Une erreur est survenue lors de l'ajout de l'entrée.");
-                });
-            });
-
-            function updateTable() {
+    
+    
+        // MODIFICATION: Partitionnement des données par utilisateur, usage de currentUser
+           async function updateTable() {
+                if (!currentUser) {
+                    console.error("User not logged in. Cannot update table.");
+                    return; // Exit if user not logged in.
+                }
                 const tbody = salesTable.querySelector('tbody');
-                tbody.innerHTML = '';
-                db.ref('sales/' + currentUser).once('value').then((snapshot) => {
-                    salesData = [];
-                    snapshot.forEach((childSnapshot) => {
-                        const entry = childSnapshot.val();
-                        entry.total = (entry.V * entry.PV).toFixed(2);
-                        salesData.push(entry);
-                    });
+                tbody.innerHTML = ''; // Clear existing rows
+                try {
+                    // MODIFICATION: Utilisation de currentUser
+                    const snapshot = await get(ref(db, `users-data/${currentUser}/sales`));
+                    salesData = []; // Reset salesData
+                    if (snapshot.exists()) {
+                        snapshot.forEach((childSnapshot) => {
+                            const entry = childSnapshot.val();
+                            entry.key = childSnapshot.key;
+                            entry.total = (entry.V * entry.PV).toFixed(2); // Calculate total here
+                            salesData.push(entry);
+                        });
+                    }
                     renderTable(salesData);
                     setupSearch();
                     setupSort(salesTable);
-                });
+    
+                } catch (error) {
+                    console.error("Error updating table:", error);
+                    alert("Error updating table."); // Inform the user
+                }
             }
-
-            function updateStockTables() {
+            // MODIFICATION: Partitionnement des données par utilisateur
+            function updateStockTables(startDate, endDate) {
+                if (!currentUser) {
+                    console.error("User not logged in. Cannot update stock tables.");
+                    return;
+                }
                 const stockTable = document.getElementById('stockTableGlobal');
-                stockTable.querySelector('tbody').innerHTML = '';
-
-                db.ref('sales/' + currentUser).once('value').then((snapshot) => {
+                const tbody = stockTable.querySelector('tbody'); // Get the tbody element
+                 tbody.innerHTML = ''; // Clear previous entries
+                //MODIFICATION: On utilise currentSalesUser
+                get(ref(db, 'users-data/' + currentUser + '/sales')).then((snapshot) => {
                     const latestStocks = {};
                     snapshot.forEach((childSnapshot) => {
                         const entry = childSnapshot.val();
-                        if (!latestStocks[entry.product] || new Date(entry.dateTime) > new Date(latestStocks[entry.product].dateTime)) {
-                            latestStocks[entry.product] = entry;
+                        const entryDate = new Date(entry.dateTime);
+                        if ((!startDate || entryDate >= startDate) && (!endDate || entryDate <= endDate)) {
+                            if (!latestStocks[entry.product] || entryDate > new Date(latestStocks[entry.product].dateTime)) {
+                                latestStocks[entry.product] = entry;
+                            }
                         }
                     });
-
+    
                     Object.values(latestStocks).forEach((entry) => {
-                        const row = stockTable.querySelector('tbody').insertRow();
+                        const row = tbody.insertRow(); // Use the tbody element here
                         row.insertCell(0).textContent = entry.product;
                         row.insertCell(1).textContent = entry.SF;
                         row.insertCell(2).textContent = new Date(entry.dateTime).toLocaleString();
                     });
-
+    
                     setupSort(stockTable);
                 });
             }
-
-            // Fonction pour exporter les données vers Excel
+    
+    
+            // Export to Excel
             function exportToExcel() {
-                // Créer un nouveau classeur
                 const wb = XLSX.utils.book_new();
-
-                // Convertir les données du tableau en une feuille de calcul
                 const ws = XLSX.utils.table_to_sheet(document.getElementById('salesTable'));
-
-                // Ajouter la feuille au classeur
                 XLSX.utils.book_append_sheet(wb, ws, "Ventes");
-
-                // Générer le fichier Excel et le télécharger
                 XLSX.writeFile(wb, "ventes_wifi_zone.xlsx");
             }
-
-            // Ajouter un écouteur d'événements au bouton d'exportation
-            document.getElementById('exportExcel').addEventListener('click', exportToExcel);
-
-            // Fonction pour supprimer une entrée et actualiser les données
-            function deleteEntry(key) {
-                db.ref(`sales/${currentUser}/${key}`).once('value')
-                    .then((snapshot) => {
-                        const deletedEntry = snapshot.val();
-                        return db.ref(`sales/${currentUser}/${key}`).remove()
-                            .then(() => {
-                                console.log("Entrée supprimée avec succès");
-                                return updateStockAfterDeletion(deletedEntry);
-                            });
-                    })
-                    .then(() => {
-                        // Mettre à jour l'interface utilisateur
-                        return updateTable();
-                    })
-                    .then(() => {
-                        updateStockTables();
-                        updateAnalysis();
-                    })
-                    .catch((error) => {
-                        console.error("Erreur lors de la suppression de l'entrée:", error);
-                    });
+    
+            // MODIFICATION : Partitionnement des données, usage de currentUser.
+          async function deleteEntry(key) {
+            if (!currentUser) {
+                console.error("User not logged in. Cannot delete entry.");
+                return; // Or redirect to login, depending on your needs
             }
-
-            // Fonction pour mettre à jour le stock après une suppression
-            function updateStockAfterDeletion(deletedEntry) {
-                return db.ref(`sales/${currentUser}`)
-                    .orderByChild('dateTime')
-                    .endAt(deletedEntry.dateTime)
-                    .limitToLast(2)
-                    .once('value')
-                    .then((snapshot) => {
-                        let entries = [];
-                        snapshot.forEach((childSnapshot) => {
-                            entries.push({key: childSnapshot.key, ...childSnapshot.val()});
-                        });
-                        entries.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
-
-                        if (entries.length > 1 && entries[0].key !== deletedEntry.key) {
-                            const previousEntry = entries[1];
-                            const newStockFinal = previousEntry.SF + deletedEntry.V - deletedEntry.APP;
-
-                            return db.ref(`sales/${currentUser}/${previousEntry.key}`).update({SF: newStockFinal});
-                        }
-                        return Promise.resolve();
-                    });
+            try {
+                 // MODIFICATION: Utilisation de currentUser
+                const snapshot = await get(ref(db, `users-data/${currentUser}/sales/${key}`));
+                const deletedEntry = snapshot.val();
+    
+                // MODIFICATION: Utilisation de currentUser
+                await remove(ref(db, `users-data/${currentUser}/sales/${key}`));
+                console.log("Entrée supprimée avec succès");
+    
+                await updateStockAfterDeletion(deletedEntry);
+                await updateTable(); // Now returns a promise
+                updateStockTables();
+                updateAnalysis();
+    
+            } catch (error) {
+                console.error("Erreur lors de la suppression de l'entrée:", error);
             }
-
-            // Modifier la fonction updateTable pour utiliser les données de Firebase
-            function updateTable() {
-                return db.ref(`sales/${currentUser}`).once('value').then((snapshot) => {
-                    salesData = [];
+          }
+    
+    
+            // (Previous code from Gestion de stock ticket.html) ...
+            // MODIFICATION: Usage de currentUser
+            async function updateStockAfterDeletion(deletedEntry) {
+                if (!currentUser) {
+                    console.error("User not logged in. Cannot update stock after deletion.");
+                    return; // Or redirect
+                }
+    
+                try {
+                    // MODIFICATION: Utilisation de currentUser
+                    const snapshot = await get(ref(db, `users-data/${currentUser}/sales`)
+                        .orderByChild('dateTime')
+                        .endAt(deletedEntry.dateTime)
+                        .limitToLast(2)
+                    );
+    
+                    let entries = [];
                     snapshot.forEach((childSnapshot) => {
-                        const entry = childSnapshot.val();
-                        entry.key = childSnapshot.key;
-                        entry.total = (entry.V * entry.PV).toFixed(2);
-                        salesData.push(entry);
+                        entries.push({ key: childSnapshot.key, ...childSnapshot.val() });
                     });
-                    renderTable(salesData);
-                    setupSearch();
-                    setupSort(salesTable);
-                });
+                    entries.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+    
+                    if (entries.length > 1 && entries[0].key !== deletedEntry.key) {
+                        const previousEntry = entries[1];
+                        const newStockFinal = previousEntry.SF + deletedEntry.V - deletedEntry.APP;
+                         // MODIFICATION: Utilisation de currentUser
+                        await update(ref(db, `users-data/${currentUser}/sales/${previousEntry.key}`), { SF: newStockFinal });
+                    }
+                } catch (error) {
+                    console.error("Error updating stock after deletion:", error);
+                    // Consider showing an error message to the user.
+                }
             }
-
-            // Modifier la fonction renderTable pour utiliser la clé Firebase
+    
             function renderTable(data) {
                 const tbody = salesTable.querySelector('tbody');
-                tbody.innerHTML = '';
+                tbody.innerHTML = ''; // Clear existing rows
+    
                 data.forEach((entry) => {
                     const row = tbody.insertRow();
-                    row.dataset.key = entry.key;
+                    row.dataset.key = entry.key;  // Store the Firebase key
                     row.insertCell(0).textContent = new Date(entry.dateTime).toLocaleString();
                     row.insertCell(1).textContent = entry.product;
                     row.insertCell(2).textContent = entry.SI;
@@ -976,25 +990,23 @@
                     row.insertCell(6).textContent = entry.PV;
                     row.insertCell(7).textContent = entry.total;
                 });
-                addDeleteIcons();
+               window.addDeleteIcons(); // Add delete icons after rendering
             }
-
-            // Modifier la fonction addDeleteIcons pour utiliser la clé Firebase
+    
             function addDeleteIcons() {
                 const rows = salesTable.querySelectorAll('tbody tr');
                 rows.forEach((row) => {
                     const deleteIcon = document.createElement('span');
-                    deleteIcon.innerHTML = '✖'; // Caractère "X"
+                    deleteIcon.innerHTML = '✖';
                     deleteIcon.className = 'delete-icon';
                     deleteIcon.onclick = (e) => {
-                        e.stopPropagation(); // Empêche le déclenchement de l'événement sur la ligne
-                        showConfirmDialog(row.dataset.key);
+                        e.stopPropagation();
+                        window.showConfirmDialog(row.dataset.key); // Pass the Firebase key
                     };
                     row.querySelector('td:first-child').appendChild(deleteIcon);
                 });
             }
-
-            // Modifier la fonction showConfirmDialog pour utiliser la clé Firebase
+    
             function showConfirmDialog(key) {
                 const dialog = document.createElement('div');
                 dialog.className = 'confirm-dialog';
@@ -1004,56 +1016,61 @@
                     <button id="cancelDelete">Annuler</button>
                 `;
                 document.body.appendChild(dialog);
-
+    
                 document.getElementById('confirmDelete').onclick = () => {
-                    deleteEntry(key);
+                    deleteEntry(key); // Call deleteEntry with the key
                     document.body.removeChild(dialog);
                 };
                 document.getElementById('cancelDelete').onclick = () => {
                     document.body.removeChild(dialog);
                 };
             }
-
+    
             function setupSearch() {
                 const searchInputs = document.querySelectorAll('#searchInputs input');
                 searchInputs.forEach(input => {
                     input.addEventListener('input', () => {
                         const filteredData = salesData.filter(entry => {
                             return Object.keys(entry).every(key => {
-                                const searchValue = document.getElementById(`search${key.charAt(0).toUpperCase() + key.slice(1)}`)?.value.toLowerCase() || '';
+                                const searchField = document.getElementById(`search${key.charAt(0).toUpperCase() + key.slice(1)}`);
+                                const searchValue = searchField ? searchField.value.toLowerCase() : '';
                                 return entry[key].toString().toLowerCase().includes(searchValue);
                             });
                         });
                         renderTable(filteredData);
-                        updateAnalysis(filteredData);
+                        updateAnalysis(filteredData); // Update analysis on search
                     });
                 });
             }
-
+    
             function setupSort(table) {
                 const headers = table.querySelectorAll('th[data-sort]');
                 headers.forEach(header => {
                     header.addEventListener('click', () => {
                         const sortKey = header.dataset.sort;
                         const data = table.id === 'salesTable' ? salesData : stockData;
+    
                         data.sort((a, b) => {
-                            if (a[sortKey] < b[sortKey]) return -1;
-                            if (a[sortKey] > b[sortKey]) return 1;
+                             const aVal = isNaN(parseFloat(a[sortKey])) ?  a[sortKey] : parseFloat(a[sortKey]);
+                             const bVal = isNaN(parseFloat(b[sortKey])) ?  b[sortKey] : parseFloat(b[sortKey]);
+    
+                            if (aVal < bVal) return -1;
+                            if (aVal > bVal) return 1;
                             return 0;
                         });
                         if (table.id === 'salesTable') {
                             renderTable(data);
-                            updateAnalysis(data);
+                            updateAnalysis(data); // Update analysis on sort
                         } else {
-                            renderStockTable(data, table);
+                            renderStockTable(data, table); // You had this, seems correct.
                         }
                     });
                 });
             }
-
+    
             function renderStockTable(data, table) {
                 const tbody = table.querySelector('tbody');
-                tbody.innerHTML = '';
+                tbody.innerHTML = ''; //Clear
                 data.forEach((entry) => {
                     const row = tbody.insertRow();
                     row.insertCell(0).textContent = entry.product;
@@ -1061,7 +1078,7 @@
                     row.insertCell(2).textContent = new Date(entry.dateTime).toLocaleString();
                 });
             }
-
+    
             function updateAnalysis(data = salesData) {
                 let totalSales = 0;
                 let count = 0;
@@ -1070,7 +1087,7 @@
                     sales: [],
                     prices: []
                 };
-
+    
                 data.forEach((entry) => {
                     totalSales += entry.V * entry.PV;
                     count++;
@@ -1078,23 +1095,23 @@
                     chartData.sales.push(entry.V);
                     chartData.prices.push(entry.PV);
                 });
-
-                const averageSales = totalSales / count || 0;
-
+    
+                const averageSales = totalSales / (count || 1); // Avoid division by zero
+    
                 totalSalesElement.textContent = `Total des ventes: ${totalSales.toFixed(2)} FCFA`;
                 averageSalesElement.textContent = `Moyenne des ventes par jour: ${averageSales.toFixed(2)} FCFA`;
-
+    
                 updateChart(chartData);
                 updatePeriodAnalysis(data);
             }
-
+    
             function updateChart(data) {
                 const ctx = document.getElementById('salesChart').getContext('2d');
-
+    
                 if (salesChart) {
                     salesChart.destroy();
                 }
-
+    
                 salesChart = new Chart(ctx, {
                     type: 'line',
                     data: {
@@ -1142,196 +1159,305 @@
                     }
                 });
             }
-
-            function updatePeriodAnalysis(data) {
+    
+           function updatePeriodAnalysis(data) {
                 const now = new Date();
                 const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
                 const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
                 const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-
+    
                 const weekData = data.filter(entry => new Date(entry.dateTime) >= oneWeekAgo);
                 const monthData = data.filter(entry => new Date(entry.dateTime) >= oneMonthAgo);
                 const threeMonthData = data.filter(entry => new Date(entry.dateTime) >= threeMonthsAgo);
-
+    
                 updatePeriodStats(weekData, 'week');
                 updatePeriodStats(monthData, 'month');
                 updatePeriodStats(threeMonthData, 'threeMonth');
             }
-
+    
             function updatePeriodStats(data, period) {
                 const totalSales = data.reduce((sum, entry) => sum + entry.V * entry.PV, 0);
-                const averageSales = totalSales / data.length || 0;
-
+                const averageSales = totalSales / (data.length || 1); // Avoid division by zero.
+    
                 document.getElementById(`${period}TotalSales`).textContent = `Total des ventes: ${totalSales.toFixed(2)} FCFA`;
                 document.getElementById(`${period}AverageSales`).textContent = `Moyenne des ventes par jour: ${averageSales.toFixed(2)} FCFA`;
             }
-
-            toggleAnalysisButton.addEventListener('click', function() {
-                if (analysisSection.style.display === 'none' || analysisSection.style.display === '') {
-                    analysisSection.style.display = 'block';
-                    salesDetailsSection.style.display = 'none';
-                    this.textContent = 'Masquer l\'analyse des ventes';
-                    toggleSalesButton.textContent = 'Détail des ventes';
-                    // Mettre à jour l'analyse et le graphique
-                    updateAnalysis(salesData);
-                } else {
-                    analysisSection.style.display = 'none';
-                    this.textContent = 'Analyse des ventes';
-                }
-            });
-
-            toggleSalesButton.addEventListener('click', function() {
-                if (salesDetailsSection.style.display === 'none' || salesDetailsSection.style.display === '') {
-                    salesDetailsSection.style.display = 'block';
-                    analysisSection.style.display = 'none';
-                    this.textContent = 'Masquer le détail des ventes';
-                    toggleAnalysisButton.textContent = 'Analyse des ventes';
-                } else {
-                    salesDetailsSection.style.display = 'none';
-                    this.textContent = 'Détail des ventes';
-                }
-            });
-
+    
+    
+    
             // Theme toggle functionality
-            const themeToggle = document.getElementById('theme-toggle');
-            const root = document.documentElement;
-            let isDarkTheme = true;
-
+            let isDarkTheme = true; //Keep track
+    
             function setTheme(dark) {
                 if (dark) {
-                    root.classList.remove('light-theme');
+                    document.documentElement.classList.remove('light-theme');
                     themeToggle.textContent = '🌙';
                     themeToggle.setAttribute('aria-label', 'Activer le mode clair');
                 } else {
-                    root.classList.add('light-theme');
+                    document.documentElement.classList.add('light-theme');
                     themeToggle.textContent = '☀️';
                     themeToggle.setAttribute('aria-label', 'Activer le mode sombre');
                 }
                 isDarkTheme = dark;
                 localStorage.setItem('darkTheme', dark);
             }
-
-            themeToggle.addEventListener('click', () => {
-                setTheme(!isDarkTheme);
-            });
-
-
-
-            // Appelle la fonction au chargement de la page (Modifié)
-            document.addEventListener('DOMContentLoaded', () => {
-                // Initialisation du thème basé sur les préférences sauvegardées ou clair par défaut
-                const savedTheme = localStorage.getItem('darkTheme');
-                if (savedTheme !== null) {
-                    setTheme(savedTheme === 'true');
-                } else {
-                    setTheme(false); // Appliquer le thème clair par défaut
-                }
-            });
-
-            // Date filtering for stock table
-            document.getElementById('filterStockDates').addEventListener('click', function() {
-                const startDate = new Date(document.getElementById('stockStartDate').value);
-                const endDate = new Date(document.getElementById('stockEndDate').value);
-                updateStockTables(startDate, endDate);
-            });
-
-            // Date filtering for sales table
-            document.getElementById('filterSalesDates').addEventListener('click', function() {
-                const startDate = new Date(document.getElementById('salesStartDate').value);
-                const endDate = new Date(document.getElementById('salesEndDate').value);
-                const filteredData = salesData.filter(entry => {
-                    const entryDate = new Date(entry.dateTime);
-                    return (!startDate || entryDate >= startDate) && (!endDate || entryDate <= endDate);
-                });
-                renderTable(filteredData);
-                updateAnalysis(filteredData);
-            });
-
-            // ... (Code précédent)
-
-            function updateStockTables(startDate, endDate) {
-                const stockTable = document.getElementById('stockTableGlobal');
-                stockTable.querySelector('tbody').innerHTML = '';
-
-                db.ref('sales/' + currentUser).once('value').then((snapshot) => {
-                    const latestStocks = {};
-                    snapshot.forEach((childSnapshot) => {
-                        const entry = childSnapshot.val();
-                        const entryDate = new Date(entry.dateTime);
-                        if ((!startDate || entryDate >= startDate) && (!endDate || entryDate <= endDate)) {
-                            if (!latestStocks[entry.product] || entryDate > new Date(latestStocks[entry.product].dateTime)) {
-                                latestStocks[entry.product] = entry;
-                            }
-                        }
-                    });
-
-                    Object.values(latestStocks).forEach((entry) => {
-                        const row = stockTable.querySelector('tbody').insertRow();
-                        row.insertCell(0).textContent = entry.product;
-                        row.insertCell(1).textContent = entry.SF;
-                        row.insertCell(2).textContent = new Date(entry.dateTime).toLocaleString();
-                    });
-
-                    setupSort(stockTable);
-                });
-            }
-
+    
+    
             function showSubscriptionRequiredModal() {
                 document.getElementById('subscriptionRequiredModal').style.display = 'flex';
             }
-
-            function hideSubscriptionRequiredModal() {
+    
+            window.hideSubscriptionRequiredModal = function() { //Correctly scoped.
                 document.getElementById('subscriptionRequiredModal').style.display = 'none';
             }
-
-            function redirectToSubscription() {
+    
+            window.redirectToSubscription = function() { // Correctly scoped.
                 window.location.href = 'index.html';
             }
+    
+            // MODIFICATION: Adaptation, usage de currentUser.
             async function checkSubscriptionStatus() {
+               if (!currentUser) {
+                    console.error("User not logged in. Cannot check subscription status.");
+                    return false; // Or redirect
+                }
                 try {
-                    const snapshot = await adminRef.once('value');
+                     // MODIFICATION: Utilisation de currentUser
+                    const snapshot = await get(ref(db, `users-data/${currentUser}/admin/subscription`));
                     const subscription = snapshot.val();
                     const now = new Date();
-
+    
                     if (subscription && subscription.status === 'active') {
                         const endDate = new Date(subscription.endDate);
                         if (endDate >= now) {
-                            // Abonnement actif
-                            return true;
+                            return true; // Active
                         } else {
-                            // Abonnement expiré
-                            await adminRef.update({ status: 'expired' });
-                            return false;
+                            // MODIFICATION: Utilisation de currentUser
+                            await update(ref(db, `users-data/${currentUser}/admin/subscription`), { status: 'expired' });
+                            return false; // Expired
                         }
                     } else {
-                        // Pas d'abonnement actif
-                        return false;
+                        return false; // Not active
                     }
                 } catch (error) {
-                    console.error("Erreur lors de la vérification de l'abonnement :", error);
-                    throw error; // Propager l'erreur pour la gérer dans le flux d'appel
+                    console.error("Subscription check error:", error);
+                    throw error; // Re-throw to handle it where the function is called
                 }
             }
-
-            // Initial setup
-            updateTable();
-            updateStockTables();
-
-            // Initialisation : cacher les deux sections au démarrage
-            analysisSection.style.display = 'none';
-            salesDetailsSection.style.display = 'none';
-
-            // Mise à jour initiale des tableaux et des analyses
-            updateTable();
-            updateStockTables();
-            updateAnalysis();
-
-            // Initialisation du thème basé sur les préférences sauvegardées
-            const savedTheme = localStorage.getItem('darkTheme');
-            if (savedTheme !== null) {
-                setTheme(savedTheme === 'true');
+    
+            // MODIFICATION: Fonctions d'authentification, centralisées ici.
+            function showAuthSection() {
+                authSection.style.display = 'block';
+                dashboardContainer.style.display = 'none';
+                // Clear any previous user info
+                userInfoElement.textContent = '';
+                salesForm.reset();
             }
-        }
-    </script>
-</body>
-</html>
+    
+            function showLoginForm() {
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('signupForm').style.display = 'none';
+            }
+    
+            function showSignupForm() {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('signupForm').style.display = 'block';
+            }
+    
+            function setupAuthEventListeners() {
+                const loginForm = document.getElementById('loginForm');
+                const signupForm = document.getElementById('signupForm');
+    
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault(); // Prevent the default form submission
+                    const username = document.getElementById('username').value;
+                    const password = document.getElementById('password').value;
+    
+                    get(ref(db, 'users/' + username)).then((snapshot) => {
+                        if (snapshot.exists()) {
+                            if (snapshot.val().password === password) {
+                                sessionStorage.setItem('isLoggedIn', 'true');
+                                sessionStorage.setItem('currentUserId', username);  // Store the username
+                                loginSuccess(username); // Pass the username
+                            } else {
+                                alert('Mot de passe incorrect');
+                            }
+                        } else {
+                            alert('Utilisateur introuvable');
+                        }
+                    });
+                });
+    
+                signupForm.addEventListener('submit', function(e) {
+                    e.preventDefault(); // Prevent default form submission
+                    const username = document.getElementById('signupUsername').value;
+                    const password = document.getElementById('signupPassword').value;
+    
+                    get(ref(db, 'users/' + username)).then((snapshot) => {
+                        if (snapshot.exists()) {
+                            alert('Ce nom d\'utilisateur est déjà utilisé.');
+                        } else {
+                            // Inscription de l'utilisateur dans 'users'
+                            set(ref(db, 'users/' + username), {
+                                password: password
+                            }).then(() => {
+                                // Création des données initiales dans users-data
+                                const userDataRef = ref(db, `users-data/${username}`);
+                                return set(userDataRef, {
+                                    admin: {
+                                        subscription: { status: 'inactive' }
+                                    },
+                                    TicketsTotal: {},
+                                    TicketsVendus: {},
+                                    TicketsTransit: {},
+                                    TicketConnecté: {},
+                                    Vendors: {},
+                                    VendorsHistory: {},
+                                    sales: {}
+                                });
+                            }).then(() => {
+                                alert('Inscription réussie ! Connectez-vous.');
+                                showLoginForm();
+                            }).catch((error) => {
+                                console.error('Error during signup:', error);
+                                alert('Erreur lors de l\'inscription');
+                            });
+                        }
+                    });
+                });
+                signupButton.addEventListener('click', function() {
+                    showSignupForm();
+                });
+    
+                loginFromSignup.addEventListener('click', function() {
+                    showLoginForm();
+                });
+            }
+    
+    
+            function setupEventListeners() {
+    
+    
+                productSelect.addEventListener('change', function() {
+                    const product = this.value;
+                    // MODIFICATION: Utilisation de currentUser.
+                    get(ref(db, `users-data/${currentUser}/sales`).orderByChild('product').equalTo(product).limitToLast(1)).then((snapshot) => {
+                        if (snapshot.exists()) {
+                            const lastEntry = Object.values(snapshot.val())[0];
+                            document.getElementById('SI').value = lastEntry.SF || 0;
+                        } else {
+                            document.getElementById('SI').value = 0;
+                        }
+                    });
+                    updatePV();
+                });
+    
+                document.getElementById('V').addEventListener('input', updateSF);
+                document.getElementById('APP').addEventListener('input', updateSF);
+    
+                salesForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    if (!currentUser) {
+                        alert("Vous devez être connecté pour ajouter une opération.");
+                        return; // Stop if not logged in
+                    }
+    
+                    const newEntry = {
+                        dateTime: document.getElementById('dateTime').value,
+                        product: document.getElementById('product').value,
+                        SI: parseInt(document.getElementById('SI').value) || 0,
+                        APP: parseInt(document.getElementById('APP').value) || 0,
+                        V: parseInt(document.getElementById('V').value) || 0,
+                        SF: parseInt(document.getElementById('SF').value) || 0,
+                        PV: parseFloat(document.getElementById('PV').value) || 0
+                    };
+    
+                    // MODIFICATION: Utilisation de currentUser.
+                    push(ref(db, `users-data/${currentUser}/sales`), newEntry)
+                    .then(() => {
+                        updateTable();
+                        updateStockTables();
+                        updateAnalysis();
+                        salesForm.reset();
+                        document.getElementById('dateTime').value = new Date().toISOString().slice(0, 16);
+                        })
+                        .catch(error => {
+                            console.error("Error adding entry:", error);
+                            alert("Error adding entry.");
+                        });
+                    });
+    
+    
+                toggleAnalysisButton.addEventListener('click', function() {
+                    if (analysisSection.style.display === 'none' || analysisSection.style.display === '') {
+                        analysisSection.style.display = 'block';
+                        salesDetailsSection.style.display = 'none';
+                        this.textContent = 'Masquer l\'analyse des ventes';
+                        toggleSalesButton.textContent = 'Détail des ventes';
+                        updateAnalysis(salesData); // Update when showing
+                    } else {
+                        analysisSection.style.display = 'none';
+                        this.textContent = 'Analyse des ventes';
+                    }
+                });
+    
+                toggleSalesButton.addEventListener('click', function() {
+                    if (salesDetailsSection.style.display === 'none' || salesDetailsSection.style.display === '') {
+                        salesDetailsSection.style.display = 'block';
+                        analysisSection.style.display = 'none';
+                        this.textContent = 'Masquer le détail des ventes';
+                        toggleAnalysisButton.textContent = 'Analyse des ventes';
+                    } else {
+                        salesDetailsSection.style.display = 'none';
+                        this.textContent = 'Détail des ventes';
+                    }
+                });
+    
+                themeToggle.addEventListener('click', () => {
+                    setTheme(!isDarkTheme);
+                });
+    
+                document.getElementById('filterStockDates').addEventListener('click', function() {
+                    const startDate = new Date(document.getElementById('stockStartDate').value);
+                    const endDate = new Date(document.getElementById('stockEndDate').value);
+                    updateStockTables(startDate, endDate);
+                });
+    
+                document.getElementById('filterSalesDates').addEventListener('click', function() {
+                    const startDate = new Date(document.getElementById('salesStartDate').value);
+                    const endDate = new Date(document.getElementById('salesEndDate').value);
+                    const filteredData = salesData.filter(entry => {
+                        const entryDate = new Date(entry.dateTime);
+                        return (!startDate || entryDate >= startDate) && (!endDate || entryDate <= endDate);
+                    });
+                    renderTable(filteredData);
+                    updateAnalysis(filteredData);
+                });
+            }
+    
+            // --- Global Function Assignments ---
+            window.showConfirmDialog = showConfirmDialog;
+            window.addDeleteIcons = addDeleteIcons;
+            window.hideSubscriptionRequiredModal = hideSubscriptionRequiredModal;
+            window.redirectToSubscription = redirectToSubscription;
+            window.exportToExcel = exportToExcel;
+            //No longer needed since inside DOMContentLoaded:
+            //window.updateSF = updateSF;
+            //window.updatePV = updatePV;
+    
+            // Initial setup (moved inside DOMContentLoaded)
+            // updateTable();  // Removed from here
+            // updateStockTables(); // Removed from here
+            // analysisSection.style.display = 'none'; // Removed
+            // salesDetailsSection.style.display = 'none'; // Removed
+            // updateAnalysis();  // Removed from here
+            window.logout = function() {
+                sessionStorage.clear(); // Clears all session data
+                showAuthSection();     // Show the login form again
+                // Optionally, you might want to reset other parts of the UI here
+            };
+    
+    
+        </script>
+    </body>
+    </html>

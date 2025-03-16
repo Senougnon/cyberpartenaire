@@ -6,7 +6,6 @@
     <title>CYBER CAMPUS - WIFI ZONE</title>
     <link rel="stylesheet" href="styleA.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
     <script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
@@ -227,6 +226,33 @@
             text-align: center;
             max-width: 80%;
         }
+
+        .header {
+            display: flex; /* Added to align items */
+            justify-content: center; /* MODIFICATION: Center content horizontally */
+            align-items: center; /* Added to vertically align items */
+            flex-direction: column; /* MODIFICATION: Stack items vertically */
+            text-align: center; /* MODIFICATION: Center text within header */
+        }
+
+        .header h1 {
+            margin: 0; /* Reset margin for h1 inside header */
+        }
+
+        .logout-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .logout-button:hover {
+            background-color: #c0392b;
+        }
     </style>
 </head>
 <body>
@@ -237,11 +263,12 @@
     <div class="loader-wrapper" id="loaderWrapper">
         <div class="loader"></div>
     </div>
-    <div class="container">
-        <header>
+    <div class="container" id="contentContainer" style="display:none;">
+        <header class="header">
             <h1>CYBER CAMPUS - WIFI ZONE</h1>
             <div class="wave"></div>
         </header>
+
 
         <main>
             <div id="subscriptionSection">
@@ -254,26 +281,26 @@
             </div>
             <div class="menu">
                 <a href="PageVenteTicket.html" class="menu-item" id="vente">
-                    <i data-lucide="ticket"></i>
+                    <i class="fas fa-ticket-alt"></i> <!-- Font Awesome Ticket Icon -->
                     <h2>Vente de Tickets</h2>
                     <p>Procédez à la vente de nouveaux tickets Wifi.</p>
                 </a>
                 <a href="AdminVentePartenaires.html" class="menu-item" id="inventaire">
-                    <i data-lucide="clipboard-list"></i>
+                    <i class="fas fa-clipboard-list"></i> <!-- Font Awesome Clipboard List Icon -->
                     <h2>Inventaire des Tickets</h2>
                     <p>Consultez l'état des ventes de vos partenaires.</p>
                 </a>
                 <a href="Stock.html" class="menu-item" id="stock">
-                    <i data-lucide="boxes"></i>
+                    <i class="fas fa-boxes"></i> <!-- Font Awesome Boxes Icon -->
                     <h2>Gestion des Stocks Partenaire</h2>
                     <p>Suivez les stocks de tickets de vos partenaires.</p>
                 </a>
                 <a href="a3.html" class="menu-item" id="administration">
-                    <i data-lucide="settings"></i>
+                    <i class="fas fa-cog"></i> <!-- Font Awesome Settings Cog Icon -->
                     <h2>Administration des Tickets</h2>
                     <p>Gérez les tickets, activez ou désactivez-les.</p>
                 </a>
-                <button id="cancelSubscription" style="display: none;">Annuler l'abonnement</button>
+                <button onclick="logout()" class="logout-button">Déconnexion</button>
             </div>
 
         </main>
@@ -300,20 +327,44 @@
     <div class="overlay" id="overlay" style="display: none;" onclick="closePaymentModal()"></div>
 
     <script type="module">
-        import { getActiveDatabase } from './firebase-config-manager.js'; // Import getActiveDatabase
+        import { getActiveDatabase } from './firebase-config-manager.js';
         import { ref, get, set, push, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-        let db; // Database object will be initialized here
-        let adminRef; // Admin reference
-        let connectedTicketsRef; // Connected Tickets reference
+        let db;
+        let adminRef;  // Conserver la référence, mais elle sera initialisée plus tard.
+        let connectedTicketsRef;
 
         async function initializeDatabase() {
-            db = await getActiveDatabase(); // Get the active database from the module
-            adminRef = ref(db, 'admin/subscription'); // Initialize adminRef after db is available
-            connectedTicketsRef = ref(db, 'TicketConnecté'); // Initialize connectedTicketsRef after db is available
+            db = await getActiveDatabase();
+            // connectedTicketsRef reste ici car il n'est pas lié à l'abonnement.
+            connectedTicketsRef = ref(db, 'TicketConnecté');
             console.log("Database initialized in index.html");
         }
 
+        async function checkLoginStatus() {
+            if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+                redirectToLogin();
+            } else {
+                const currentUserId = sessionStorage.getItem('currentUserId');
+                if (!currentUserId) {
+                    console.error("Current user ID is not found in sessionStorage.");
+                    redirectToLogin();
+                    return;
+                }
+                document.getElementById('contentContainer').style.display = 'block';
+                 // Initialisez adminRef ici, après la vérification de l'ID utilisateur.
+                 adminRef = ref(db, `users-data/${currentUserId}/admin/subscription`);
+            }
+        }
+
+        function redirectToLogin() {
+            window.location.href = 'loginAccueil.html';
+        }
+
+        window.logout = function() {
+            sessionStorage.clear();
+            redirectToLogin();
+        };
 
         const venteMenuItem = document.getElementById('vente');
         const inventaireMenuItem = document.getElementById('inventaire');
@@ -322,7 +373,6 @@
         const subscriptionStatus = document.getElementById('subscriptionStatus');
         const subscribeMonthlyButton = document.getElementById('subscribeMonthly');
         const subscribeYearlyButton = document.getElementById('subscribeYearly');
-        const cancelSubscriptionButton = document.getElementById('cancelSubscription');
         const paymentModal = document.getElementById('paymentModal');
         const overlay = document.getElementById('overlay');
         const subscriptionRequiredModal = document.getElementById('subscriptionRequiredModal');
@@ -356,54 +406,63 @@
             // Mettre l'accent sur la section d'abonnement
         }
 
-        function checkSubscriptionStatus() {
-            get(adminRef).then((snapshot) => {
-                const subscription = snapshot.val();
-                const now = new Date();
+    // MODIFICATION: Adaptation de la fonction checkSubscriptionStatus pour le partitionnement
+    function checkSubscriptionStatus() {
+        const currentUserId = sessionStorage.getItem('currentUserId');
+        if (!currentUserId) {
+            console.error("User ID not found. Cannot check subscription status.");
+            return; // Ou rediriger vers la connexion, selon le besoin
+        }
 
-                if (subscription && subscription.status === 'active') {
-                    const endDate = new Date(subscription.endDate);
-                    if (endDate < now) {
-                        // L'abonnement a expiré
-                        subscriptionStatus.textContent = "Statut de l'abonnement: Expiré";
-                        subscriptionStatus.style.color = 'red';
-                        subscribeMonthlyButton.style.display = 'inline-block';
-                        subscribeYearlyButton.style.display = 'inline-block';
-                        cancelSubscriptionButton.style.display = 'none';
+        // MODIFICATION: Utilisez currentUserId dans le chemin de la référence
+        const userAdminRef = ref(db, `users-data/${currentUserId}/admin/subscription`);
 
-                        // Mettre à jour l'état de l'abonnement dans la base de données comme 'expired'
-                        set(adminRef, { ...subscription, status: 'expired' });
-                    } else {
-                        // L'abonnement est actif
-                        subscriptionStatus.textContent = `Statut de l'abonnement: Actif jusqu'au ${endDate.toLocaleDateString()}`;
-                        subscriptionStatus.style.color = 'green';
-                        subscribeMonthlyButton.style.display = 'none';
-                        subscribeYearlyButton.style.display = 'none';
-                        cancelSubscriptionButton.style.display = 'inline-block';
-                    }
-                } else {
-                    // Pas d'abonnement actif
-                    subscriptionStatus.textContent = "Statut de l'abonnement: Inactif";
+        get(userAdminRef).then((snapshot) => {
+            const subscription = snapshot.val();
+            const now = new Date();
+
+            if (subscription && subscription.status === 'active') {
+                const endDate = new Date(subscription.endDate);
+                if (endDate < now) {
+                    subscriptionStatus.textContent = "Statut de l'abonnement: Expiré";
                     subscriptionStatus.style.color = 'red';
                     subscribeMonthlyButton.style.display = 'inline-block';
                     subscribeYearlyButton.style.display = 'inline-block';
-                    cancelSubscriptionButton.style.display = 'none';
+                    set(userAdminRef, { ...subscription, status: 'expired' });
+                } else {
+                    subscriptionStatus.textContent = `Statut de l'abonnement: Actif jusqu'au ${endDate.toLocaleDateString()}`;
+                    subscriptionStatus.style.color = 'green';
+                    subscribeMonthlyButton.style.display = 'none';
+                    subscribeYearlyButton.style.display = 'none';
                 }
-            });
-        }
+            } else {
+                subscriptionStatus.textContent = "Statut de l'abonnement: Inactif";
+                subscriptionStatus.style.color = 'red';
+                subscribeMonthlyButton.style.display = 'inline-block';
+                subscribeYearlyButton.style.display = 'inline-block';
+            }
+        }).catch(error => {
+            console.error("Erreur lors de la vérification du statut d'abonnement:", error);
+            // Gérer l'erreur, par exemple, afficher un message à l'utilisateur
+        });
+    }
 
-        function checkUserAccess() {
-            get(adminRef).then((snapshot) => {
-                const subscription = snapshot.val();
-                if (!subscription || subscription.status !== 'active') {
-                    showSubscriptionRequiredModal();
-                }
-            });
-        }
+
+
+    function checkUserAccess() {
+        get(adminRef).then((snapshot) => {
+            const subscription = snapshot.val();
+            // Vérifiez si l'utilisateur a un abonnement *et* s'il est actif.
+            if (!subscription || subscription.status !== 'active') {
+                showSubscriptionRequiredModal();
+            }
+        });
+    }
+
 
         venteMenuItem.addEventListener('click', (event) => {
             event.preventDefault();
-            checkUserAccess();
+            checkUserAccess(); // Vérifie *avant* la redirection.
             window.location.href = 'PageVenteTicket.html';
         });
 
@@ -433,65 +492,83 @@
             initiatePayment('yearly');
         });
 
-        cancelSubscriptionButton.addEventListener('click', () => {
-            cancelSubscription();
-        });
 
-        function initiatePayment(plan) {
-            const amount = plan === 'monthly' ? 1000 : 10000;
-            const planDescription = plan === 'monthly' ? 'Abonnement mensuel' : 'Abonnement annuel';
+    // MODIFICATION: Adaptation de initiatePayment et handleSuccessfulPayment
+    function initiatePayment(plan) {
+        const amount = plan === 'monthly' ? 1000 : 10000;
+        const planDescription = plan === 'monthly' ? 'Abonnement mensuel' : 'Abonnement annuel';
+        const currentUserId = sessionStorage.getItem('currentUserId'); // Récupérer l'ID
 
-            FedaPay.init({
-                public_key: 'pk_live_TfSz212W0xSMKK7oPEogkFmp',
-                transaction: {
-                    amount: amount,
-                    description: planDescription,
-                },
-                customer: {
-                    email: 'admin@example.com', // Email de l'administrateur
-                },
-                onComplete: async function(response) {
-                        if (response.reason === FedaPay.DIALOG_DISMISSED) {
-                            alert('Paiement échoué.');
-                        } else if (response.reason === FedaPay.CHECKOUT_COMPLETED) {
-                            handleSuccessfulPayment(plan, response);
-                        }
-                    }
-            }).open();
+        if (!currentUserId) {
+            console.error("User ID not found. Cannot initiate payment.");
+            alert("Vous devez être connecté pour vous abonner."); // Message convivial
+            return; // Arrêter la fonction si pas d'ID utilisateur
         }
 
-        async function handleSuccessfulPayment(plan, response) {
-            const startDate = new Date();
-            const endDate = new Date(startDate);
-            if (plan === 'monthly') {
-                endDate.setMonth(endDate.getMonth() + 1);
-            } else {
-                endDate.setFullYear(endDate.getFullYear() + 1);
-            }
-
-            const subscriptionData = {
-                status: 'active',
-                startDate: startDate.toISOString(),
-                endDate: endDate.toISOString(),
-                transactionId: response.transaction.id,
-                plan: plan
-            };
-
-            try {
-                await set(adminRef, subscriptionData);
-                checkSubscriptionStatus();
-                alert(`Abonnement ${plan === 'monthly' ? 'mensuel' : 'annuel'} réussi!`);
-            } catch (error) {
-                console.error('Erreur lors de la mise à jour de l\'abonnement:', error);
-                console.error('Détails de la réponse de FedaPay:', response);
-                console.error('Données d\'abonnement tentées:', subscriptionData);
-                alert('Erreur lors de la mise à jour de l\'abonnement.');
+        FedaPay.init({
+            public_key: 'pk_live_TfSz212W0xSMKK7oPEogkFmp', // Votre clé publique FedaPay
+            transaction: {
+                amount: amount,
+                description: planDescription,
+            },
+            customer: {
+                // Vous *pourriez* potentiellement utiliser l'ID utilisateur ici, mais
+                // FedaPay attend généralement un email, un nom, etc.  Si vous avez
+                // stocké ces infos lors de l'inscription, utilisez-les ici.
+                // Pour cet exemple, je vais laisser un email statique, mais adaptez-le.
+                email: 'admin@example.com', // À remplacer par des données utilisateur réelles si disponibles
+            },
+           onComplete: async function(response) {
+            if (response.reason === FedaPay.DIALOG_DISMISSED) {
+                alert('Paiement échoué.');
+            } else if (response.reason === FedaPay.CHECKOUT_COMPLETED) {
+                handleSuccessfulPayment(plan, response, currentUserId); // Passer currentUserId
             }
         }
+        }).open();
+    }
+
+    // MODIFICATION: Adaptation de la fonction pour utiliser currentUserId
+    async function handleSuccessfulPayment(plan, response, currentUserId) {
+        const startDate = new Date();
+        const endDate = new Date(startDate);
+        if (plan === 'monthly') {
+            endDate.setMonth(endDate.getMonth() + 1);
+        } else {
+            endDate.setFullYear(endDate.getFullYear() + 1);
+        }
+
+        const subscriptionData = {
+            status: 'active',
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+            transactionId: response.transaction.id,
+            plan: plan
+        };
+
+        try {
+            // MODIFICATION: Utilisez currentUserId dans le chemin
+            const userAdminRef = ref(db, `users-data/${currentUserId}/admin/subscription`);
+            await set(userAdminRef, subscriptionData);
+            checkSubscriptionStatus(); // Vérifiez et mettez à jour l'affichage
+            alert(`Abonnement ${plan === 'monthly' ? 'mensuel' : 'annuel'} réussi!`);
+        } catch (error) {
+            console.error('Erreur lors de la mise à jour de l\'abonnement:', error);
+            alert('Erreur lors de la mise à jour de l\'abonnement.');
+        }
+    }
 
         async function cancelSubscription() {
+              const currentUserId = sessionStorage.getItem('currentUserId');
+              if (!currentUserId) {
+                console.error("User ID not found. Cannot cancel subscription.");
+                alert("Vous devez être connecté pour annuler un abonnement."); // Message convivial
+                return;
+              }
             try {
-                await set(adminRef, { ... (await get(adminRef)).val(), status: 'cancelled' });
+                //MODIFICATION: On utilise le currentUserId dans le ref
+                const userAdminRef = ref(db, `users-data/${currentUserId}/admin/subscription`);
+                await set(userAdminRef, { ... (await get(userAdminRef)).val(), status: 'cancelled' });
                 checkSubscriptionStatus();
                 alert('Abonnement annulé.');
             } catch (error) {
@@ -500,14 +577,14 @@
             }
         }
 
-        // Fonction de déconnexion améliorée
-        function logout() {
-            sessionStorage.clear(); // Nettoie toutes les données de session
-            window.location.replace('loginAccueil.html');
-        }
 
-        async function processConnectedTickets() {
+         async function processConnectedTickets() {
             const pageLoaderMessage = document.getElementById('pageLoaderMessage');
+            const currentUserId = sessionStorage.getItem('currentUserId'); // Récupérer l'ID de l'utilisateur
+            if (!currentUserId) {
+                console.error("Current user ID is not found in sessionStorage.");
+                return; // Quitter si l'ID utilisateur n'est pas trouvé.
+            }
             try {
                 pageLoaderMessage.textContent = "Vérification des tickets connectés...";
                 const snapshot = await get(connectedTicketsRef);
@@ -524,7 +601,7 @@
 
                 pageLoaderMessage.textContent = "Traitement des tickets uniques...";
                 for (const user in uniqueTickets) {
-                    await processTicket(uniqueTickets[user]);
+                    await processTicket(uniqueTickets[user], currentUserId); // Passer currentUserId
                 }
 
                 pageLoaderMessage.textContent = "Nettoyage des tickets traités...";
@@ -538,13 +615,17 @@
             }
         }
 
-        async function processTicket(ticket) {
+        async function processTicket(ticket, currentUserId) {  // Accepter currentUserId
             const pageLoaderMessage = document.getElementById('pageLoaderMessage');
+            if (!currentUserId) {
+                console.error("Current user ID is not provided to processTicket.");
+                return; // Quitter si currentUserId n'est pas fourni.
+            }
             try {
                 pageLoaderMessage.textContent = `Vérification du ticket pour ${ticket.username}...`;
 
                 // Vérifier dans VendorsHistory
-                const vendorsHistoryRef = ref(db, 'VendorsHistory');
+                const vendorsHistoryRef = ref(db, `users-data/${currentUserId}/VendorsHistory`);
                 const vendorsHistorySnapshot = await get(vendorsHistoryRef);
                 const vendorsHistory = vendorsHistorySnapshot.val() || {};
 
@@ -564,8 +645,8 @@
                     pageLoaderMessage.textContent = `Traitement du ticket ${ticket.username}...`;
 
                     // Vérifier dans TicketsTotal et TicketsTransit
-                    const ticketsTotalRef = ref(db, 'TicketsTotal');
-                    const ticketsTransitRef = ref(db, 'TicketsTransit');
+                    const ticketsTotalRef = ref(db, `users-data/${currentUserId}/TicketsTotal`);
+                    const ticketsTransitRef = ref(db, `users-data/${currentUserId}/TicketsTransit`);
                     const totalSnapshot = await get(ticketsTotalRef);
                     const transitSnapshot = await get(ticketsTransitRef);
                     const totalTickets = totalSnapshot.val() || {};
@@ -592,7 +673,7 @@
                                     prix: totalTickets[category].prix.filter((_, index) => index !== ticketIndex)
                                 }
                             };
-                            foundTicketRef = ref(db, `TicketsTotal/${category}`);
+                            foundTicketRef = ref(db, `users-data/${currentUserId}/TicketsTotal/${category}`);
                             foundInCategory = "TicketsTotal";
                             break;
                         }
@@ -608,7 +689,7 @@
                                     password: transitTickets[transitId].password,
                                     price: transitTickets[transitId].price
                                 };
-                                foundTicketRef = ref(db, `TicketsTransit/${transitId}`);
+                                foundTicketRef = ref(db, `users-data/${currentUserId}/TicketsTransit/${transitId}`);
                                 foundInCategory = "TicketsTransit";
                                 break;
                             }
@@ -617,7 +698,7 @@
 
                     if (foundTicket) {
                         pageLoaderMessage.textContent = `Vente du ticket ${ticket.username}...`;
-                        await sellTicketAutomatically(foundTicket, foundTicketRef, foundInCategory);
+                        await sellTicketAutomatically(foundTicket, foundTicketRef, foundInCategory, currentUserId); // Passer currentUserId
                     }
                 }
             } catch (error) {
@@ -626,53 +707,64 @@
             }
         }
 
-        async function sellTicketAutomatically(ticket, ticketRef, foundInCategory) {
-            try {
-                const automaticVendorId = "Vendeur automatique";
-
-                // Enregistrement de la vente dans VendorsHistory
-                const vendorHistoryRef = ref(db, `VendorsHistory/${automaticVendorId}`);
-                await push(vendorHistoryRef, {
-                    category: ticket.category,
-                    user: ticket.user,
-                    password: ticket.password,
-                    price: ticket.price,
-                    soldAt: Date.now()
-                });
-
-                // Enregistrement de la vente dans TicketsVendus
-                const ticketsVendusRef = ref(db, 'TicketsVendus');
-                await push(ticketsVendusRef, {
-                    category: ticket.category,
-                    user: ticket.user,
-                    password: ticket.password,
-                    price: ticket.price,
-                    soldAt: Date.now(),
-                    vendorId: automaticVendorId
-                });
-
-                // Suppression du ticket de la source (TicketsTotal ou TicketsTransit)
-                if(foundInCategory === "TicketsTotal"){
-                    await set(ticketRef, ticket.updatedData);
-                } else {
-                    await remove(ticketRef);
-                }
-
-                console.log(`Ticket ${ticket.user} vendu automatiquement.`);
-            } catch (error) {
-                console.error("Erreur lors de la vente automatique du ticket :", error);
-                showNotification("Erreur", "Erreur lors de la vente automatique du ticket.");
-            }
+      async function sellTicketAutomatically(ticket, ticketRef, foundInCategory, currentUserId) { // Accepter currentUserId
+        if (!currentUserId) {
+            console.error("Current user ID is not provided to sellTicketAutomatically.");
+            return;  // Quitter si currentUserId n'est pas fourni
         }
+        try {
+            const automaticVendorId = "Vendeur automatique";
+
+            // Enregistrement de la vente dans VendorsHistory
+            const vendorHistoryRef = ref(db, `users-data/${currentUserId}/VendorsHistory/${automaticVendorId}`);
+            await push(vendorHistoryRef, {
+                category: ticket.category,
+                user: ticket.user,
+                password: ticket.password,
+                price: ticket.price,
+                soldAt: Date.now()
+            });
+
+            // Enregistrement de la vente dans TicketsVendus
+            const ticketsVendusRef = ref(db, `users-data/${currentUserId}/TicketsVendus`);
+            await push(ticketsVendusRef, {
+                category: ticket.category,
+                user: ticket.user,
+                password: ticket.password,
+                price: ticket.price,
+                soldAt: Date.now(),
+                vendorId: automaticVendorId
+            });
+
+            // Suppression du ticket de la source (TicketsTotal ou TicketsTransit)
+            if(foundInCategory === "TicketsTotal"){
+                await set(ticketRef, ticket.updatedData);
+            } else {
+                await remove(ticketRef);
+            }
+
+            console.log(`Ticket ${ticket.user} vendu automatiquement.`);
+        } catch (error) {
+            console.error("Erreur lors de la vente automatique du ticket :", error);
+            showNotification("Erreur", "Erreur lors de la vente automatique du ticket.");
+        }
+    }
+
+        // Fonction de déconnexion améliorée
+        window.logout = function() {
+            sessionStorage.clear(); // Nettoie toutes les données de session
+            window.location.replace('loginAccueil.html');
+        }
+
 
         // Initialisation
         document.addEventListener('DOMContentLoaded', async () => {
             showPageLoader();
             await initializeDatabase(); // Initialize database first
+            await checkLoginStatus();
             processConnectedTickets()
                 .then(() => checkSubscriptionStatus())
                 .then(() => {
-                  lucide.createIcons();
                   hidePageLoader();
                 })
                 .catch((error) => {
@@ -690,8 +782,6 @@
         }
 
          window.onload = () => {
-
-            lucide.createIcons();
         };
     </script>
 

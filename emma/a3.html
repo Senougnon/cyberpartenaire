@@ -57,7 +57,26 @@
         h1, h2 {
             color: var(--primary-color);
             margin-bottom: 20px;
+            display: flex; /* Added to align items */
+            justify-content: space-between; /* Added to space items apart */
+            align-items: center; /* Added to vertically align items */
         }
+
+        .logout-button {
+            background-color: #e74c3c;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .logout-button:hover {
+            background-color: #c0392b;
+        }
+
 
         .pin-icon {
             cursor: pointer;
@@ -245,10 +264,11 @@
             }
         }
         .logout-button {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 1000;
+        position: relative; /* Changed from fixed to relative */
+        top: auto; /* Reset top */
+        right: auto; /* Reset right */
+        margin-left: 10px; /* Add some space from the title */
+        z-index: auto;
         background-color: #e74c3c;
         color: white;
         padding: 10px 20px;
@@ -307,11 +327,12 @@
     </style>
 </head>
 <body>
-<button onclick="logout()" class="logout-button">
-    <i class="fas fa-sign-out-alt"></i> Déconnexion
-</button>
-    <div class="container">
-        <h1>Gestion des tickets</h1>
+    <div id="loadingIndicator" class="loading" style="display: none;"></div>
+    <div class="container" id="contentContainer" style="display:none;">
+        <h1>Gestion des tickets <button onclick="logout()" class="logout-button">
+            <i class="fas fa-sign-out-alt"></i> Déconnexion
+        </button></h1>
+
 
         <div class="database-selector">
             <label for="databaseSelect">Choisir la base de données : </label>
@@ -334,7 +355,6 @@
         <div id="ticketCategories"></div>
     </div>
 
-    <div id="loadingIndicator" class="loading" style="display: none;"></div>
 
     <!-- Modal pour les prix -->
     <div id="priceModal" class="modal">
@@ -408,32 +428,58 @@
     </div>
 
     <script type="module">
-        import { getActiveDatabase } from './firebase-config-manager.js';
+        import { getActiveDatabase } from './firebase-config-manager.js'; // Import the function
+        import { getDatabase, ref, onValue, set, update, push, remove, off, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getDatabase, ref, get, set, push, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-        let db;
-
-        async function initializeFirebaseApp() {
-            db = await getActiveDatabase();
-            loadTickets();
-        }
-
-        initializeFirebaseApp();
 
 
+        let db; // Database object will be initialized here
         let allTickets = {};
         let tempImportData = null;
         let tempCategory = null;
         let currentEditingTicket = null;
         let currentEditingCategory = null;
         let currentDatabase = 'TicketsTotal';
+        let currentUserId;  //MODIFICATION : Déclaration de currentUserId
 
         // Variables pour stocker les informations d'édition
         let editingCategory = '';
         let editingIndex = -1;
         let editingId = '';
+        let initializationPromise;
 
+
+        async function initializeDatabase() {
+            if (!initializationPromise) {
+                initializationPromise = getActiveDatabase(); // Start initialization promise
+            }
+            db = await initializationPromise; // Wait for initialization to complete
+            console.log("Database initialized in a3.html");
+        }
+
+        async function checkLoginStatus() {
+            if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+                redirectToLogin();
+            } else {
+                 // MODIFICATION: Récupération de l'ID utilisateur et vérification
+                currentUserId = sessionStorage.getItem('currentUserId');
+                if (!currentUserId) {
+                    console.error("Current user ID is not found in sessionStorage.");
+                    redirectToLogin(); // Rediriger si l'ID utilisateur est manquant
+                    return;
+                }
+                document.getElementById('contentContainer').style.display = 'block'; // Show content after login check
+            }
+        }
+
+        function redirectToLogin() {
+            window.location.href = 'loginAccueil.html';
+        }
+
+        window.logout = function() {
+            sessionStorage.clear();
+            redirectToLogin();
+        };
 
 
         function showLoading() {
@@ -444,9 +490,20 @@
             document.getElementById('loadingIndicator').style.display = 'none';
         }
 
-        function loadTickets() {
+        //MODIFICATION: Modification de loadTickets pour le partitionnement
+       async function loadTickets() {
             showLoading();
-            const ticketsRef = ref(db, currentDatabase);
+            const currentUserId = sessionStorage.getItem('currentUserId'); // MODIFICATION: Récupérer currentUserId
+            if (!currentUserId) {
+                hideLoading();
+                console.error("User not logged in.");
+                return; // Arrêter si l'utilisateur n'est pas connecté
+            }
+
+            await initializeDatabase(); // Ensure database is initialized before loading tickets
+             //MODIFICATION: On ajoute currentUserId au ref
+            const ticketsRef = ref(db, `users-data/${currentUserId}/${currentDatabase}`);
+            off(ticketsRef, 'value'); // Détacher les anciens listeners
             onValue(ticketsRef, (snapshot) => {
                 allTickets = snapshot.val() || {};
                 displayTickets(allTickets);
@@ -457,6 +514,7 @@
                 alert("Erreur lors du chargement des tickets. Veuillez réessayer.");
             });
         }
+
         // Fonction pour afficher les tickets en fonction de la base de données sélectionnée
         function displayTickets(tickets, searchTerm = '') {
         const categoriesContainer = document.getElementById('ticketCategories');
@@ -479,10 +537,10 @@
                     <div class="category-header">
                         <div class="category-title">
                             <h2>${category}</h2>
-                            <i class="fas fa-thumbtack pin-icon" onclick="editCategory('${category}')"></i>
+                            <i class="fas fa-thumbtack pin-icon" onclick="window.editCategory('${category}')"></i>
                         </div>
                         <div>
-                            <button class="add-ticket-btn" onclick="showAddTicketModal('${category}')">
+                            <button class="add-ticket-btn" onclick="window.showAddTicketModal('${category}')">
                                 <i class="fas fa-plus"></i> Ajouter un ticket
                             </button>
                             <label for="importFile_${category}" class="file-input-label">
@@ -494,8 +552,8 @@
                                 onchange="importTickets(event)">
                         </div>
                     </div>
-                    <button onclick="deleteAllTicketsInCategory('${category}')">Supprimer tous les tickets de ${category}</button>
-                    <button onclick="editSelectedTickets('${category}')">Modifier les tickets selectionnés</button>
+                    <button onclick="window.deleteAllTicketsInCategory('${category}')">Supprimer tous les tickets de ${category}</button>
+                    <button onclick="window.editSelectedTickets('${category}')">Modifier les tickets selectionnés</button>
                     <table>
                         <thead>
                             <tr>
@@ -510,7 +568,7 @@
                             ${generateTicketRowsTotal(category, categoryTickets, searchTerm)}
                         </tbody>
                     </table>
-                    <button onclick="deleteSelectedTickets('${category}')">Supprimer les tickets sélectionnés de ${category}</button>
+                    <button onclick="window.deleteSelectedTickets('${category}')">Supprimer les tickets sélectionnés de ${category}</button>
                 </div>
             `;
             categoriesContainer.innerHTML += categoryHtml;
@@ -529,10 +587,10 @@
                     <td>${highlightMatch(categoryTickets.prix[i], searchTerm)}</td>
                     <td>${highlightMatch(categoryTickets.utilisateur[i], searchTerm)}</td>
                     <td>
-                        <button class="edit-btn" onclick="editTicketTotal('${category}', ${i})">
+                        <button class="edit-btn" onclick="window.editTicketTotal('${category}', ${i})">
                             <i class="fas fa-edit"></i> Modifier
                         </button>
-                        <button class="delete-btn" onclick="deleteTicket('${category}', ${i},null)">
+                        <button class="delete-btn" onclick="window.deleteTicket('${category}', ${i},null)">
                             <i class="fas fa-trash"></i> Supprimer
                         </button>
                     </td>
@@ -554,7 +612,7 @@
                         <h2>Tickets en transit</h2>
                     </div>
                     <div>
-                        <button class="add-ticket-btn" onclick="showAddTicketModal(null)">
+                        <button class="add-ticket-btn" onclick="window.showAddTicketModal(null)">
                             <i class="fas fa-plus"></i> Ajouter un ticket
                         </button>
                         <label for="importFile_Transit" class="file-input-label">
@@ -565,8 +623,8 @@
     style="display: none;"
     onchange="importTickets(event)">                    </div>
                 </div>
-                <button onclick="deleteAllTicketsInCategory(null)">Supprimer tous les tickets</button>
-                <button onclick="editSelectedTickets(null)">Modifier les tickets selectionnés</button>
+                <button onclick="window.deleteAllTicketsInCategory(null)">Supprimer tous les tickets</button>
+                <button onclick="window.editSelectedTickets(null)">Modifier les tickets selectionnés</button>
                 <table>
                     <thead>
                         <tr>
@@ -583,7 +641,7 @@
                         ${generateTicketRowsTransit(tickets, searchTerm)}
                     </tbody>
                 </table>
-                <button onclick="deleteSelectedTickets(null)">Supprimer les tickets sélectionnés</button>
+                <button onclick="window.deleteSelectedTickets(null)">Supprimer les tickets sélectionnés</button>
             </div>
         `;
 
@@ -605,10 +663,10 @@
                     <td>${highlightMatch(ticket.price, searchTerm)}</td>
                     <td>${highlightMatch(ticket.user, searchTerm)}</td>
                     <td>
-                        <button class="edit-btn" onclick="editTicketTransit('${id}')">
+                        <button class="edit-btn" onclick="window.editTicketTransit('${id}')">
                             <i class="fas fa-edit"></i> Modifier
                         </button>
-                        <button class="delete-btn" onclick="deleteTicket(null,null, '${id}')">
+                        <button class="delete-btn" onclick="window.deleteTicket(null,null, '${id}')">
                             <i class="fas fa-trash"></i> Supprimer
                         </button>
                     </td>
@@ -618,7 +676,7 @@
         return rows;
         }
 
-        function editTicketTransit(id) {
+    function editTicketTransit(id) {
         const ticket = allTickets[id];
         if (ticket) {
             editingId = id;
@@ -631,62 +689,69 @@
         } else {
             alert("Ticket introuvable.");
         }
-        }
+    }
 
-        function saveTicketEdit() {
-            const newPassword = document.getElementById('editPassword').value;
-            const newPrice = document.getElementById('editPrice').value;
-            const newUser = document.getElementById('editUser').value;
-            const newCategory = document.getElementById('editCategory').value;
+// MODIFICATION: Adaptation de saveTicketEdit() pour le partitionnement.
+async function saveTicketEdit() {
+    const newPassword = document.getElementById('editPassword').value;
+    const newPrice = document.getElementById('editPrice').value;
+    const newUser = document.getElementById('editUser').value;
+    const newCategory = document.getElementById('editCategory').value;
+    const currentUserId = sessionStorage.getItem('currentUserId');  // MODIFICATION: Récupérer currentUserId
 
-            if (!newPassword || !newPrice || !newUser || !newCategory) {
-                alert('Tous les champs sont obligatoires');
-                return;
-            }
+    if (!newPassword || !newPrice || !newUser || !newCategory || !currentUserId) { // MODIFICATION: Vérifier aussi currentUserId
+        alert('Tous les champs sont obligatoires');
+        return;
+    }
 
-            showLoading();
+    showLoading();
+    await initializeDatabase(); // Ensure database is initialized before saving edit
 
-            if (currentDatabase === 'TicketsTotal') {
-                const categoryData = allTickets[editingCategory];
-                categoryData.motDePasse[editingIndex] = newPassword;
-                categoryData.prix[editingIndex] = newPrice;
-                categoryData.utilisateur[editingIndex] = newUser;
+    if (currentDatabase === 'TicketsTotal') {
+        const categoryData = allTickets[editingCategory];
+        categoryData.motDePasse[editingIndex] = newPassword;
+        categoryData.prix[editingIndex] = newPrice;
+        categoryData.utilisateur[editingIndex] = newUser;
 
-                const updates = {
-                    [`${currentDatabase}/${editingCategory}`]: categoryData
-                };
+        // MODIFICATION : Utilisation de currentUserId dans le chemin
+        const updates = {
+            [`users-data/${currentUserId}/${currentDatabase}/${editingCategory}`]: categoryData
+        };
 
-                set(ref(db),updates)
-                    .then(() => {
-                        hideLoading();
-                        closeEditModal();
-                        alert('Ticket modifié avec succès!');
-                    })
-                    .catch(error => {
-                        console.error("Erreur lors de la modification:", error);
-                        hideLoading();
-                        alert('Erreur lors de la modification du ticket');
-                    });
-            } else if (currentDatabase === 'TicketsTransit') {
-                const ticketRef = ref(db,`${currentDatabase}/${editingId}`);
-                set(ticketRef,{
-                    category: newCategory,
-                    password: newPassword,
-                    price: newPrice,
-                    user: newUser
-                })
-                .then(() => {
-                    hideLoading();
-                    closeEditModal();
-                    alert('Ticket modifié avec succès!');
-                })
-                .catch(error => {
-                    console.error("Erreur lors de la modification:", error);
-                    hideLoading();
-                    alert('Erreur lors de la modification du ticket');
-                });
-            }
-        }
+        update(ref(db), updates)
+            .then(() => {
+                hideLoading();
+                closeEditModal();
+                alert('Ticket modifié avec succès!');
+            })
+            .catch(error => {
+                console.error("Erreur lors de la modification:", error);
+                hideLoading();
+                alert('Erreur lors de la modification du ticket');
+            });
+
+    } else if (currentDatabase === 'TicketsTransit') {
+        // MODIFICATION: Utilisation de currentUserId
+        const ticketRef = ref(db, `users-data/${currentUserId}/${currentDatabase}/${editingId}`);
+        update(ticketRef, {
+            category: newCategory,
+            password: newPassword,
+            price: newPrice,
+            user: newUser
+        })
+        .then(() => {
+            hideLoading();
+            closeEditModal();
+            alert('Ticket modifié avec succès!');
+        })
+        .catch(error => {
+            console.error("Erreur lors de la modification:", error);
+            hideLoading();
+            alert('Erreur lors de la modification du ticket');
+        });
+    }
+}
+
 
                 function editTicketTotal(category, index) {
                     editingCategory = category;
@@ -702,13 +767,22 @@
                     document.getElementById('editTicketModal').style.display = 'block';
                 }
 
-function mergeTicketsToCategory(category, newTickets) {
+//MODIFICATION: Adaptation de la fonction mergeTicketsToCategory
+async function mergeTicketsToCategory(category, newTickets) {
     let updates = {};
+    const currentUserId = sessionStorage.getItem('currentUserId');  // MODIFICATION: Récupérer currentUserId
+    if (!currentUserId) {
+        console.error("User not logged in.");
+        return; // Arrêter si l'utilisateur n'est pas connecté
+    }
+
+    await initializeDatabase(); // Ensure database is initialized before merge
 
     if (currentDatabase === 'TicketsTransit') {
         // Utiliser les IDs uniques pour mettre à jour la base de données
         for (let uniqueId in newTickets) {
-            updates[`${currentDatabase}/${uniqueId}`] = newTickets[uniqueId];
+            // MODIFICATION : Utilisation de currentUserId dans le chemin
+            updates[`users-data/${currentUserId}/${currentDatabase}/${uniqueId}`] = newTickets[uniqueId];
         }
     } else {
         // Si la catégorie n'existe pas, la créer
@@ -727,11 +801,11 @@ function mergeTicketsToCategory(category, newTickets) {
             prix: [...currentTickets.prix, ...newTickets.prix],
             utilisateur: [...currentTickets.utilisateur, ...newTickets.utilisateur]
         };
-
-        updates[`${currentDatabase}/${category}`] = mergedTickets;
+        // MODIFICATION: Utilisation de currentUserId
+        updates[`users-data/${currentUserId}/${currentDatabase}/${category}`] = mergedTickets;
     }
 
-    set(ref(db),updates)
+    update(ref(db), updates)
         .then(() => {
             hideLoading();
             alert(`Importation réussie dans ${category || 'TicketsTransit'}!`);
@@ -743,17 +817,18 @@ function mergeTicketsToCategory(category, newTickets) {
         });
 }
 
-function editCategory(category) {
-    currentEditingCategory = category;
-    document.getElementById('editCategoryName').value = category;
-    document.getElementById('editCategoryModal').style.display = 'block';
-}
-
-function saveCategoryEdit() {
+        function editCategory(category) {
+            currentEditingCategory = category;
+            document.getElementById('editCategoryName').value = category;
+            document.getElementById('editCategoryModal').style.display = 'block';
+        }
+// MODIFICATION: Adaptation de la fonction saveCategoryEdit()
+async function saveCategoryEdit() {
     const newCategoryName = document.getElementById('editCategoryName').value.trim();
+    const currentUserId = sessionStorage.getItem('currentUserId'); // MODIFICATION
 
-    if (!newCategoryName) {
-        alert('Le nom de la catégorie ne peut pas être vide');
+    if (!newCategoryName || !currentUserId) { // MODIFICATION: Vérifier aussi currentUserId
+        alert('Le nom de la catégorie ne peut pas être vide, et vous devez être connecté.');
         return;
     }
 
@@ -763,14 +838,16 @@ function saveCategoryEdit() {
     }
 
     showLoading();
+    await initializeDatabase(); // Ensure database is initialized before saving category edit
     const categoryData = allTickets[currentEditingCategory];
 
     const updates = {
-        [`${currentDatabase}/${currentEditingCategory}`]: null,
-        [`${currentDatabase}/${newCategoryName}`]: categoryData
+         // MODIFICATION: Utilisation de currentUserId
+        [`users-data/${currentUserId}/${currentDatabase}/${currentEditingCategory}`]: null, // Supprimer l'ancienne catégorie
+        [`users-data/${currentUserId}/${currentDatabase}/${newCategoryName}`]: categoryData  // Ajouter la nouvelle catégorie
     };
 
-    set(ref(db),updates)
+    update(ref(db), updates)
         .then(() => {
             hideLoading();
             closeEditCategoryModal();
@@ -783,17 +860,27 @@ function saveCategoryEdit() {
         });
 }
 
-function showAddTicketModal(category) {
-    currentEditingCategory = category;
-    document.getElementById('newPassword').value = '';
-    document.getElementById('newPrice').value = '';
-    document.getElementById('newUser').value = '';
-    document.getElementById('newCategory').value = '';
-    document.getElementById('addTicketModal').style.display = 'block';
-}
 
-function saveNewTicket() {
+        function showAddTicketModal(category) {
+            currentEditingCategory = category;
+            document.getElementById('newPassword').value = '';
+            document.getElementById('newPrice').value = '';
+            document.getElementById('newUser').value = '';
+            document.getElementById('newCategory').value = '';
+            document.getElementById('addTicketModal').style.display = 'block';
+        }
+//MODIFICATION: adaptation de la fonction saveNewTicket()
+async function saveNewTicket() {
     showLoading();
+    const currentUserId = sessionStorage.getItem('currentUserId'); // MODIFICATION
+    if (!currentUserId) { // MODIFICATION: Vérification
+        hideLoading();
+        alert('Vous devez être connecté pour ajouter un ticket.');
+        return;
+    }
+
+    await initializeDatabase(); // Ensure database is initialized before saving new ticket
+
     if (currentDatabase === 'TicketsTransit') {
         const id = `id-${Date.now()}`; // Générer un ID unique pour TicketsTransit
         const newTicket = {
@@ -803,8 +890,8 @@ function saveNewTicket() {
             price: document.getElementById('newPrice').value.trim(),
             user: document.getElementById('newUser').value.trim()
         };
-
-        set(ref(db,`${currentDatabase}/${id}`),newTicket)
+        // MODIFICATION: Utilisation de currentUserId
+        set(ref(db, `users-data/${currentUserId}/${currentDatabase}/${id}`), newTicket)
             .then(() => {
                 hideLoading();
                 closeAddTicketModal();
@@ -828,7 +915,8 @@ function saveNewTicket() {
         categoryData.prix.push(newTicket.price);
         categoryData.utilisateur.push(newTicket.user);
 
-        set(ref(db,`${currentDatabase}/${category}`),categoryData)
+        // MODIFICATION: Utilisation de currentUserId
+        set(ref(db, `users-data/${currentUserId}/${currentDatabase}/${category}`), categoryData)
             .then(() => {
                 hideLoading();
                 closeAddTicketModal();
@@ -842,59 +930,69 @@ function saveNewTicket() {
     }
 }
 
-function closeEditModal() {
-    document.getElementById('editTicketModal').style.display = 'none';
-    editingCategory = '';
-    editingIndex = -1;
-}
 
-function closeEditCategoryModal() {
-    document.getElementById('editCategoryModal').style.display = 'none';
-    currentEditingCategory = null;
-}
+        function closeEditModal() {
+            document.getElementById('editTicketModal').style.display = 'none';
+            editingCategory = '';
+            editingIndex = -1;
+        }
 
-function closeAddTicketModal() {
-    document.getElementById('addTicketModal').style.display = 'none';
-    currentEditingCategory = null;
-}
+        function closeEditCategoryModal() {
+            document.getElementById('editCategoryModal').style.display = 'none';
+            currentEditingCategory = null;
+        }
 
-function matchesSearchTotal(categoryTickets, index, searchTerm) {
-const lowerSearchTerm = searchTerm.toLowerCase();
-return categoryTickets.motDePasse[index].toLowerCase().includes(lowerSearchTerm) ||
-   categoryTickets.prix[index].toLowerCase().includes(lowerSearchTerm) ||
-   categoryTickets.utilisateur[index].toLowerCase().includes(lowerSearchTerm);
-}
+        function closeAddTicketModal() {
+            document.getElementById('addTicketModal').style.display = 'none';
+            currentEditingCategory = null;
+        }
 
-function matchesSearchTransit(ticket, searchTerm) {
-const lowerSearchTerm = searchTerm.toLowerCase();
-return (ticket.id && ticket.id.toLowerCase().includes(lowerSearchTerm)) ||
-   (ticket.category && ticket.category.toLowerCase().includes(lowerSearchTerm)) ||
-   (ticket.password && ticket.password.toLowerCase().includes(lowerSearchTerm)) ||
-   (ticket.price && ticket.price.toLowerCase().includes(lowerSearchTerm)) ||
-   (ticket.user && ticket.user.toLowerCase().includes(lowerSearchTerm));
-}
+        function matchesSearchTotal(categoryTickets, index, searchTerm) {
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        return categoryTickets.motDePasse[index].toLowerCase().includes(lowerSearchTerm) ||
+           categoryTickets.prix[index].toLowerCase().includes(lowerSearchTerm) ||
+           categoryTickets.utilisateur[index].toLowerCase().includes(lowerSearchTerm);
+        }
 
-// Modifiez la fonction matchesSearch pour utiliser la fonction appropriée en fonction de la base de données
-function matchesSearch(data, index, searchTerm) {
-if (currentDatabase === 'TicketsTotal') {
-return matchesSearchTotal(data, index, searchTerm);
-} else if (currentDatabase === 'TicketsTransit') {
-return matchesSearchTransit(data, searchTerm);
-}
-return false;
-}
+        function matchesSearchTransit(ticket, searchTerm) {
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        return (ticket.id && ticket.id.toLowerCase().includes(lowerSearchTerm)) ||
+           (ticket.category && ticket.category.toLowerCase().includes(lowerSearchTerm)) ||
+           (ticket.password && ticket.password.toLowerCase().includes(lowerSearchTerm)) ||
+           (ticket.price && ticket.price.toLowerCase().includes(lowerSearchTerm)) ||
+           (ticket.user && ticket.user.toLowerCase().includes(lowerSearchTerm));
+        }
 
-function highlightMatch(text, searchTerm) {
-    if (!searchTerm) return text;
-    const regex = new RegExp(searchTerm, 'gi');
-    return text.replace(regex, match => `<span class="highlight">${match}</span>`);
-}
+        // Modifiez la fonction matchesSearch pour utiliser la fonction appropriée en fonction de la base de données
+        function matchesSearch(data, index, searchTerm) {
+        if (currentDatabase === 'TicketsTotal') {
+        return matchesSearchTotal(data, index, searchTerm);
+        } else if (currentDatabase === 'TicketsTransit') {
+        return matchesSearchTransit(data, searchTerm);
+        }
+        return false;
+        }
 
-function deleteTicket(category, index, id) {
+        function highlightMatch(text, searchTerm) {
+            if (!searchTerm) return text;
+            const regex = new RegExp(searchTerm, 'gi');
+            return text.replace(regex, match => `<span class="highlight">${match}</span>`);
+        }
+//MODIFICATION: adaptation de la fonction deleteTicket
+async function deleteTicket(category, index, id) {
+    const currentUserId = sessionStorage.getItem('currentUserId'); // MODIFICATION
+    if (!currentUserId) { //MODIFICATION : Verification
+        alert('Vous devez être connecté pour supprimer un ticket.');
+        return;
+    }
+
     if (confirm('Êtes-vous sûr de vouloir supprimer ce ticket ?')) {
         showLoading();
+        await initializeDatabase(); // Ensure database is initialized before delete
+
         if (currentDatabase === 'TicketsTransit') {
-            remove(ref(db,`${currentDatabase}/${id}`))
+            // MODIFICATION : Utilisation de currentUserId
+            remove(ref(db, `users-data/${currentUserId}/${currentDatabase}/${id}`))
                 .then(() => {
                     hideLoading();
                     alert('Ticket supprimé avec succès!');
@@ -910,7 +1008,8 @@ function deleteTicket(category, index, id) {
             categoryData.prix.splice(index, 1);
             categoryData.utilisateur.splice(index, 1);
 
-            set(ref(db,`${currentDatabase}/${category}`),categoryData)
+            // MODIFICATION : Utilisation de currentUserId
+            set(ref(db, `users-data/${currentUserId}/${currentDatabase}/${category}`), categoryData)
             .then(() => {
                 hideLoading();
                 alert('Ticket supprimé avec succès!');
@@ -924,7 +1023,13 @@ function deleteTicket(category, index, id) {
     }
 }
 
-function deleteSelectedTickets(category) {
+//MODIFICATION: adaptation de la fonction deleteSelectedTickets
+async function deleteSelectedTickets(category) {
+    const currentUserId = sessionStorage.getItem('currentUserId');  // MODIFICATION: Récupérer currentUserId
+    if (!currentUserId) {
+        alert('Vous devez être connecté pour supprimer des tickets.');
+        return; // Arrêter si l'utilisateur n'est pas connecté
+    }
     const selectedTickets = document.querySelectorAll(`input[name^="ticketSelect_${category || 'Transit'}"]:checked`);
     if (selectedTickets.length === 0) {
         alert('Veuillez sélectionner au moins un ticket à supprimer');
@@ -933,12 +1038,14 @@ function deleteSelectedTickets(category) {
 
     if (confirm('Êtes-vous sûr de vouloir supprimer les tickets sélectionnés ?')) {
         showLoading();
+        await initializeDatabase(); // Ensure database is initialized before delete selected
         const updates = {};
 
         if (currentDatabase === 'TicketsTransit') {
             selectedTickets.forEach(checkbox => {
                 const ticketId = checkbox.value;
-                updates[`${currentDatabase}/${ticketId}`] = null;
+                 // MODIFICATION : Utilisation de currentUserId dans le chemin
+                updates[`users-data/${currentUserId}/${currentDatabase}/${ticketId}`] = null;
             });
         } else {
             const categoryData = allTickets[category];
@@ -951,11 +1058,11 @@ function deleteSelectedTickets(category) {
                 categoryData.prix.splice(index, 1);
                 categoryData.utilisateur.splice(index, 1);
             });
-
-            updates[`${currentDatabase}/${category}`] = categoryData;
+             // MODIFICATION : Utilisation de currentUserId dans le chemin
+            updates[`users-data/${currentUserId}/${currentDatabase}/${category}`] = categoryData;
         }
 
-        set(ref(db),updates)
+        update(ref(db), updates)
             .then(() => {
                 hideLoading();
                 alert('Tickets sélectionnés supprimés avec succès!');
@@ -965,55 +1072,61 @@ function deleteSelectedTickets(category) {
                 hideLoading();
                 alert('Erreur lors de la suppression des tickets');
             });
-    }
+        }
 }
 
-// Fonction pour modifier les tickets sélectionnés
-function editSelectedTickets(category) {
-    const selectedTickets = document.querySelectorAll(`input[name^="ticketSelect_${category || 'Transit'}"]:checked`);
-    if (selectedTickets.length === 0) {
-        alert('Veuillez sélectionner au moins un ticket à modifier');
-        return;
-    }
 
-    // Stocker les informations des tickets sélectionnés pour la modification groupée
-    window.selectedTicketsData = {
-        category: category,
-        tickets: []
-    };
-
-    if (currentDatabase === 'TicketsTransit') {
-        selectedTickets.forEach(checkbox => {
-            const ticketId = checkbox.value;
-            window.selectedTicketsData.tickets.push({
-                id: ticketId,
-                data: allTickets[ticketId]
-            });
-        });
-    } else {
-        const indices = Array.from(selectedTickets).map(checkbox => parseInt(checkbox.value));
-        window.selectedTicketsData.tickets = indices.map(index => ({
-            index: index,
-            data: {
-                password: allTickets[category].motDePasse[index],
-                price: allTickets[category].prix[index],
-                user: allTickets[category].utilisateur[index]
+        // Fonction pour modifier les tickets sélectionnés
+        function editSelectedTickets(category) {
+            const selectedTickets = document.querySelectorAll(`input[name^="ticketSelect_${category || 'Transit'}"]:checked`);
+            if (selectedTickets.length === 0) {
+                alert('Veuillez sélectionner au moins un ticket à modifier');
+                return;
             }
-        }));
-    }
 
-    // Ouvrir la modale de modification groupée
-    document.getElementById('bulkEditModal').style.display = 'block';
-}
+            // Stocker les informations des tickets sélectionnés pour la modification groupée
+            window.selectedTicketsData = {
+                category: category,
+                tickets: []
+            };
 
-// Fonction pour enregistrer les modifications groupées
-function saveBulkEdit() {
+            if (currentDatabase === 'TicketsTransit') {
+                selectedTickets.forEach(checkbox => {
+                    const ticketId = checkbox.value;
+                    window.selectedTicketsData.tickets.push({
+                        id: ticketId,
+                        data: allTickets[ticketId]
+                    });
+                });
+            } else {
+                const indices = Array.from(selectedTickets).map(checkbox => parseInt(checkbox.value));
+                window.selectedTicketsData.tickets = indices.map(index => ({
+                    index: index,
+                    data: {
+                        password: allTickets[category].motDePasse[index],
+                        price: allTickets[category].prix[index],
+                        user: allTickets[category].utilisateur[index]
+                    }
+                }));
+            }
+
+            // Ouvrir la modale de modification groupée
+            document.getElementById('bulkEditModal').style.display = 'block';
+        }
+
+//MODIFICATION: Adaptation de la fonction saveBulkEdit()
+async function saveBulkEdit() {
     const newCategory = document.getElementById('bulkEditCategory').value.trim();
     const newPassword = document.getElementById('bulkEditPassword').value.trim();
     const newPrice = document.getElementById('bulkEditPrice').value.trim();
     const newUser = document.getElementById('bulkEditUser').value.trim();
-
+    const currentUserId = sessionStorage.getItem('currentUserId');  // MODIFICATION: Récupérer currentUserId
+    if (!currentUserId) { //MODIFICATION: Vérification
+        alert('Vous devez être connecté pour modifier des tickets.');
+        return;
+    }
     showLoading();
+    await initializeDatabase(); // Ensure database is initialized before bulk edit
     const updates = {};
 
     if (currentDatabase === 'TicketsTransit') {
@@ -1025,7 +1138,8 @@ function saveBulkEdit() {
                 price: newPrice || ticket.data.price,
                 user: newUser || ticket.data.user
             };
-            updates[`${currentDatabase}/${ticket.id}`] = updatedTicket;
+             // MODIFICATION : Utilisation de currentUserId dans le chemin
+            updates[`users-data/${currentUserId}/${currentDatabase}/${ticket.id}`] = updatedTicket;
         });
     } else {
         const category = window.selectedTicketsData.category;
@@ -1036,10 +1150,11 @@ function saveBulkEdit() {
             if (newPrice) categoryData.prix[ticket.index] = newPrice;
             if (newUser) categoryData.utilisateur[ticket.index] = newUser;
         });
-        updates[`${currentDatabase}/${category}`] = categoryData;
+        // MODIFICATION: Utilisation de currentUserId
+        updates[`users-data/${currentUserId}/${currentDatabase}/${category}`] = categoryData;
     }
 
-    set(ref(db),updates)
+    update(ref(db), updates)
         .then(() => {
             hideLoading();
             closeBulkEditModal();
@@ -1052,28 +1167,39 @@ function saveBulkEdit() {
         });
 }
 
-// Fonction pour fermer la modale de modification groupée
-function closeBulkEditModal() {
-    document.getElementById('bulkEditModal').style.display = 'none';
-    window.selectedTicketsData = null;
-}
 
-function deleteAllTicketsInCategory(category) {
+        // Fonction pour fermer la modale de modification groupée
+        function closeBulkEditModal() {
+            document.getElementById('bulkEditModal').style.display = 'none';
+            window.selectedTicketsData = null;
+        }
+//MODIFICATION: adaptation de la fonction deleteAllTicketsInCategory
+async function deleteAllTicketsInCategory(category) {
+    const currentUserId = sessionStorage.getItem('currentUserId'); // MODIFICATION
+    if (!currentUserId) { //MODIFICATION: verification
+        alert('Vous devez être connecté pour supprimer des tickets.');
+        return;
+    }
+
     if (confirm(`Êtes-vous sûr de vouloir supprimer TOUS les tickets de ${category || 'TicketsTransit'} ?`)) {
         showLoading();
+        await initializeDatabase(); // Ensure database is initialized before delete all
+
         if (currentDatabase === 'TicketsTransit') {
-            set(ref(db,currentDatabase),{})
+            // MODIFICATION : Utilisation de currentUserId dans le chemin
+            set(ref(db, `users-data/${currentUserId}/${currentDatabase}`), {})
                 .then(() => {
                     hideLoading();
                     alert('Tous les tickets ont été supprimés avec succès!');
                 })
-                .catch(error => {
+                .catch((error) => {
                     console.error("Erreur lors de la suppression:", error);
                     hideLoading();
                     alert('Erreur lors de la suppression des tickets');
                 });
         } else {
-            set(ref(db,`${currentDatabase}/${category}`),{
+             // MODIFICATION : Utilisation de currentUserId dans le chemin
+            set(ref(db, `users-data/${currentUserId}/${currentDatabase}/${category}`), {
                 motDePasse: [],
                 prix: [],
                 utilisateur: []
@@ -1091,260 +1217,261 @@ function deleteAllTicketsInCategory(category) {
     }
 }
 
-function exportTickets() {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allTickets, null, 2));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", `tickets_export_${currentDatabase}.json`);
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-}
 
-function exportFilteredTickets() {
-    const searchTerm = document.getElementById('searchBar').value.trim();
-    const filteredTickets = {};
-
-    if (currentDatabase === 'TicketsTransit') {
-        for (let id in allTickets) {
-            if (!searchTerm || matchesSearchTransit(allTickets[id], searchTerm)) {
-                filteredTickets[id] = allTickets[id];
-            }
+        function exportTickets() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allTickets, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", `tickets_export_${currentDatabase}.json`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
         }
-    } else {
-        for (let category in allTickets) {
-            const categoryTickets = allTickets[category];
-            filteredTickets[category] = {
-                motDePasse: [],
-                prix: [],
-                utilisateur: []
-            };
 
-            for (let i = 0; i < categoryTickets.motDePasse.length; i++) {
-                if (!searchTerm || matchesSearchTotal(categoryTickets, i, searchTerm)) {
-                    filteredTickets[category].motDePasse.push(categoryTickets.motDePasse[i]);
-                    filteredTickets[category].prix.push(categoryTickets.prix[i]);
-                    filteredTickets[category].utilisateur.push(categoryTickets.utilisateur[i]);
+        function exportFilteredTickets() {
+            const searchTerm = document.getElementById('searchBar').value.trim();
+            const filteredTickets = {};
+
+            if (currentDatabase === 'TicketsTransit') {
+                for (let id in allTickets) {
+                    if (!searchTerm || matchesSearchTransit(allTickets[id], searchTerm)) {
+                        filteredTickets[id] = allTickets[id];
+                    }
                 }
-            }
-        }
-    }
-
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(filteredTickets, null, 2));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", `filtered_tickets_export_${currentDatabase}.json`);
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-}
-
-function handleJsonImport(jsonContent) {
-    const importedData = JSON.parse(jsonContent);
-    if (confirm('Êtes-vous sûr de vouloir importer ces tickets ? Les nouveaux tickets seront ajoutés aux tickets existants.')) {
-
-        // Vérifier si la base est vide
-        if (!allTickets || Object.keys(allTickets).length === 0) {
-            allTickets = currentDatabase === 'TicketsTransit' ? {} : {};
-        }
-
-        const updates = {};
-
-        if (currentDatabase === 'TicketsTransit') {
-            let updatedTickets = {};
-            for (let id in importedData) {
-                let uniqueId = id;
-                // Générer un ID unique si l'ID existe déjà
-                while (allTickets[uniqueId]) {
-                    uniqueId = `id-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-                }
-                updatedTickets[uniqueId] = { ...importedData[id], id: uniqueId };
-            }
-            for (let uniqueId in updatedTickets) {
-                updates[`${currentDatabase}/${uniqueId}`] = updatedTickets[uniqueId];
-            }
-        } else {
-            for (let category in importedData) {
-                if (allTickets[category]) {
-                    // Fusion des tickets existants avec les nouveaux
-                    updates[`${currentDatabase}/${category}`] = {
-                        motDePasse: [...allTickets[category].motDePasse, ...importedData[category].motDePasse],
-                        prix: [...allTickets[category].prix, ...importedData[category].prix],
-                        utilisateur: [...allTickets[category].utilisateur, ...importedData[category].utilisateur]
-                    };
-                } else {
-                    // Nouvelle catégorie
-                    updates[`${currentDatabase}/${category}`] = importedData[category];
-                }
-            }
-        }
-
-        set(ref(db),updates)
-            .then(() => {
-                hideLoading();
-                alert('Importation réussie !');
-            })
-            .catch((error) => {
-                console.error("Erreur lors de l'importation:", error);
-                hideLoading();
-                alert("Erreur lors de l'importation. Veuillez réessayer.");
-            });
-    } else {
-        hideLoading();
-    }
-}
-
-function handleCsvImport(csvContent) {
-    const lines = csvContent.split('\n');
-    let tickets = {};
-
-    if (currentDatabase === 'TicketsTransit') {
-        // Structure améliorée pour TicketsTransit
-        for (let i = 1; i < lines.length; i++) {
-            if (!lines[i].trim()) continue;
-            const values = lines[i].split(',');
-            // Générer un ID unique basé sur un timestamp plus précis et un nombre aléatoire
-            const uniqueId = `id-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-            tickets[uniqueId] = {
-                id: uniqueId,
-                category: values[1] ? values[1].trim() : 'N/A',
-                password: values[2] ? values[2].trim() : '',
-                price: values[3] ? values[3].trim() : '',
-                user: values[4] ? values[4].trim() : ''
-            };
-        }
-        tempImportData = { tickets: tickets };
-        tempCategory = "TicketsTransit";
-        showPriceModal("TicketsTransit Import");
-    } else {
-        for (let i = 1; i < lines.length; i++) {
-            if (!lines[i].trim()) continue;
-            const values = lines[i].split(',');
-            const category = values[2].trim(); // Profile column
-
-            if (!tickets[category]) {
-                tickets[category] = {
-                    motDePasse: [],
-                    prix: [],
-                    utilisateur: []
-                };
-            }
-
-            tickets[category].utilisateur.push(values[0].trim());
-            tickets[category].motDePasse.push(values[1].trim());
-        }
-
-        tempImportData = tickets;
-        const firstCategory = Object.keys(tickets)[0];
-        showPriceModal(firstCategory);
-    }
-}
-
-function handleTxtImport(txtContent) {
-    const lines = txtContent.split('\n');
-    let tickets = {};
-
-    if (currentDatabase === 'TicketsTransit') {
-        const regex = /add name="([^"]+)" password="([^"]+)" profile="([^"]+)"/;
-        for (let line of lines) {
-            line = line.trim();
-            if (!line || line === '/ip hotspot user') continue;
-            const match = line.match(regex);
-            if (match) {
-                const [_, name, password, profile] = match;
-                // Générer un ID unique pour chaque ticket
-                const uniqueId = `id-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-                tickets[uniqueId] = {
-                    id: uniqueId,
-                    category: profile,
-                    password: password,
-                    price: '', // Le prix sera défini plus tard
-                    user: name
-                };
-            }
-        }
-        tempImportData = { tickets: tickets };
-        tempCategory = "TicketsTransit";
-        showPriceModal("TicketsTransit Import");
-    } else {
-        const regex = /add name="([^"]+)" password="([^"]+)" profile="([^"]+)"/;
-        for (let line of lines) {
-            line = line.trim();
-            if (!line || line === '/ip hotspot user') continue;
-
-            const match = line.match(regex);
-            if (match) {
-                const [_, name, password, profile] = match;
-                if (!tickets[profile]) {
-                    tickets[profile] = {
+            } else {
+                for (let category in allTickets) {
+                    const categoryTickets = allTickets[category];
+                    filteredTickets[category] = {
                         motDePasse: [],
                         prix: [],
                         utilisateur: []
                     };
+
+                    for (let i = 0; i < categoryTickets.motDePasse.length; i++) {
+                        if (!searchTerm || matchesSearchTotal(categoryTickets, i, searchTerm)) {
+                            filteredTickets[category].motDePasse.push(categoryTickets.motDePasse[i]);
+                            filteredTickets[category].prix.push(categoryTickets.prix[i]);
+                            filteredTickets[category].utilisateur.push(categoryTickets.utilisateur[i]);
+                        }
+                    }
+                }
+            }
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(filteredTickets, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", `filtered_tickets_export_${currentDatabase}.json`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function handleJsonImport(jsonContent) {
+            const importedData = JSON.parse(jsonContent);
+            if (confirm('Êtes-vous sûr de vouloir importer ces tickets ? Les nouveaux tickets seront ajoutés aux tickets existants.')) {
+
+                // Vérifier si la base est vide
+                if (!allTickets || Object.keys(allTickets).length === 0) {
+                    allTickets = currentDatabase === 'TicketsTransit' ? {} : {};
                 }
 
-                tickets[profile].utilisateur.push(name);
-                tickets[profile].motDePasse.push(password);
+                const updates = {};
+
+                if (currentDatabase === 'TicketsTransit') {
+                    let updatedTickets = {};
+                    for (let id in importedData) {
+                        let uniqueId = id;
+                        // Générer un ID unique si l'ID existe déjà
+                        while (allTickets[uniqueId]) {
+                            uniqueId = `id-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                        }
+                        updatedTickets[uniqueId] = { ...importedData[id], id: uniqueId };
+                    }
+                    for (let uniqueId in updatedTickets) {
+                        updates[`${currentDatabase}/${uniqueId}`] = updatedTickets[uniqueId];
+                    }
+                } else {
+                    for (let category in importedData) {
+                        if (allTickets[category]) {
+                            // Fusion des tickets existants avec les nouveaux
+                            updates[`${currentDatabase}/${category}`] = {
+                                motDePasse: [...allTickets[category].motDePasse, ...importedData[category].motDePasse],
+                                prix: [...allTickets[category].prix, ...importedData[category].prix],
+                                utilisateur: [...allTickets[category].utilisateur, ...importedData[category].utilisateur]
+                            };
+                        } else {
+                            // Nouvelle catégorie
+                            updates[`${currentDatabase}/${category}`] = importedData[category];
+                        }
+                    }
+                }
+
+                mergeTicketsToCategory(null, updates); // Use mergeTicketsToCategory with updates
+            } else {
+                hideLoading();
             }
         }
 
-        if (Object.keys(tickets).length === 0) {
-            hideLoading();
-            alert('Aucun ticket valide n\'a été trouvé dans le fichier');
-            return;
+
+        function handleCsvImport(csvContent) {
+            const lines = csvContent.split('\n');
+            let tickets = {};
+
+            if (currentDatabase === 'TicketsTransit') {
+                // Structure améliorée pour TicketsTransit
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    const values = lines[i].split(',');
+                    // Générer un ID unique basé sur un timestamp plus précis et un nombre aléatoire
+                    const uniqueId = `id-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                    tickets[uniqueId] = {
+                        id: uniqueId,
+                        category: values[1] ? values[1].trim() : 'N/A',
+                        password: values[2] ? values[2].trim() : '',
+                        price: values[3] ? values[3].trim() : '',
+                        user: values[4] ? values[4].trim() : ''
+                    };
+                }
+                tempImportData = { tickets: tickets };
+                tempCategory = "TicketsTransit";
+                showPriceModal("TicketsTransit Import");
+            } else {
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    const values = lines[i].split(',');
+                    const category = values[2].trim(); // Profile column
+
+                    if (!tickets[category]) {
+                        tickets[category] = {
+                            motDePasse: [],
+                            prix: [],
+                            utilisateur: []
+                        };
+                    }
+
+                    tickets[category].utilisateur.push(values[0].trim());
+                    tickets[category].motDePasse.push(values[1].trim());
+                }
+
+                tempImportData = tickets;
+                const firstCategory = Object.keys(tickets)[0];
+                showPriceModal(firstCategory);
+            }
         }
 
-        tempImportData = tickets;
-        const firstCategory = Object.keys(tickets)[0];
-        showPriceModal(firstCategory);
-    }
-}
+        function handleTxtImport(txtContent) {
+            const lines = txtContent.split('\n');
+            let tickets = {};
 
-function showPriceModal(category) {
-    tempCategory = category;
-    document.getElementById('categoryName').textContent = category;
-    document.getElementById('priceModal').style.display = 'block';
-    document.getElementById('priceInput').value = '';
-}
+            if (currentDatabase === 'TicketsTransit') {
+                const regex = /add name="([^"]+)" password="([^"]+)" profile="([^"]+)"/;
+                for (let line of lines) {
+                    line = line.trim();
+                    if (!line || line === '/ip hotspot user') continue;
+                    const match = line.match(regex);
+                    if (match) {
+                        const [_, name, password, profile] = match;
+                        // Générer un ID unique pour chaque ticket
+                        const uniqueId = `id-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                        tickets[uniqueId] = {
+                            id: uniqueId,
+                            category: profile,
+                            password: password,
+                            price: '', // Le prix sera défini plus tard
+                            user: name
+                        };
+                    }
+                }
+                tempImportData = { tickets: tickets };
+                tempCategory = "TicketsTransit";
+                showPriceModal("TicketsTransit Import");
+            } else {
+                const regex = /add name="([^"]+)" password="([^"]+)" profile="([^"]+)"/;
+                for (let line of lines) {
+                    line = line.trim();
+                    if (!line || line === '/ip hotspot user') continue;
 
-function confirmPrice() {
-    const price = document.getElementById('priceInput').value.trim();
-    if (!price) {
-        alert('Veuillez entrer un prix');
+                    const match = line.match(regex);
+                    if (match) {
+                        const [_, name, password, profile] = match;
+                        if (!tickets[profile]) {
+                            tickets[profile] = {
+                                motDePasse: [],
+                                prix: [],
+                                utilisateur: []
+                            };
+                        }
+
+                        tickets[profile].utilisateur.push(name);
+                        tickets[profile].motDePasse.push(password);
+                    }
+                }
+
+                if (Object.keys(tickets).length === 0) {
+                    hideLoading();
+                    alert('Aucun ticket valide n\'a été trouvé dans le fichier');
+                    return;
+                }
+
+                tempImportData = tickets;
+                const firstCategory = Object.keys(tickets)[0];
+                showPriceModal(firstCategory);
+            }
+        }
+
+        function showPriceModal(category) {
+            tempCategory = category;
+            document.getElementById('categoryName').textContent = category;
+            document.getElementById('priceModal').style.display = 'block';
+            document.getElementById('priceInput').value = '';
+        }
+
+        function confirmPrice() {
+            const price = document.getElementById('priceInput').value.trim();
+            if (!price) {
+                alert('Veuillez entrer un prix');
+                return;
+            }
+
+            if (currentDatabase === 'TicketsTransit') {
+                for (let id in tempImportData.tickets) {
+                    tempImportData.tickets[id].price = price;
+                }
+                finishImport();
+            } else {
+                tempImportData[tempCategory].prix = Array(tempImportData[tempCategory].motDePasse.length).fill(price);
+                const categories = Object.keys(tempImportData);
+                const currentIndex = categories.indexOf(tempCategory);
+
+                if (currentIndex < categories.length - 1) {
+                    document.getElementById('priceInput').value = '';
+                    showPriceModal(categories[currentIndex + 1]);
+                } else {
+                    finishImport();
+                }
+            }
+        }
+
+        function cancelImport() {
+            document.getElementById('priceModal').style.display = 'none';
+            if (currentDatabase === 'TicketsTransit') {
+                tempImportData = null;
+            }
+            document.getElementById('importFile').value = '';
+            tempCategory = null;
+            hideLoading();
+        }
+//MODIFICATION: adaptation de la fonction finishImport
+async function finishImport() {
+    const currentUserId = sessionStorage.getItem('currentUserId'); // MODIFICATION
+    if (!currentUserId) {  //MODIFICATION : Vérification
+        alert('Vous devez être connecté pour importer des tickets.');
         return;
     }
 
-    if (currentDatabase === 'TicketsTransit') {
-        for (let id in tempImportData.tickets) {
-            tempImportData.tickets[id].price = price;
-        }
-        finishImport();
-    } else {
-        tempImportData[tempCategory].prix = Array(tempImportData[tempCategory].motDePasse.length).fill(price);
-        const categories = Object.keys(tempImportData);
-        const currentIndex = categories.indexOf(tempCategory);
-
-        if (currentIndex < categories.length - 1) {
-            document.getElementById('priceInput').value = '';
-            showPriceModal(categories[currentIndex + 1]);
-        } else {
-            finishImport();
-        }
-    }
-}
-
-function cancelImport() {
-    document.getElementById('priceModal').style.display = 'none';
-    if (currentDatabase === 'TicketsTransit') {
-        tempImportData = null;
-    }
-    document.getElementById('importFile').value = '';
-    tempCategory = null;
-    hideLoading();
-}
-
-function finishImport() {
     if (confirm('Êtes-vous sûr de vouloir importer ces tickets ? Les nouveaux tickets seront ajoutés aux tickets existants.')) {
+        showLoading();
+        await initializeDatabase(); // Ensure database is initialized before finish import
 
         // Si la base est vide, initialiser allTickets
         if (!allTickets || Object.keys(allTickets).length === 0) {
@@ -1354,25 +1481,26 @@ function finishImport() {
         const updates = {};
         if (currentDatabase === 'TicketsTransit') {
             for (let id in tempImportData.tickets) {
-                updates[`${currentDatabase}/${id}`] = tempImportData.tickets[id];
+                // MODIFICATION : Utilisation de currentUserId dans le chemin
+                updates[`users-data/${currentUserId}/${currentDatabase}/${id}`] = tempImportData.tickets[id];
             }
         } else {
             for (let category in tempImportData) {
                 if (allTickets[category]) {
                     // Fusion des tickets existants avec les nouveaux
-                    updates[`${currentDatabase}/${category}`] = {
+                    updates[`users-data/${currentUserId}/${currentDatabase}/${category}`] = {  // MODIFICATION: Utilisation de currentUserId
                         motDePasse: [...allTickets[category].motDePasse, ...tempImportData[category].motDePasse],
                         prix: [...allTickets[category].prix, ...tempImportData[category].prix],
                         utilisateur: [...allTickets[category].utilisateur, ...tempImportData[category].utilisateur]
                     };
                 } else {
                     // Nouvelle catégorie
-                    updates[`${currentDatabase}/${category}`] = tempImportData[category];
+                    updates[`users-data/${currentUserId}/${currentDatabase}/${category}`] = tempImportData[category]; // MODIFICATION: Utilisation de currentUserId
                 }
             }
         }
 
-        set(ref(db),updates)
+        update(ref(db), updates)
             .then(() => {
                 document.getElementById('priceModal').style.display = 'none';
                 document.getElementById('importFile').value = '';
@@ -1391,48 +1519,53 @@ function finishImport() {
     }
 }
 
-function importTickets(event) {
-    const file = event.target.files[0];
-    if (!file) return;
 
-    showLoading();
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const fileExtension = file.name.split('.').pop().toLowerCase();
-            if (fileExtension === 'json') {
-                handleJsonImport(e.target.result);
-            } else if (fileExtension === 'csv') {
-                handleCsvImport(e.target.result);
-            } else if (fileExtension === 'txt') {
-                handleTxtImport(e.target.result);
-            } else {
-                throw new Error('Format de fichier non supporté');
-            }
-        } catch (error) {
-            console.error('Erreur d\'importation:', error);
-            hideLoading();
-            alert('Erreur lors de l\'importation. Veuillez vérifier le format du fichier.');
+        function importTickets(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showLoading();
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const fileExtension = file.name.split('.').pop().toLowerCase();
+                    if (fileExtension === 'json') {
+                        handleJsonImport(e.target.result);
+                    } else if (fileExtension === 'csv') {
+                        handleCsvImport(e.target.result);
+                    } else if (fileExtension === 'txt') {
+                        handleTxtImport(e.target.result);
+                    } else {
+                        throw new Error('Format de fichier non supporté');
+                    }
+                } catch (error) {
+                    console.error('Erreur d\'importation:', error);
+                    hideLoading();
+                    alert('Erreur lors de l\'importation. Veuillez vérifier le format du fichier.');
+                }
+            };
+            reader.readAsText(file);
         }
-    };
-    reader.readAsText(file);
-}
-
-function deleteSearchResults() {
+//MODIFICATION : Adaptation de la fonction deleteSearchResults
+async function deleteSearchResults() {
     const searchTerm = document.getElementById('searchBar').value.trim();
-    if (!searchTerm) {
-        alert('Veuillez entrer un terme de recherche avant de supprimer.');
+    const currentUserId = sessionStorage.getItem('currentUserId'); // MODIFICATION
+
+    if (!searchTerm || !currentUserId) { // MODIFICATION : Vérifier aussi currentUserId
+        alert('Veuillez entrer un terme de recherche et vous assurer que vous êtes connecté.');
         return;
     }
 
     if (confirm('Êtes-vous sûr de vouloir supprimer tous les tickets correspondant à votre recherche ?')) {
         showLoading();
+        await initializeDatabase();
         const updates = {};
 
         if (currentDatabase === 'TicketsTransit') {
             for (let id in allTickets) {
                 if (matchesSearchTransit(allTickets[id], searchTerm)) {
-                    updates[`${currentDatabase}/${id}`] = null;
+                    // MODIFICATION : Utilisation de currentUserId
+                    updates[`users-data/${currentUserId}/${currentDatabase}/${id}`] = null;
                 }
             }
         } else {
@@ -1451,11 +1584,12 @@ function deleteSearchResults() {
                         newCategoryData.utilisateur.push(categoryTickets.utilisateur[i]);
                     }
                 }
-                updates[`${currentDatabase}/${category}`] = newCategoryData;
+                // MODIFICATION : Utilisation de currentUserId
+                updates[`users-data/${currentUserId}/${currentDatabase}/${category}`] = newCategoryData;
             }
         }
 
-        set(ref(db),updates)
+        update(ref(db), updates)
             .then(() => {
                 hideLoading();
                 alert('Les tickets correspondant à la recherche ont été supprimés.');
@@ -1468,51 +1602,74 @@ function deleteSearchResults() {
     }
 }
 
-function searchTickets() {
-    const searchTerm = document.getElementById('searchBar').value.trim();
-    displayTickets(allTickets, searchTerm);
-}
+        function searchTickets() {
+            const searchTerm = document.getElementById('searchBar').value.trim();
+            displayTickets(allTickets, searchTerm);
+        }
 
 
+        function changeDatabase() {
+            currentDatabase = document.getElementById('databaseSelect').value;
+            updateImportFileAccept(); // Appeler la fonction pour mettre à jour l'attribut accept
+            loadTickets();
+        }
 
-function changeDatabase() {
-    currentDatabase = document.getElementById('databaseSelect').value;
-    updateImportFileAccept(); // Appeler la fonction pour mettre à jour l'attribut accept
-    loadTickets();
-}
+        function updateImportFileAccept() {
+            const importFileInput = document.getElementById('importFile');
+            if (currentDatabase === 'TicketsTransit') {
+                importFileInput.accept = '.txt,.json';
+            } else {
+                importFileInput.accept = '.json,.csv,.txt';
+            }
+        }
 
-function updateImportFileAccept() {
-    const importFileInput = document.getElementById('importFile');
-    if (currentDatabase === 'TicketsTransit') {
-        importFileInput.accept = '.txt,.json';
-    } else {
-        importFileInput.accept = '.json,.csv,.txt';
-    }
-}
 
-// Appeler updateImportFileAccept au chargement initial pour définir l'attribut accept correctement
-window.onload = () => {
-    if (checkAuth()) {
-        updateImportFileAccept();
-        loadTickets();
-    }
-};
-// Fonction de déconnexion améliorée
-function logout() {
-    sessionStorage.clear(); // Nettoie toutes les données de session
-    window.location.replace('login.html');
-}
+        // Make functions globally accessible
+        window.editCategory = editCategory;
+        window.showAddTicketModal = showAddTicketModal;
+        window.deleteAllTicketsInCategory = deleteAllTicketsInCategory;
+        window.editSelectedTickets = editSelectedTickets;
+        window.deleteSelectedTickets = deleteSelectedTickets;
+        window.editTicketTotal = editTicketTotal;
+        window.editTicketTransit = editTicketTransit;
+        window.saveTicketEdit = saveTicketEdit;
+        window.saveCategoryEdit = saveCategoryEdit;
+        window.saveNewTicket = saveNewTicket;
+        window.closeEditModal = closeEditModal;
+        window.closeEditCategoryModal = closeEditCategoryModal;
+        window.closeAddTicketModal = closeAddTicketModal;
+        window.exportTickets = exportTickets;
+        window.exportFilteredTickets = exportFilteredTickets;
+        window.confirmPrice = confirmPrice;
+        window.cancelImport = cancelImport;
+        window.deleteSearchResults = deleteSearchResults;
+        window.searchTickets = searchTickets;
+        window.changeDatabase = changeDatabase;
+        window.logout = logout;
+        window.importTickets = importTickets;
+        window.saveBulkEdit = saveBulkEdit;
+        window.closeBulkEditModal = closeBulkEditModal;
 
-// Écouteur d'événement pour la recherche
-document.getElementById('searchBar').addEventListener('input', searchTickets);
 
-// Chargement initial des tickets
-window.onload = () => {
-    if (checkAuth()) {
-        loadTickets();
-    }
-};
-</script>
+        // Appeler updateImportFileAccept au chargement initial pour définir l'attribut accept correctement
+        window.onload = async () => {
+            await initializeDatabase();
+            await checkLoginStatus();
+            updateImportFileAccept();
+            loadTickets();
+        };
+
+
+        // Écouteur d'événement pour la recherche
+        document.getElementById('searchBar').addEventListener('input', searchTickets);
+
+        // Chargement initial des tickets
+        window.onload = async () => {
+            await initializeDatabase();
+            await checkLoginStatus();
+            loadTickets();
+        };
+    </script>
 
 </body>
 </html>

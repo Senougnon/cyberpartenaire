@@ -4,13 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion Utilisateur</title>
-    <!-- Firebase App (compat) and Database (compat) are NOT needed here anymore -->
+    <title>Connexion / Inscription Administrateur</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styleA.css">
     <style>
-         /* Style pour le formulaire de connexion */
-         body {
+        /* Style pour le formulaire de connexion et d'inscription */
+        body {
             font-family: 'Roboto', sans-serif;
             line-height: 1.6;
             color: #fff;
@@ -19,9 +17,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
-             margin: 0; /* Reset margin for the body */
-            padding: 0; /* Reset padding for the body */
+            margin: 0;
+            padding: 0;
         }
+
         .login-container {
             background-color: rgba(255, 255, 255, 0.9);
             padding: 2rem;
@@ -75,6 +74,7 @@
             font-size: 1rem;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            margin-top: 0.5rem; /* Add some spacing between buttons */
         }
 
         button:hover {
@@ -85,13 +85,26 @@
             color: #e74c3c;
             text-align: center;
             margin-top: 1rem;
-            display: none;
+            display: none; /* Hide by default */
         }
-      /* Media query pour les écrans plus petits (smartphones) */
+
+        .form-switcher {
+            margin-top: 1rem;
+            text-align: center;
+            color: #333;
+        }
+
+        .form-switcher a {
+            color: #1a2a6c;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        /* Media query pour les écrans plus petits (smartphones) */
         @media (max-width: 600px) {
             .login-container {
                 padding: 1.5rem;
-                 max-width: 90%;
+                max-width: 90%;
             }
 
             h1 {
@@ -103,17 +116,20 @@
                 padding: 0.6rem;
                 font-size: 0.9rem;
             }
-          button {
-               padding: 0.8rem;
-              font-size: 0.9rem;
-          }
+
+            button {
+                padding: 0.8rem;
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <h1>Connexion Administrateur</h1>
-        <form id="loginForm" onsubmit="return login(event)">
+        <h1>Connexion / Inscription Administrateur</h1>
+
+        <!-- Formulaire de connexion -->
+        <form id="loginForm">
             <div class="input-group">
                 <label for="username">Nom d'utilisateur</label>
                 <input type="text" id="username" required>
@@ -123,76 +139,184 @@
                 <input type="password" id="password" required>
             </div>
             <button type="submit">Se connecter</button>
+            <div class="form-switcher">
+                Pas encore de compte ? <a href="#" id="switchToSignup">S'inscrire</a>
+            </div>
         </form>
+
+
+        <!-- Formulaire d'inscription -->
+        <form id="signupForm" style="display: none;">
+            <div class="input-group">
+                <label for="signupUsername">Nom d'utilisateur</label>
+                <input type="text" id="signupUsername" required>
+            </div>
+            <div class="input-group">
+                <label for="signupPassword">Mot de passe</label>
+                <input type="password" id="signupPassword" required>
+            </div>
+            <button type="submit">S'inscrire</button>
+            <div class="form-switcher">
+                Déjà un compte ? <a href="#" id="switchToLogin">Se connecter</a>
+            </div>
+        </form>
+
         <div id="errorMessage" class="error-message"></div>
     </div>
 
     <script type="module">
-        import { getActiveDatabase } from './firebase-config-manager.js'; // Import getActiveDatabase
-        import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+        import { getActiveDatabase } from './firebase-config-manager.js';
+        import { ref, get, set, push, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-
-        let db; // Will hold the active database
-        let adminsRef; // Firebase reference to admins
+        let db;
 
         async function initializeDatabase() {
             try {
-                db = await getActiveDatabase(); // Get the active database
-                adminsRef = ref(db, 'admins'); // Initialize adminsRef after db is ready
+                db = await getActiveDatabase();
                 console.log("Database initialized in loginAccueil.html");
             } catch (error) {
                 console.error("Database initialization failed:", error);
-                // Handle initialization error, e.g., display a message to the user
-                document.getElementById('errorMessage').textContent = 'Erreur lors de la connexion à la base de données.';
-                document.getElementById('errorMessage').style.display = 'block';
+                displayError('Erreur lors de la connexion à la base de données.');
             }
         }
 
+        function displayError(message) {
+            const errorMessageElement = document.getElementById('errorMessage');
+            errorMessageElement.textContent = message;
+            errorMessageElement.style.display = 'block';
+        }
 
-        async function login(event) {
+        // --- Gestion de l'inscription ---
+        async function signup(event) {
             event.preventDefault();
-
-            if (!db) { // Check if db is initialized
-                console.error("Database not initialized. Login attempt aborted.");
-                document.getElementById('errorMessage').textContent = 'Base de données non initialisée. Veuillez réessayer.';
-                document.getElementById('errorMessage').style.display = 'block';
+            if (!db) {
+                displayError('Base de données non initialisée. Veuillez réessayer.');
                 return;
             }
 
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('errorMessage');
+            const username = document.getElementById('signupUsername').value.trim();
+            const password = document.getElementById('signupPassword').value.trim();
+
+            if (!username || !password) {
+                displayError('Veuillez remplir tous les champs.');
+                return;
+            }
 
             try {
-                const snapshot = await get(adminsRef); // Use the initialized adminsRef
-                const admins = snapshot.val();
-                if(!admins){
-                    errorMessage.textContent = 'Nom d\'utilisateur ou mot de passe incorrect';
-                    errorMessage.style.display = 'block';
-                   return;
-                }
-                const admin = Object.values(admins).find(admin =>
-                    admin.username === username && admin.password === password
-                );
+                // Vérifier si le nom d'utilisateur existe déjà dans 'users'
+                const usersRef = ref(db, 'users');  // Référence à 'users' pour la vérification
+                const snapshot = await get(usersRef);
+                const users = snapshot.val();
 
-                if (admin) {
-                    sessionStorage.setItem('isLoggedIn', 'true');
-                    window.location.href = 'index.html';
-                } else {
-                    errorMessage.textContent = 'Nom d\'utilisateur ou mot de passe incorrect';
-                    errorMessage.style.display = 'block';
+                if (users && Object.keys(users).includes(username)) {
+                   displayError("Ce nom d'utilisateur existe déjà.");
+                    return;
                 }
+
+                // Créer le nouvel utilisateur dans 'users' (pour la connexion)
+                const newUserRef = ref(db, `users/${username}`);
+                await set(newUserRef, {
+                    password: password  // Stocker le mot de passe
+                });
+
+                // Initialiser les données pour le nouvel utilisateur dans 'users-data'
+                const userInitialDataRef = ref(db, `users-data/${username}`);
+
+                await set(userInitialDataRef, {
+                        admin: {
+                            subscription: {
+                                status: 'inactive'
+                            }
+                        },
+                        TicketsTotal: {},
+                        TicketsVendus: {},
+                        TicketsTransit: {},
+                        TicketConnecté: {},
+                        Vendors: {},
+                        VendorsHistory: {},
+                        sales: {}
+                });
+
+
+
+                alert("Inscription réussie ! Vous pouvez maintenant vous connecter.");
+                switchForm('login'); // Rediriger vers le formulaire de connexion
+
             } catch (error) {
-                console.error('Erreur de connexion:', error);
-                errorMessage.textContent = 'Une erreur est survenue. Veuillez réessayer.';
-                errorMessage.style.display = 'block';
+                console.error("Erreur lors de l'inscription:", error);
+                displayError('Erreur lors de l\'inscription.');
             }
         }
 
-        // Initialize database on DOMContentLoaded
+
+        // --- Gestion de la connexion ---
+        async function login(event) {
+            event.preventDefault();
+            if (!db) {
+                displayError('Base de données non initialisée. Veuillez réessayer.');
+                return;
+            }
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            if (!username || !password) {
+                displayError('Veuillez remplir tous les champs.');
+                return;
+            }
+
+            try {
+                const userRef = ref(db, `users/${username}`);  // Accède directement à l'utilisateur
+                const snapshot = await get(userRef);
+
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    if (userData.password === password) {
+                        // Connexion réussie : Stocker l'état de connexion et l'ID utilisateur
+                        sessionStorage.setItem('isLoggedIn', 'true');
+                        sessionStorage.setItem('currentUserId', username); // Stockez le username comme identifiant
+                        window.location.href = 'index.html'; // Rediriger
+                    } else {
+                        displayError('Nom d utilisateur ou mot de passe incorrect.');
+                    }
+                } else {
+                    displayError('Nom d utilisateur ou mot de passe incorrect.');
+                }
+            } catch (error) {
+                console.error('Erreur de connexion:', error);
+                displayError('Une erreur est survenue. Veuillez réessayer.');
+            }
+        }
+
+
+
+        // Fonction pour basculer entre les formulaires
+        function switchForm(formType) {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+
+            if (formType === 'login') {
+                loginForm.style.display = 'block';
+                signupForm.style.display = 'none';
+            } else {
+                loginForm.style.display = 'none';
+                signupForm.style.display = 'block';
+            }
+        }
+
+        // --- Initialisation ---
         document.addEventListener('DOMContentLoaded', async () => {
             await initializeDatabase();
+
+            // Écouteurs d'événements pour les formulaires
+            document.getElementById('loginForm').addEventListener('submit', login);
+            document.getElementById('signupForm').addEventListener('submit', signup);
+
+            // Écouteurs d'événements pour les liens de basculement de formulaire
+            document.getElementById('switchToSignup').addEventListener('click', () => switchForm('signup'));
+            document.getElementById('switchToLogin').addEventListener('click', () => switchForm('login'));
         });
+
     </script>
 </body>
 </html>
