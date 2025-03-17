@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion</title>
+    <title>Connexion Cyber Campus</title>
     <style>
-        /* --- General Styles --- */
+        /* ... (Le CSS de votre ancien login.html, inchangé) ... */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
         * {
@@ -28,20 +28,19 @@
             width: 100%;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 10px;
         }
 
-        /* --- Header Styles --- */
         header {
             background-color: rgba(0, 0, 0, 0.5);
-            padding: 30px 0;
+            padding: 20px 0;
             position: relative;
             overflow: hidden;
         }
 
         .header-image {
             width: 100%;
-            height: 400px;
+            height: 300px;
             object-fit: cover;
             position: absolute;
             top: 0;
@@ -49,55 +48,30 @@
             z-index: -1;
         }
 
-        .img1 { animation: slide1 20s linear infinite; }
-        .img2 { animation: slide2 20s linear infinite; }
+        .img1 {
+            animation: slide1 10s linear infinite;
+        }
+
+        .img2 {
+            animation: slide2 10s linear infinite;
+        }
 
         .logo {
-            font-size: 3em;
+            font-size: 2.5em;
             color: white;
             text-align: center;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
             position: relative;
             z-index: 2;
-            margin-bottom: 1em;
         }
 
-        /* Floating Icons */
-        .floating-icons {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1; /* Above images, below logo and nav */
-            pointer-events: none; /* Allows clicks to pass through */
+        .logo::before {
+            content: '';
+            font-size: 0.8em;
+            margin-right: 10px;
+            animation: rotate 5s linear infinite;
+            display: inline-block;
         }
-
-        .icon {
-            position: absolute;
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 1.5em;
-            animation: floatIcon linear infinite;
-        }
-
-        /* Different animation delays and positions for each icon */
-        .icon:nth-child(1) { top: 10%; left: 10%; animation-duration: 8s;  animation-delay: 0s; }
-        .icon:nth-child(2) { top: 20%; left: 80%; animation-duration: 10s; animation-delay: 2s;}
-        .icon:nth-child(3) { top: 60%; left: 30%; animation-duration: 12s; animation-delay: 1s;}
-        .icon:nth-child(4) { top: 70%; left: 60%; animation-duration: 9s;  animation-delay: 3s;}
-        .icon:nth-child(5) { top: 30%; left: 50%; animation-duration: 7s;  animation-delay: 1.5s;}
-        .icon:nth-child(6) { top: 50%; left: 90%; animation-duration: 11s; animation-delay: 4s; font-size: 2em;}  /* Larger icon */
-        .icon:nth-child(7) { top: 80%; left: 15%; animation-duration: 8.5s; animation-delay: 0.5s;}
-        .icon:nth-child(8) { top: 40%; left: 5%; animation-duration: 9.5s; animation-delay: 2.5s;}
-
-        @keyframes floatIcon {
-            0% { transform: translate(0, 0); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { transform: translate(50px, -100px); opacity: 0; } /* Move and fade */
-        }
-
-
 
         @keyframes rotate {
             0% { transform: rotate(0deg); }
@@ -106,122 +80,122 @@
 
         .moon {
             position: absolute;
-            top: 30px;
-            right: 30px;
-            font-size: 2.5em;
-            animation: float 5s ease-in-out infinite;
+            top: 20px;
+            right: 20px;
+            font-size: 2em;
+            animation: float 3s ease-in-out infinite;
         }
 
         @keyframes float {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
+            50% { transform: translateY(-10px); }
         }
 
         nav {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 20px;
-    padding: 0 10px;
-    flex-wrap: wrap;
-}
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 0 10px;
+            flex-wrap: wrap;
+        }
 
-.nav-button {
-    background-color: rgba(0, 0, 0, 0.952);
-    color: rgb(255, 255, 255);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 25px;
-    cursor: pointer;
-    transition: all 0.3s;
-    position: relative;
-    overflow: hidden;
-    width: auto;
-    min-width: 150px;
-    text-align: center;
-    margin: 5px;
-}
+        .nav-button {
+            background-color: rgba(0, 0, 0, 0.952);
+            color: rgb(255, 255, 255);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            width: auto;
+            min-width: 150px;
+            text-align: center;
+            margin: 5px;
+        }
 
-.nav-button::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background-color: rgb(0, 0, 0);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    transition: width 0.5s, height 0.5s;
-}
+        .nav-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background-color: rgb(0, 0, 0);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
 
-.nav-button:hover::before {
-    width: 300px;
-    height: 300px;
-}
+        .nav-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
 
-@keyframes buttonPulse {
-    0% { background-color: #020202; color: #ffffff; }
-    50% { background-color: #1a2a6c; color: #c8ff00; }
-    100% { background-color: #000000; color: #ffffff; }
-}
+        @keyframes buttonPulse {
+            0% { background-color: #020202; color: #ffffff; }
+            50% { background-color: #1a2a6c; color: #c8ff00; }
+            100% { background-color: #000000; color: #ffffff; }
+        }
 
-.nav-button.animate-pay {
-    animation: buttonPulse 3s ease-in-out infinite;
-}
+        .nav-button.animate-pay {
+            animation: buttonPulse 3s ease-in-out infinite;
+        }
 
-@keyframes textChange {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-}
+        @keyframes textChange {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
 
-        /* --- Main Content Styles --- */
         main {
             display: flex;
             flex-direction: column;
-            padding: 30px 20px;
-            gap: 30px;
+            padding: 20px 10px;
+            gap: 20px;
             flex: 1;
         }
 
-        section {
-            background-color: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(15px);
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            margin-bottom: 20px;
+        .login-section,
+        .rates-section,
+        .locations-section,
+        .products-section {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
         }
 
         section:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
         }
 
-
         .login-section {
-            max-width: 600px;
+            width: 100%;
+            max-width: 500px;
             margin: 0 auto;
         }
 
         h2 {
             color: rgb(0, 0, 0);
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             position: relative;
             display: inline-block;
-            font-size: 1.8em;
         }
 
         h2::after {
             content: '';
             position: absolute;
-            bottom: -8px;
+            bottom: -5px;
             left: 0;
             width: 0;
-            height: 3px;
+            height: 2px;
             background-color: #fdbb2d;
-            transition: width 0.4s ease;
+            transition: width 0.3s;
         }
 
         section:hover h2::after {
@@ -231,56 +205,40 @@
         form {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
         }
 
         input {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 30px;
-            background-color: rgba(255,255,255, 0.5);
+            margin-bottom: 10px;
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            background-color: rgb(255, 253, 250);
             color: rgb(0, 0, 0);
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-            font-size: 16px;
+            transition: background-color 0.3s;
         }
 
         input:focus {
-            background-color: rgba(255, 255, 255, 0.7);
-            border-color: #fdbb2d;
+            background-color: rgba(255, 255, 255, 0.3);
             outline: none;
         }
 
-        button[type="submit"] {
+        button {
             background-color: #000000;
             color: #ffffff;
             border: none;
-            padding: 15px;
-            border-radius: 30px;
+            padding: 10px;
+            border-radius: 25px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
             font-weight: bold;
-            font-size: 16px;
         }
 
-        button[type="submit"]:hover {
+        button:hover {
             background-color: #1a2a6c;
             color: #fdbb2d;
-            transform: translateY(-3px);
         }
 
-        .info {
-            margin-top: 15px;
-            color: #eee;
-            font-size: 14px;
-            text-align: center;
-        }
-        .info.alert {
-             color: #ffdddd;
-             font-weight: bold;
-        }
-
-        /* --- Rates Section Styles --- */
         .rates-section {
             width: 100%;
             overflow-x: auto;
@@ -290,42 +248,40 @@
         .rates-section table {
             width: 100%;
             border-collapse: separate;
-            border-spacing: 0 15px;
-            margin: 15px 0;
+            border-spacing: 0;
+            margin: 10px 0;
         }
 
         .rates-section th,
         .rates-section td {
-            padding: 15px;
+            padding: 12px;
             text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .rates-section th {
-            background-color: rgba(0, 0, 0, 0.2);
-            color: white;
-            font-weight: 600;
-        }
-
-
-        .rates-section .loading-message {
-            text-align: center;
-            padding: 30px;
-            font-style: italic;
-            color: #ddd;
-        }
-
-        /* --- List Styles --- */
-        ul {
-            list-style-type: none;
+        .rates-section th:first-child,
+        .rates-section td:first-child {
             padding-left: 20px;
         }
 
+        .rates-section th:last-child,
+        .rates-section td:last-child {
+            padding-right: 20px;
+        }
+
+        .rates-section .loading-message {
+            text-align: center;
+            padding: 20px;
+        }
+
+        ul {
+            list-style-type: none;
+        }
+
         li {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             position: relative;
-            padding-left: 30px;
-            font-size: 16px;
+            padding-left: 20px;
         }
 
         li::before {
@@ -333,74 +289,62 @@
             position: absolute;
             left: 0;
             color: #fdbb2d;
-            font-size: 1.2em;
         }
 
-        /* --- Footer Styles --- */
         footer {
             background-color: rgba(0, 0, 0, 0.5);
-            padding: 20px;
+            padding: 15px;
             text-align: center;
             margin-top: auto;
-            font-size: 14px;
-            color: #ddd;
         }
 
-        /* --- Notification Styles --- */
         .notification {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
             z-index: 1000;
             display: none;
             color: #1a2a6c;
             text-align: center;
             width: 90%;
-            max-width: 500px;
+            max-width: 400px;
         }
 
         .notification h2 {
             color: #1a2a6c;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .notification p {
-            margin-bottom: 20px;
-            line-height: 1.5;
+            margin-bottom: 15px;
         }
-
 
         .close-icon {
             position: absolute;
-            top: 15px;
-            right: 15px;
+            top: 10px;
+            right: 10px;
             cursor: pointer;
-            font-size: 24px;
+            font-size: 20px;
         }
 
         .notification .ticket-info {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             text-align: left;
         }
 
         .notification .ticket-info p {
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
-
 
         .notification .login-button,
         .notification .delete-button {
             display: inline-block;
-            margin: 10px;
-            padding: 12px 25px;
-            border-radius: 30px;
-            font-weight: bold;
-            transition: all 0.3s ease;
+            margin: 0 10px;
         }
 
         .notification .login-button {
@@ -422,158 +366,54 @@
             border: 1px solid #faa;
             color: #f00;
         }
-         .tariffs-section table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
 
-        .tariffs-section th,
-        .tariffs-section td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .tariffs-section th {
-            background-color: rgba(0, 0, 0, 0.5);
+        /* Footer Popup Styles */
+        .footer-popup {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translate(-50%, 200%);
+            width: 95%;
+            max-width: 600px;
+            padding: 2rem;
+            border-radius: 25px;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, rgba(129, 0, 0, 0.95) 0%, rgba(0, 60, 150, 0.95) 100%);
+            backdrop-filter: blur(10px);
             color: white;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3),
+                        0 0 20px rgba(0, 89, 255, 0.3),
+                        inset 0 0 60px rgba(0, 89, 255, 0.1);
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* --- Media Queries --- */
-        @media screen and (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-
-            .logo {
-                font-size: 2.5em;
-            }
-
-            .header-image {
-                height: 300px;
-            }
-
-            nav {
-                gap: 15px;
-                padding: 0 15px;
-            }
-
-            .nav-button {
-                padding: 10px 20px;
-                font-size: 14px;
-                max-width: 200px;
-            }
-            section {
-                padding: 20px;
-            }
-
-            h2 {
-                font-size: 1.5em;
-            }
-
-            input {
-                padding: 12px;
-                font-size: 14px;
-            }
-
-            button[type="submit"] {
-                padding: 12px;
-                font-size: 14px;
-            }
-
-            .notification {
-                padding: 20px;
-                max-width: 400px;
-            }
-
-            .tariffs-section th,
-            .tariffs-section td {
-                padding: 10px 12px;
-            }
-             /* Adjust floating icons for smaller screens */
-            .icon {
-                font-size: 1em; /* Smaller icons */
-            }
-            .icon:nth-child(6) { font-size: 1.5em; } /* Keep one larger */
-
+        .footer-popup.show {
+            transform: translate(-50%, 0);
+            opacity: 1;
         }
 
-        @media screen and (max-width: 480px) {
-            .logo {
-                font-size: 2em;
-            }
-
-            .header-image {
-                height: 250px;
-            }
-           nav {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .nav-button {
-                width: 100%;
-                max-width: none;
-                margin: 5px 0;
-                padding: 10px 15px;
-                font-size: 13px;
-            }
-
-            h2 {
-                font-size: 1.3em;
-            }
-
-
-            input, button[type="submit"] {
-                padding: 10px;
-                font-size: 13px;
-            }
-            .notification {
-                padding: 15px;
-                max-width: 90%;
-            }
-
-            .tariffs-section th,
-            .tariffs-section td {
-                padding: 8px 10px;
-                font-size: 12px;
-            }
-
-            .close-icon {
-                font-size: 20px;
-            }
-             /* Further adjust floating icons */
-            .icon {
-                font-size: 0.8em; /* Even smaller */
-            }
-            .icon:nth-child(6) { font-size: 1.2em; } /* Still larger */
-        }
-
-    /* --- Login Mode Toggle Styles --- */
-        .login-mode-toggle {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 15px;
-        }
-
-        .login-mode-toggle button {
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
+        .footer-popup .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.15);
             border: none;
-    
-            border-radius: 10px;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
             cursor: pointer;
-            transition: background-color 0.3s ease;
-            font-size: 1em;
-            margin: 0 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
         }
 
-        .login-mode-toggle button.active {
-            background-color: #fdbb2d;
-            color: #1a2a6c;
-        }
-          /* Animations */
+        /* Animations */
         @keyframes slide1 {
             0% { transform: translateX(0); }
             50% { transform: translateX(-100%); }
@@ -585,8 +425,131 @@
             50% { transform: translateX(0); }
             100% { transform: translateX(100%); }
         }
-    </style>
 
+        /* Media Queries */
+        @media screen and (max-width: 768px) {
+            .container {
+                padding: 5px;
+            }
+
+            .logo {
+                font-size: 2em;
+            }
+
+            nav {
+                flex-direction: column;
+                padding: 0 15px;
+            }
+
+            .nav-button {
+                width: 100%;
+                margin: 5px 0;
+            }
+
+            main {
+                padding: 10px 5px;
+            }
+
+            .login-section,
+            .rates-section,
+            .locations-section,
+            .products-section {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+
+            .rates-section {
+                margin: 0 -5px;
+                width: calc(100% + 10px);
+                border-radius: 0;
+            }
+
+            .rates-section table {
+                font-size: 14px;
+            }
+
+            .rates-section th,
+            .rates-section td {
+                padding: 8px;
+            }
+
+            .footer-popup {
+                width: 92%;
+                padding: 1.5rem;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .logo {
+                font-size: 1.8em;
+            }
+
+            h2 {
+                font-size: 1.2em;
+            }
+
+            .rates-section th,
+            .rates-section td {
+                padding: 6px;
+                font-size: 12px;
+            }
+
+            .notification {
+                width: 95%;
+                padding: 15px;
+            }
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 0 10px;
+            flex-wrap: nowrap; /* Empêche le retour à la ligne */
+        }
+
+        .nav-button {
+            background-color: rgba(0, 0, 0, 0.952);
+            color: rgb(255, 255, 255);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            width: auto;
+            min-width: 0; /* Supprime la largeur minimale */
+            text-align: center;
+            margin: 5px;
+            white-space: nowrap; /* Empêche le texte de passer à la ligne */
+            font-size: 14px; /* Taille de police réduite pour mobile */
+            flex: 1; /* Les boutons se partagent l'espace disponible */
+            max-width: calc(50% - 10px); /* Maximum 50% de la largeur moins la marge */
+        }
+
+        /* Modification des media queries */
+        @media screen and (max-width: 768px) {
+            nav {
+                flex-direction: row; /* Force l'alignement horizontal */
+                padding: 0 10px;
+            }
+
+            .nav-button {
+                width: auto; /* Permet aux boutons de s'adapter à leur contenu */
+                margin: 5px;
+                font-size: 12px; /* Taille de police encore plus petite pour les très petits écrans */
+            }
+        }
+
+        @media screen and (max-width: 320px) {
+            .nav-button {
+                padding: 8px 12px; /* Padding réduit pour les très petits écrans */
+                font-size: 11px;
+            }
+        }
+    </style>
 
     $(if chap-id)
     <form name="sendin" action="$(link-login-only)" method="post" style="display:none">
@@ -610,29 +573,25 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://kit.fontawesome.com/your-fontawesome-kit-id.js" crossorigin="anonymous"></script> <!-- Replace with your Font Awesome kit ID if you're using Font Awesome -->
+    <script type="module">
+(function(_0x39be78,_0x3faf69){var _0x42b6d1=_0x1f78,_0x4ba071=_0x39be78();while(!![]){try{var _0x27f406=-parseInt(_0x42b6d1(0xd0))/0x1+-parseInt(_0x42b6d1(0xcc))/0x2+-parseInt(_0x42b6d1(0xca))/0x3*(-parseInt(_0x42b6d1(0xd3))/0x4)+parseInt(_0x42b6d1(0xcf))/0x5*(-parseInt(_0x42b6d1(0xd2))/0x6)+parseInt(_0x42b6d1(0xcb))/0x7+-parseInt(_0x42b6d1(0xcd))/0x8*(parseInt(_0x42b6d1(0xce))/0x9)+parseInt(_0x42b6d1(0xd1))/0xa;if(_0x27f406===_0x3faf69)break;else _0x4ba071['push'](_0x4ba071['shift']());}catch(_0x4789e4){_0x4ba071['push'](_0x4ba071['shift']());}}}(_0x562b,0xf28f8));function _0x562b(){var _0xa2db1=['24tBnBHc','3208uTjfQI','1398shPuew','12496246bmGbbY','2522632xVplIM','24zqPwUJ','1483011rEdYSl','2190360UBIjUu','1832478CXWmzE','41750370WlXukV'];_0x562b=function(){return _0xa2db1;};return _0x562b();}function _0x1f78(_0x57b422,_0x47c083){var _0x562b96=_0x562b();return _0x1f78=function(_0x1f78e9,_0x614f15){_0x1f78e9=_0x1f78e9-0xca;var _0x63b0f8=_0x562b96[_0x1f78e9];return _0x63b0f8;},_0x1f78(_0x57b422,_0x47c083);}import{getActiveDatabase}from'./firebase-config-manager.js';import{ref,get,set,push,remove}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+        const adminUserId = '<!-- ADMIN_USER_ID -->';
+        const networkName = '<!-- NETWORK_NAME -->';
+        const contactNumber = '<!-- CONTACT_NUMBER -->';
+        const fedapayApiKey = '<!-- FEDAPAY_API_KEY -->';
 
+const _0x9c22c=_0x146a;function _0x37c7(){const _0x5d4fcc=['\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Catégorie</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Prix\x20(FCFA)</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Action</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','CHECKOUT_COMPLETED','log','textContent','endDate','notification-title','price','remove','Aucun\x20ticket\x20disponible\x20pour\x20cette\x20catégorie.','function','467334fkGikt','display','value','addEventListener','innerHTML','.rates-section\x20.loading-message','3890gYjabf','includes','428580SHzgFC','Connexion','keys','floor','unshift','Payer\x20un\x20ticket','submit','Pas\x20d\x27abonnement\x20actif','/admin/subscription','utilisateur','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td><button\x20onclick=\x22initPayment(\x27','Erreur\x20lors\x20de\x20l\x27initialisation\x20du\x20paiement:','Ticket\x20supprimé','Ticket\x20vendu\x20stocké\x20avec\x20succès','Supprimer','createElement','notification-message','prix','motDePasse','/TicketsTotal/','.login-button,\x20.delete-button','.nav-button.animate-pay','login-button','setItem','Database\x20initialized\x20in\x20login.html','Vous\x20devez\x20attendre\x207\x20jours\x20entre\x20chaque\x20ticket\x20gratuit.','Ticket\x20en\x20transit\x20stocké:','click','length','button','login','split','3107968ODqEeL','Ticket\x20cadeau','Prix:\x20','getItem','now','3238515yAGfFD','Erreur\x20lors\x20de\x20l\x27enregistrement\x20du\x20nom\x20d\x27utilisateur\x20du\x20ticket\x20connecté:','Voir\x20mon\x20ticket','Nom\x20d\x27utilisateur\x20du\x20ticket\x20connecté\x20enregistré\x20dans\x20Firebase\x20avec\x20la\x20clé:','Une\x20erreur\x20est\x20survenue.\x20Veuillez\x20réessayer\x20plus\x20tard.','✅\x20Paiement\x20validé\x20pour:\x0aPseudo:\x20','Paiement\x20annulé','smooth','reason','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement\x20:','\x20de\x20','find','querySelector','\x0aCatégorie:\x20','none','5pQuhNU','status','Ticket\x20acheté','1693853bJXCdr','.logo','entries','getElementById','.rates-section','delete-button','1793562FnXBfd','Votre\x20ticket\x20a\x20été\x20supprimé\x20avec\x20succès.','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Mot\x20de\x20passe:\x20','preventDefault','.rates-section\x20table','client@example.com','stringify','\x0aMot\x20de\x20passe:\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','users-data/','Erreur','TicketConnecté','parse','111TVBbpk','indexOf','Non\x20disponible','Payer','Nom\x20d\x27utilisateur:\x20','Données\x20incomplètes\x20pour\x20la\x20catégorie:\x20','style','initPayment','open','removeItem','appendChild','active','expired','table','ticket\x20cadeau','filter','DOMContentLoaded','lastFreeTicket','\x0aPrix:\x20','block','user','\x20F</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','/TicketsTotal','forEach','error','val','className','querySelectorAll','toLowerCase','Identifiants\x20invalides.','password','scrollIntoView','key','Mot\x20de\x20passe:\x20','username',')\x22>','notification','\x27,\x20','storedTicket','\x20FCFA'];_0x37c7=function(){return _0x5d4fcc;};return _0x37c7();}(function(_0x276d93,_0x4ba22f){const _0x3d2e7e=_0x146a,_0x9f96f=_0x276d93();while(!![]){try{const _0x297f64=parseInt(_0x3d2e7e(0x1e8))/0x1*(-parseInt(_0x3d2e7e(0x220))/0x2)+-parseInt(_0x3d2e7e(0x21a))/0x3+-parseInt(_0x3d2e7e(0x222))/0x4+-parseInt(_0x3d2e7e(0x1d2))/0x5*(parseInt(_0x3d2e7e(0x1db))/0x6)+parseInt(_0x3d2e7e(0x1d5))/0x7+parseInt(_0x3d2e7e(0x1be))/0x8+parseInt(_0x3d2e7e(0x1c3))/0x9;if(_0x297f64===_0x4ba22f)break;else _0x9f96f['push'](_0x9f96f['shift']());}catch(_0xbd4be9){_0x9f96f['push'](_0x9f96f['shift']());}}}(_0x37c7,0x33e55));let db,userConfigRef;async function initializeDatabase(){const _0x26b949=_0x146a;db=await getActiveDatabase(),userConfigRef=ref(db,'users-data/'+adminUserId+'/portalConfig'),console['log'](_0x26b949(0x1b6));}let localTickets={};async function checkSubscriptionStatus(){const _0x43329=_0x146a;try{const _0x14e558=ref(db,'users-data/'+adminUserId+_0x43329(0x22a)),_0x5ada94=await get(_0x14e558),_0x3efb43=_0x5ada94[_0x43329(0x201)](),_0x44a076=new Date();if(_0x3efb43&&_0x3efb43[_0x43329(0x1d3)]===_0x43329(0x1f3)){const _0xcee5a5=new Date(_0x3efb43[_0x43329(0x214)]);return _0xcee5a5<_0x44a076?(await set(_0x14e558,{..._0x3efb43,'status':_0x43329(0x1f4)}),![]):!![];}else return![];}catch(_0x219c69){return console[_0x43329(0x200)](_0x43329(0x1cc),_0x219c69),![];}}async function syncTickets(){const _0x38fece=_0x146a;try{const _0x4ecbcf=await checkSubscriptionStatus();if(!_0x4ecbcf){document[_0x38fece(0x1cf)](_0x38fece(0x21f))[_0x38fece(0x213)]=_0x38fece(0x229);return;}const _0x588c18=ref(db,_0x38fece(0x1e4)+adminUserId+_0x38fece(0x1fe)),_0x488070=await get(_0x588c18);localTickets=_0x488070[_0x38fece(0x201)]()||{};const _0x3ca8b0=ref(db,_0x38fece(0x1e4)+adminUserId+'/TicketsVendus'),_0x472629=await get(_0x3ca8b0),_0x1f4eb3=_0x472629[_0x38fece(0x201)]()||{};for(const _0x947aa8 in _0x1f4eb3){const _0x7ec039=_0x1f4eb3[_0x947aa8],_0x2018ab=Object[_0x38fece(0x224)](localTickets)[_0x38fece(0x1ce)](_0x8de365=>localTickets[_0x8de365][_0x38fece(0x22b)]&&localTickets[_0x8de365][_0x38fece(0x22b)]['includes'](_0x7ec039[_0x38fece(0x1fc)]));if(_0x2018ab){const _0x20403b=localTickets[_0x2018ab][_0x38fece(0x22b)]['indexOf'](_0x7ec039['user']);_0x20403b>-0x1&&(localTickets[_0x2018ab]={...localTickets[_0x2018ab],'utilisateur':localTickets[_0x2018ab][_0x38fece(0x22b)]['filter']((_0xa7f019,_0x483c8a)=>_0x483c8a!==_0x20403b),'motDePasse':localTickets[_0x2018ab][_0x38fece(0x234)][_0x38fece(0x1f7)]((_0x4961d1,_0x43ff59)=>_0x43ff59!==_0x20403b),'prix':localTickets[_0x2018ab][_0x38fece(0x233)][_0x38fece(0x1f7)]((_0x263666,_0x2e79b8)=>_0x2e79b8!==_0x20403b)},localTickets[_0x2018ab]['utilisateur'][_0x38fece(0x1ba)]===0x0&&delete localTickets[_0x2018ab]);}}console['log']('Données\x20synchronisées:',localTickets),createTicketTable();}catch(_0x49ef09){console[_0x38fece(0x200)]('Erreur\x20lors\x20de\x20la\x20synchronisation\x20des\x20tickets:',_0x49ef09);}}document[_0x9c22c(0x21d)](_0x9c22c(0x1f8),async()=>{const _0x114638=_0x9c22c;await initializeDatabase(),syncTickets(),setInterval(syncTickets,0x1388),document[_0x114638(0x1cf)](_0x114638(0x1d6))['textContent']=networkName,document[_0x114638(0x1cf)]('.nav-button')['textContent']=contactNumber;});function storeLoginTicket(_0x1aa0a4,_0x1a96a2){const _0x44144c=_0x9c22c;localStorage[_0x44144c(0x239)](_0x44144c(0x1e6),JSON[_0x44144c(0x1e1)]({'user':_0x1aa0a4,'password':_0x1a96a2})),console[_0x44144c(0x212)]('Ticket\x20de\x20connexion\x20stocké:',_0x1aa0a4);}document[_0x9c22c(0x1bc)][_0x9c22c(0x21d)]('submit',function(_0x22f1ce){const _0x8a9c0b=_0x9c22c;_0x22f1ce[_0x8a9c0b(0x1de)]();const _0xbee425=document['login'][_0x8a9c0b(0x20a)][_0x8a9c0b(0x21c)],_0x252e58=document[_0x8a9c0b(0x1bc)][_0x8a9c0b(0x206)][_0x8a9c0b(0x21c)];if(typeof hexMD5===_0x8a9c0b(0x219))doLogin();else{const _0x3a03bf=checkCredentials(_0xbee425,_0x252e58);_0x3a03bf?(storeLoginTicket(_0xbee425,_0x252e58),storeConnectedTicket(_0xbee425),this[_0x8a9c0b(0x228)]()):showNotification('Erreur',_0x8a9c0b(0x205));}});async function storeTicketEnTransit(_0x21942f){const _0x22557c=_0x9c22c,_0xf641d0=await synchronizeAndReserveTicket(_0x21942f);if(!_0xf641d0)throw new Error(_0x22557c(0x218));const _0x4e2a5a=ref(db,_0x22557c(0x1e4)+adminUserId+'/TicketsTransit'),_0x5ad40b=push(_0x4e2a5a);return await set(_0x5ad40b,{'id':_0x5ad40b[_0x22557c(0x208)],'category':_0x21942f,..._0xf641d0}),console[_0x22557c(0x212)](_0x22557c(0x1b8),_0x5ad40b['key']),{'id':_0x5ad40b[_0x22557c(0x208)],..._0xf641d0};}async function removeTicketFromTransit(_0x45e58f){const _0x329938=_0x9c22c,_0x3aa639=ref(db,_0x329938(0x1e4)+adminUserId+'/TicketsTransit/'+_0x45e58f);await remove(_0x3aa639),console[_0x329938(0x212)]('Ticket\x20en\x20transit\x20supprimé:',_0x45e58f);}async function synchronizeAndReserveTicket(_0x1b6765){const _0xdced4b=_0x9c22c;try{const _0x275263=ref(db,_0xdced4b(0x1e4)+adminUserId+_0xdced4b(0x235)+_0x1b6765),_0x3c2291=await get(_0x275263),_0x1ddfa9=_0x3c2291['val']();if(!_0x1ddfa9||!_0x1ddfa9[_0xdced4b(0x22b)]||_0x1ddfa9[_0xdced4b(0x22b)][_0xdced4b(0x1ba)]===0x0)return null;const _0x22ccc5={'user':_0x1ddfa9['utilisateur'][0x0],'password':_0x1ddfa9[_0xdced4b(0x234)][0x0],'price':_0x1ddfa9[_0xdced4b(0x233)][0x0]},_0x3553c0={..._0x1ddfa9,'utilisateur':_0x1ddfa9[_0xdced4b(0x22b)][_0xdced4b(0x1f7)]((_0x1df126,_0x2971f1)=>_0x2971f1!==0x0),'motDePasse':_0x1ddfa9[_0xdced4b(0x234)][_0xdced4b(0x1f7)]((_0x36e1d1,_0x3207bf)=>_0x3207bf!==0x0),'prix':_0x1ddfa9[_0xdced4b(0x233)][_0xdced4b(0x1f7)]((_0x1d9d38,_0x265ba0)=>_0x265ba0!==0x0)};return await set(_0x275263,_0x3553c0),_0x22ccc5;}catch(_0x17676b){console[_0xdced4b(0x200)]('Erreur\x20lors\x20de\x20la\x20synchronisation\x20et\x20réservation\x20du\x20ticket:',_0x17676b);throw _0x17676b;}}async function restoreTicket(_0x4690a1,_0x16f913){const _0x55d0c7=_0x9c22c,_0xb0ac34=ref(db,_0x55d0c7(0x1e4)+adminUserId+_0x55d0c7(0x235)+_0x4690a1),_0x28ee03=await get(_0xb0ac34),_0x1e0896=_0x28ee03[_0x55d0c7(0x201)]()||{'utilisateur':[],'motDePasse':[],'prix':[]};_0x1e0896[_0x55d0c7(0x22b)][_0x55d0c7(0x226)](_0x16f913[_0x55d0c7(0x1fc)]),_0x1e0896[_0x55d0c7(0x234)][_0x55d0c7(0x226)](_0x16f913[_0x55d0c7(0x206)]),_0x1e0896[_0x55d0c7(0x233)][_0x55d0c7(0x226)](_0x16f913[_0x55d0c7(0x216)]),await set(_0xb0ac34,_0x1e0896);}function canGetFreeTicket(){const _0x1b4742=_0x9c22c,_0x138591=localStorage[_0x1b4742(0x1c1)](_0x1b4742(0x1f9));if(!_0x138591)return!![];const _0x15bba5=new Date(parseInt(_0x138591)),_0x13ab9b=new Date(),_0x5be43a=Math[_0x1b4742(0x225)]((_0x13ab9b-_0x15bba5)/(0x3e8*0x3c*0x3c*0x18));return _0x5be43a>=0x7;}window[_0x9c22c(0x1ef)]=async function(_0x45237b,_0x172862){const _0x40bb17=_0x9c22c;let _0x814cb2=null;try{if(_0x45237b['toLowerCase']()[_0x40bb17(0x221)](_0x40bb17(0x1f6))){if(!canGetFreeTicket()){showNotification(_0x40bb17(0x1ea),_0x40bb17(0x1b7),![]);return;}const _0x1edd94=await synchronizeAndReserveTicket(_0x45237b);localStorage[_0x40bb17(0x239)]('lastFreeTicket',Date[_0x40bb17(0x1c2)]()['toString']()),showNotification(_0x40bb17(0x1bf),'Félicitations\x20!\x20Vous\x20avez\x20reçu\x20un\x20ticket\x20gratuit.',!![]),displayTicket(_0x1edd94,_0x45237b),await storeTicketVendu(_0x1edd94);return;}_0x814cb2=await storeTicketEnTransit(_0x45237b);const _0x3390fc=_0x45237b+';\x20'+_0x814cb2['user']+_0x40bb17(0x1cd)+_0x814cb2[_0x40bb17(0x216)]+_0x40bb17(0x20f);var _0x249844=FedaPay['init']({'public_key':fedapayApiKey,'transaction':{'amount':_0x172862,'description':_0x3390fc},'customer':{'email':_0x40bb17(0x1e0)},'onComplete':async function(_0x5131e9){const _0x3cd170=_0x40bb17;if(_0x5131e9[_0x3cd170(0x1cb)]===FedaPay['DIALOG_DISMISSED'])showNotification(_0x3cd170(0x1c9),'Le\x20paiement\x20a\x20été\x20annulé.'),await restoreTicket(_0x45237b,_0x814cb2),await removeTicketFromTransit(_0x814cb2['id']);else{if(_0x5131e9[_0x3cd170(0x1cb)]===FedaPay[_0x3cd170(0x211)]){const _0x1dd400=_0x3cd170(0x1c8)+_0x814cb2[_0x3cd170(0x1fc)]+_0x3cd170(0x1e2)+_0x814cb2[_0x3cd170(0x206)]+_0x3cd170(0x1d0)+_0x45237b+_0x3cd170(0x1fa)+_0x814cb2[_0x3cd170(0x216)]+'\x20FCFA\x0aMerci\x20pour\x20votre\x20achat!\x20🎉';showNotification('Paiement\x20réussi',_0x1dd400),await storeTicketVendu(_0x814cb2),displayTicket(_0x814cb2,_0x45237b);}}}});_0x249844[_0x40bb17(0x1f0)]();}catch(_0x18f988){console[_0x40bb17(0x200)](_0x40bb17(0x22d),_0x18f988),showNotification(_0x40bb17(0x1e5),_0x40bb17(0x1c7)),_0x814cb2&&(await restoreTicket(_0x45237b,_0x814cb2),await removeTicketFromTransit(_0x814cb2['id']));}};function showTariffsTable(){const _0x2ccfc6=_0x9c22c,_0x1e489f=document[_0x2ccfc6(0x1cf)](_0x2ccfc6(0x1df)),_0x5c96ed=document['querySelector'](_0x2ccfc6(0x21f));_0x1e489f['style']['display']=_0x2ccfc6(0x1f5),_0x5c96ed['style'][_0x2ccfc6(0x21b)]=_0x2ccfc6(0x1d1);}async function createTicketTable(){const _0x55eb17=_0x9c22c,_0x4c5982=document['querySelector'](_0x55eb17(0x1df));_0x4c5982[_0x55eb17(0x21e)]=_0x55eb17(0x210);if(Object[_0x55eb17(0x224)](localTickets)[_0x55eb17(0x1ba)]===0x0){document[_0x55eb17(0x1cf)](_0x55eb17(0x21f))[_0x55eb17(0x213)]='Aucun\x20ticket\x20disponible\x20pour\x20le\x20moment.';return;}for(const [_0x3e03e5,_0x367307]of Object[_0x55eb17(0x1d7)](localTickets)){if(!_0x367307||!_0x367307[_0x55eb17(0x233)]||_0x367307[_0x55eb17(0x233)][_0x55eb17(0x1ba)]===0x0){console['warn'](_0x55eb17(0x1ed)+_0x3e03e5);continue;}const _0x5237a7=_0x367307[_0x55eb17(0x233)][0x0],_0x38e2c5=_0x4c5982['insertRow'](),_0x53682b=_0x3e03e5[_0x55eb17(0x204)]()['includes']('ticket\x20cadeau')?'Obtenir':_0x55eb17(0x1eb);_0x38e2c5[_0x55eb17(0x21e)]=_0x55eb17(0x1e3)+_0x3e03e5+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>'+_0x5237a7+_0x55eb17(0x22c)+_0x3e03e5+_0x55eb17(0x20d)+_0x5237a7+_0x55eb17(0x20b)+_0x53682b+'</button></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20';}showTariffsTable();}function showTicketNotification(_0x2b6f9f){const _0x430903=_0x9c22c,_0x16d934=document[_0x430903(0x1d8)](_0x430903(0x20c)),_0x5b66e4=document[_0x430903(0x1d8)](_0x430903(0x215)),_0xc62e25=document[_0x430903(0x1d8)](_0x430903(0x232));_0x5b66e4[_0x430903(0x213)]='Votre\x20ticket',_0xc62e25[_0x430903(0x21e)]='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22ticket-info\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Nom\x20d\x27utilisateur:\x20'+_0x2b6f9f[_0x430903(0x1fc)]+_0x430903(0x1dd)+_0x2b6f9f[_0x430903(0x206)]+'</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Prix:\x20'+_0x2b6f9f[_0x430903(0x216)]+_0x430903(0x1fd);const _0x27893c=_0x16d934['querySelectorAll'](_0x430903(0x236));_0x27893c[_0x430903(0x1ff)](_0x4d3c20=>_0x4d3c20['remove']());const _0x1c6f3e=document[_0x430903(0x231)](_0x430903(0x1bb));_0x1c6f3e[_0x430903(0x202)]=_0x430903(0x238),_0x1c6f3e[_0x430903(0x213)]=_0x430903(0x223),_0x1c6f3e['addEventListener'](_0x430903(0x1b9),()=>{const _0x2bd678=_0x430903;autoLogin(_0x2b6f9f[_0x2bd678(0x1fc)],_0x2b6f9f[_0x2bd678(0x206)]);});const _0x2f3636=document[_0x430903(0x231)]('button');_0x2f3636[_0x430903(0x202)]=_0x430903(0x1da),_0x2f3636[_0x430903(0x213)]='Supprimer',_0x2f3636[_0x430903(0x21d)](_0x430903(0x1b9),deleteTicket),_0x16d934[_0x430903(0x1f2)](_0x1c6f3e),_0x16d934['appendChild'](_0x2f3636),_0x16d934['style']['display']=_0x430903(0x1fb);}function showNotification(_0x26cec5,_0x5503c5,_0xc68dec=![]){const _0x4abdac=_0x9c22c,_0x4c4202=document[_0x4abdac(0x1d8)]('notification'),_0x1848d5=document['getElementById']('notification-title'),_0x500aa1=document['getElementById'](_0x4abdac(0x232));_0x1848d5[_0x4abdac(0x213)]=_0x26cec5,_0x500aa1[_0x4abdac(0x213)]=_0x5503c5;const _0x442c4a=_0x4c4202[_0x4abdac(0x203)](_0x4abdac(0x236));_0x442c4a[_0x4abdac(0x1ff)](_0x3ef424=>_0x3ef424[_0x4abdac(0x217)]());if(_0xc68dec){const _0x259040=document['createElement'](_0x4abdac(0x1bb));_0x259040['className']=_0x4abdac(0x238),_0x259040[_0x4abdac(0x213)]=_0x4abdac(0x223),_0x259040[_0x4abdac(0x21d)](_0x4abdac(0x1b9),()=>{const _0x3009e2=_0x4abdac,_0x2fd0eb=_0x5503c5['split']('\x0a'),_0x450434=_0x2fd0eb[0x0][_0x3009e2(0x1bd)](':\x20')[0x1],_0x64fdea=_0x2fd0eb[0x1]['split'](':\x20')[0x1];autoLogin(_0x450434,_0x64fdea);}),_0x4c4202[_0x4abdac(0x1f2)](_0x259040);const _0x4a69b0=document[_0x4abdac(0x231)]('button');_0x4a69b0['className']=_0x4abdac(0x1da),_0x4a69b0[_0x4abdac(0x213)]=_0x4abdac(0x230),_0x4a69b0['addEventListener']('click',deleteTicket),_0x4c4202[_0x4abdac(0x1f2)](_0x4a69b0);}_0x4c4202['style']['display']=_0x4abdac(0x1fb);}window['hideNotification']=function(){const _0x583662=_0x9c22c;document[_0x583662(0x1d8)](_0x583662(0x20c))[_0x583662(0x1ee)][_0x583662(0x21b)]='none';};async function storeConnectedTicket(_0x1964fc){const _0x10bb7e=_0x9c22c;try{const _0x37c95b=ref(db,_0x10bb7e(0x1e4)+adminUserId+'/TicketConnecté'),_0x33e6ad=push(_0x37c95b);await set(_0x33e6ad,{'username':_0x1964fc}),console[_0x10bb7e(0x212)](_0x10bb7e(0x1c6),_0x33e6ad[_0x10bb7e(0x208)]);}catch(_0x459e0c){console[_0x10bb7e(0x200)](_0x10bb7e(0x1c4),_0x459e0c);}}function checkCredentials(_0x5e9468,_0x32cb88){const _0x5737d9=_0x9c22c;for(const _0x4225f4 in localTickets){const _0x380e76=localTickets[_0x4225f4][_0x5737d9(0x22b)],_0x20a55f=localTickets[_0x4225f4][_0x5737d9(0x234)];if(_0x380e76&&_0x20a55f){const _0x1cf7d1=_0x380e76[_0x5737d9(0x1e9)](_0x5e9468);if(_0x1cf7d1>-0x1&&_0x20a55f[_0x1cf7d1]===_0x32cb88)return!![];}}return![];}function autoLogin(_0x686ea4,_0x23740a){const _0x4027b3=_0x9c22c;document[_0x4027b3(0x1bc)][_0x4027b3(0x20a)][_0x4027b3(0x21c)]=_0x686ea4,document[_0x4027b3(0x1bc)][_0x4027b3(0x206)][_0x4027b3(0x21c)]=_0x23740a,storeConnectedTicket(_0x686ea4),document[_0x4027b3(0x1bc)][_0x4027b3(0x228)]();}function deleteTicket(){const _0x52d70a=_0x9c22c;localStorage[_0x52d70a(0x1f1)](_0x52d70a(0x20e)),showNotification(_0x52d70a(0x22e),_0x52d70a(0x1dc)),updateButtonText();}window[_0x9c22c(0x21d)]('load',()=>{const _0x2cb5ee=_0x9c22c;updateButtonText();const _0x27e2c8=document[_0x2cb5ee(0x1cf)](_0x2cb5ee(0x237));_0x27e2c8[_0x2cb5ee(0x21d)](_0x2cb5ee(0x1b9),()=>{const _0x3bb394=_0x2cb5ee,_0x129917=localStorage['getItem']('storedTicket');if(_0x129917){const _0x3779e3=JSON[_0x3bb394(0x1e7)](_0x129917);showTicketNotification(_0x3779e3);}else document['querySelector'](_0x3bb394(0x1d9))[_0x3bb394(0x207)]({'behavior':_0x3bb394(0x1ca)});});});function _0x146a(_0x7bf422,_0x264c01){const _0x37c7de=_0x37c7();return _0x146a=function(_0x146a1f,_0x357b82){_0x146a1f=_0x146a1f-0x1b6;let _0xf885c6=_0x37c7de[_0x146a1f];return _0xf885c6;},_0x146a(_0x7bf422,_0x264c01);}function updateButtonText(){const _0x46b51f=_0x9c22c,_0x6b61aa=document['querySelector'](_0x46b51f(0x237)),_0x9dc524=localStorage[_0x46b51f(0x1c1)](_0x46b51f(0x20e));_0x9dc524?_0x6b61aa['textContent']=_0x46b51f(0x1c5):_0x6b61aa[_0x46b51f(0x213)]=_0x46b51f(0x227);}async function storeTicketVendu(_0x29a88f){const _0x35ac3e=_0x9c22c,_0x8f76a=ref(db,_0x35ac3e(0x1e4)+adminUserId+'/TicketsVendus');await push(_0x8f76a,{'password':_0x29a88f[_0x35ac3e(0x206)],'price':_0x29a88f['price'],'user':_0x29a88f[_0x35ac3e(0x1fc)]}),console[_0x35ac3e(0x212)](_0x35ac3e(0x22f));}function displayTicket(_0x4be12c,_0x242eb6){const _0x29be03=_0x9c22c;showNotification(_0x29be03(0x1d4),_0x29be03(0x1ec)+_0x4be12c[_0x29be03(0x1fc)]+'\x0a'+(_0x29be03(0x209)+_0x4be12c[_0x29be03(0x206)]+'\x0a')+(_0x29be03(0x1c0)+_0x4be12c[_0x29be03(0x216)]+'\x20F'),!![]),updateButtonText(),storeTicketLocally({'ticketName':_0x242eb6,'user':_0x4be12c[_0x29be03(0x1fc)],'password':_0x4be12c[_0x29be03(0x206)],'price':_0x4be12c['price']});}function storeTicketLocally(_0x2109d1){const _0x4ee344=_0x9c22c;localStorage[_0x4ee344(0x239)](_0x4ee344(0x20e),JSON[_0x4ee344(0x1e1)](_0x2109d1));}
+
+    </script>
 </head>
 <body>
     <header>
         <div class="container">
-            <!-- Logo dynamique -->
             <h1 class="logo"><!-- NETWORK_NAME --></h1>
-            <div class="floating-icons">
-                <span class="icon">🚀</span>
-                <span class="icon">💻</span>
-                <span class="icon">📡</span>
-                <span class="icon">🔒</span>
-                <span class="icon">🌐</span>
-                <span class="icon">⚡</span>
-                <span class="icon">📶</span>
-                <span class "icon">🔥</span>
-            </div>
+            <div class="moon"></div>
             <img class="header-image img1" src="img/img1.jpg" alt="Image de fond">
             <img class="header-image img2" src="img/img2.jpg" alt="Image de fond">
-
             <nav>
-                <!-- Bouton de contact dynamique -->
                 <button class="nav-button"><!-- CONTACT_NUMBER --></button>
                 <button class="nav-button animate-pay">Payer un ticket</button>
             </nav>
@@ -643,16 +602,11 @@
 
         <section class="login-section">
             <h2>Connexion</h2>
-            <!-- Login Mode Toggle -->
-            <div class="login-mode-toggle">
-                <button id="separate-mode">Ticket</button>
-                <button id="same-mode" class="active">Identifiant unique</button>
-            </div>
-           <form name="login" action="$(link-login-only)" method="post" $(if chap-id) onSubmit="return doLogin()" $(endif)>
+            <form name="login" action="$(link-login-only)" method="post" $(if chap-id) onSubmit="return doLogin()" $(endif)>
                 <input type="hidden" name="dst" value="$(link-orig)" />
                 <input type="hidden" name="popup" value="true" />
-                <input type="text" name="username" placeholder="Identifiant unique" value="$(username)" required>
-                <input type="password" name="password" placeholder="Mot de passe" id="password-input"  style="display: none;">
+                <input type="text" name="username" placeholder="Nom d'utilisateur" value="$(username)" required>
+                <input type="password" name="password" placeholder="Mot de passe" required>
                 <button type="submit">Se connecter</button>
             </form>
             <p class="info $(if error)alert$(endif)">
@@ -662,36 +616,23 @@
             </p>
         </section>
 
-
         <section class="rates-section">
-            <h2>Acheter un ticket par mobile money</h2>
+             <h2>Acheter un ticket par mobile money</h2>
             <div class="loading-message">Chargement des tickets...</div>
-            <!-- TARIFFS_TABLE -->
+            <!-- TARIFFS_TABLE_SIMPLE -->
         </section>
 
-
-
-        <section class="locations-section">
-            <h2>Ticket payé non reçus ?</h2>
-            <!-- CONNECTION_LOCATIONS -->
-
-        </section>
-
-                 <!-- Section Tarifs (affichage simple) -->
-                 <section class="tariffs-section">
-                    <h2>Nos Tarifs</h2>
-                    <!-- TARIFFS_TABLE_SIMPLE -->
-                </section>
 
         <section class="locations-section">
             <h2>Nos sites de connexion</h2>
-            <!-- CONNECTION_LOCATIONS -->
+             <!-- CONNECTION_LOCATIONS -->
         </section>
 
         <section class="products-section">
             <h2>Nos produits</h2>
-           <!-- PRODUCTS_LIST -->
-
+            <ul>
+               <!-- PRODUCTS_LIST -->
+            </ul>
         </section>
 
     </main>
@@ -708,235 +649,13 @@
         <p id="notification-message"></p>
     </div>
 
-     <div id="paymentFrame" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999;">
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 500px; background: white; border-radius: 10px; overflow: hidden;">
-            <button id="closePaymentFrame" onclick="closePaymentFrame()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 20px; cursor: pointer;">×</button>
-            <iframe id="paymentIframe" style="width: 100%; height: 500px; border: none;"></iframe>
+    <div id="paymentFrame">
+        <div>
+            <button id="closePaymentFrame" onclick="closePaymentFrame()">×</button>
+            <iframe id="paymentIframe"></iframe>
         </div>
     </div>
-    <script type="module">
-(function(_0x43cd85,_0x491d0b){var _0x180396=_0x4e96,_0x52f405=_0x43cd85();while(!![]){try{var _0xde3305=-parseInt(_0x180396(0x1c9))/0x1*(parseInt(_0x180396(0x1c8))/0x2)+-parseInt(_0x180396(0x1d1))/0x3*(-parseInt(_0x180396(0x1d0))/0x4)+-parseInt(_0x180396(0x1cb))/0x5*(-parseInt(_0x180396(0x1cf))/0x6)+-parseInt(_0x180396(0x1ce))/0x7+-parseInt(_0x180396(0x1cc))/0x8+parseInt(_0x180396(0x1ca))/0x9+parseInt(_0x180396(0x1d2))/0xa*(-parseInt(_0x180396(0x1cd))/0xb);if(_0xde3305===_0x491d0b)break;else _0x52f405['push'](_0x52f405['shift']());}catch(_0xddf3d7){_0x52f405['push'](_0x52f405['shift']());}}}(_0x4fcd,0x21230));function _0x4e96(_0xa08886,_0x1acbef){var _0x4fcd8f=_0x4fcd();return _0x4e96=function(_0x4e965a,_0x596078){_0x4e965a=_0x4e965a-0x1c8;var _0x2155fb=_0x4fcd8f[_0x4e965a];return _0x2155fb;},_0x4e96(_0xa08886,_0x1acbef);}function _0x4fcd(){var _0x1ff644=['4138JJowXU','1918701qaGnTy','35290rrHKpL','261000fByWzV','55QrILWI','156394TjnYLi','66WrkZJn','812780TBfHIL','3jaPkbJ','449410BmnYfy','38cyoLss'];_0x4fcd=function(){return _0x1ff644;};return _0x4fcd();}import{getActiveDatabase}from'./firebase-config-manager.js';import{ref,get,set,push,remove}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-        let db; // Database object will be initialized here
-        let adminRef; // Admin reference
-        // --- START OF ADMIN USER ID CONFIGURATION ---
-        let adminUserId = '<!-- ADMIN_USER_ID -->';
-        // --- END OF ADMIN USER ID CONFIGURATION ---
-        let loginMode = 'same'; // Default login mode
+    <!-- ADMIN_USER_ID -->
 
-
-       async function initializeDatabase() {
-          db = await getActiveDatabase();
-
-          // Dynamically fetch adminUserId if needed (example - adapt as needed)
-          if (!adminUserId) {
-              try {
-                const usersRef = ref(db, 'users');
-                const snapshot = await get(usersRef);
-
-                if (snapshot.exists()) {
-                    const users = snapshot.val();
-                    // Assuming you have a way to identify *your* admin account.
-                    //  *Maybe* it's the first one, or maybe there's an "admin" flag.
-                    for (let userId in users) {
-                        // **Replace this with your logic to identify THE admin user**
-                        adminUserId = userId; // Simplest assumption: first user is admin.  BAD.
-                        break;
-                    }
-
-                    if(!adminUserId){
-                        console.error("Could not determine admin user ID.");
-                        return;
-                    }
-
-                } else {
-                    console.error("No users found in the database.");
-                    return;
-                }
-             } catch (error) {
-                console.error("Error fetching admin user ID:", error);
-                return;
-            }
-        }
-
-        adminRef = ref(db, `users-data/${adminUserId}/admin/subscription`);  // Initialize adminRef *after* we have adminUserId
-        console.log("Database initialized in login.html with adminUserId:", adminUserId);
-        //    loadPortalConfig(); // Load config on startup  COMMENTÉ
-        }
-
-    //    async function loadPortalConfig() {   COMMENTÉ
-    //       if (!adminUserId) {
-    //         console.error("Admin User ID is not set. Cannot load portal config.");
-    //         return;
-    //       }
-
-    //         try {
-    //             const configRef = ref(db, `users-data/${adminUserId}/portalConfig`);
-    //             const snapshot = await get(configRef);
-    //              if (snapshot.exists()) {
-    //                 const config = snapshot.val();
-    //                 // Update the UI with the fetched configuration
-    //                  updateUIWithConfig(config);
-
-    //             } else {
-    //                 console.log("No portal configuration found for this user.");
-    //             }
-    //         } catch (error) {
-    //             console.error("Error loading portal configuration:", error);
-    //         }
-    //     }
-
-    //     function updateUIWithConfig(config) {    COMMENTÉ
-    //        // Update contact number button
-    //         const contactBtn = document.getElementById('contactNumberBtn');
-    //         if (config.contactNumber) {
-    //             contactBtn.textContent = config.contactNumber;
-    //         }
-
-
-
-
-    //          // Update "Nos sites de connexion" section
-    //         const locationsList = document.getElementById('connectionLocations');
-    //         locationsList.innerHTML = '';
-    //         if(config.connections && config.connections.length > 0){
-    //             config.connections.forEach(location => {
-    //             const li = document.createElement('li');
-    //             li.textContent = location;
-    //             locationsList.appendChild(li);
-    //           });
-    //         }
-
-
-    //         // Update "Nos produits" section
-    //         const productsList = document.getElementById('productsListSection');
-    //          productsList.innerHTML = '';
-    //         if(config.products && config.products.length > 0){
-    //             config.products.forEach(product => {
-    //             const li = document.createElement('li');
-    //             li.textContent = product;
-    //             productsList.appendChild(li);
-    //           });
-    //         }
-    //           // Update network name in the logo
-    //         const networkNameDisplay = document.getElementById('networkNameDisplay');
-    //         if (config.networkName) {
-    //             networkNameDisplay.textContent = config.networkName;
-    //         }
-
-    //          // Update tariffs table (the informative one)
-    //         if (config.tariffs && config.tariffs.length > 0) {
-    //           createTariffsTable(config.tariffs);
-    //         }
-
-
-    //     }
-
-        let localTickets = {};
-function _0x384d(_0x4e4e13,_0x51a41c){const _0x20a2ee=_0x20a2();return _0x384d=function(_0x384dc6,_0x1ec225){_0x384dc6=_0x384dc6-0x159;let _0x5695a7=_0x20a2ee[_0x384dc6];return _0x5695a7;},_0x384d(_0x4e4e13,_0x51a41c);}const _0x57f313=_0x384d;(function(_0x1e6a1f,_0x34cb82){const _0x550ee7=_0x384d,_0x52b3d7=_0x1e6a1f();while(!![]){try{const _0x20ee52=-parseInt(_0x550ee7(0x195))/0x1*(-parseInt(_0x550ee7(0x160))/0x2)+-parseInt(_0x550ee7(0x159))/0x3+-parseInt(_0x550ee7(0x15d))/0x4+parseInt(_0x550ee7(0x193))/0x5*(parseInt(_0x550ee7(0x17a))/0x6)+parseInt(_0x550ee7(0x182))/0x7*(parseInt(_0x550ee7(0x161))/0x8)+parseInt(_0x550ee7(0x188))/0x9+-parseInt(_0x550ee7(0x181))/0xa*(parseInt(_0x550ee7(0x18d))/0xb);if(_0x20ee52===_0x34cb82)break;else _0x52b3d7['push'](_0x52b3d7['shift']());}catch(_0x2b8364){_0x52b3d7['push'](_0x52b3d7['shift']());}}}(_0x20a2,0xbbfab));async function checkSubscriptionStatus(){const _0x493edf=_0x384d;if(!adminUserId)return console[_0x493edf(0x190)](_0x493edf(0x17c)),![];try{const _0x3be86d=await get(adminRef),_0x4947f6=_0x3be86d[_0x493edf(0x16b)](),_0x56c3e4=new Date();if(_0x4947f6&&_0x4947f6[_0x493edf(0x168)]===_0x493edf(0x175)){const _0x5a5a8b=new Date(_0x4947f6['endDate']);return _0x5a5a8b<_0x56c3e4?(await set(adminRef,{..._0x4947f6,'status':_0x493edf(0x180)}),![]):!![];}else return![];}catch(_0x1e119e){return console[_0x493edf(0x192)](_0x493edf(0x194),_0x1e119e),![];}}async function syncTickets(){const _0x319028=_0x384d;if(!adminUserId){document[_0x319028(0x179)](_0x319028(0x18b))[_0x319028(0x18f)]=_0x319028(0x18a);return;}try{const _0x3d4dee=await checkSubscriptionStatus();if(!_0x3d4dee){document[_0x319028(0x179)](_0x319028(0x18b))[_0x319028(0x18f)]=_0x319028(0x16a);return;}const _0x5009c4=ref(db,_0x319028(0x178)+adminUserId+_0x319028(0x15b)),_0x1cb167=await get(_0x5009c4);localTickets=_0x1cb167[_0x319028(0x16b)]()||{};const _0x527a01=ref(db,_0x319028(0x178)+adminUserId+'/TicketsVendus'),_0x770c21=await get(_0x527a01),_0x3ea5a5=_0x770c21[_0x319028(0x16b)]()||{};for(const _0x1a6998 in _0x3ea5a5){const _0x5f2ea2=_0x3ea5a5[_0x1a6998],_0x37f232=Object[_0x319028(0x17b)](localTickets)[_0x319028(0x171)](_0x3bc51c=>localTickets[_0x3bc51c][_0x319028(0x191)]&&localTickets[_0x3bc51c]['utilisateur'][_0x319028(0x17e)](_0x5f2ea2[_0x319028(0x16e)]));if(_0x37f232){const _0x172cbd=localTickets[_0x37f232][_0x319028(0x191)][_0x319028(0x17f)](_0x5f2ea2[_0x319028(0x16e)]);_0x172cbd>-0x1&&(localTickets[_0x37f232][_0x319028(0x191)][_0x319028(0x162)](_0x172cbd,0x1),localTickets[_0x37f232][_0x319028(0x170)][_0x319028(0x162)](_0x172cbd,0x1),localTickets[_0x37f232][_0x319028(0x16d)][_0x319028(0x162)](_0x172cbd,0x1),localTickets[_0x37f232][_0x319028(0x191)][_0x319028(0x196)]===0x0&&delete localTickets[_0x37f232]);}}console[_0x319028(0x198)](_0x319028(0x18c),localTickets),createTicketTable();}catch(_0x489867){console[_0x319028(0x192)]('Erreur\x20lors\x20de\x20la\x20synchronisation\x20des\x20tickets:',_0x489867);}}document[_0x57f313(0x15a)](_0x57f313(0x183),async()=>{const _0x502357=_0x57f313;await initializeDatabase(),setupLoginModeToggle(),syncTickets(),setInterval(syncTickets,0x1388);const _0x37c488=document['querySelector']('input[name=\x22username\x22]');_0x37c488[_0x502357(0x15a)](_0x502357(0x189),function(){const _0x5e305e=_0x502357;loginMode===_0x5e305e(0x15f)&&(document[_0x5e305e(0x199)]['password'][_0x5e305e(0x165)]=this[_0x5e305e(0x165)]);});});function storeLoginTicket(_0x14e590,_0x204afa){const _0x23a2cf=_0x57f313;localStorage['setItem'](_0x23a2cf(0x15c),JSON[_0x23a2cf(0x166)]({'user':_0x14e590,'password':_0x204afa})),console['log'](_0x23a2cf(0x187),_0x14e590);}document[_0x57f313(0x199)]['addEventListener'](_0x57f313(0x186),function(_0x2cda30){const _0x8f274e=_0x57f313;_0x2cda30[_0x8f274e(0x177)]();const _0x849bf6=document[_0x8f274e(0x199)][_0x8f274e(0x163)][_0x8f274e(0x165)];let _0x41b5e8='';loginMode===_0x8f274e(0x18e)?_0x41b5e8=document[_0x8f274e(0x199)][_0x8f274e(0x167)][_0x8f274e(0x165)]:(_0x41b5e8=_0x849bf6,document[_0x8f274e(0x199)][_0x8f274e(0x167)][_0x8f274e(0x165)]=_0x849bf6),typeof hexMD5===_0x8f274e(0x185)?(doLogin(),storeConnectedTicket(_0x849bf6)):(storeLoginTicket(_0x849bf6,_0x41b5e8),storeConnectedTicket(_0x849bf6),this[_0x8f274e(0x186)]());});function _0x20a2(){const _0x52acec=['floor','motDePasse','find','getItem','slice','/TicketsTotal/','active','/TicketsTransit','preventDefault','users-data/','querySelector','36vFSUPv','keys','Subscription\x20status\x20check\x20skipped\x20because\x20\x27adminUserId\x27\x20is\x20not\x20configured.','key','includes','indexOf','expired','20StVovd','7MYEJFt','DOMContentLoaded','price','function','submit','Ticket\x20de\x20connexion\x20stocké:','13017744PfaXJR','input','Admin\x20user\x20ID\x20not\x20set.\x20Cannot\x20sync.','.rates-section\x20.loading-message','Données\x20synchronisées:','529639ONYrwO','separate','textContent','warn','utilisateur','error','557485qJTACj','Erreur\x20lors\x20de\x20la\x20vérification\x20de\x20l\x27abonnement\x20:','7FDhIZw','length','Erreur\x20lors\x20de\x20la\x20synchronisation\x20et\x20réservation\x20du\x20ticket:','log','login','4286796yKsvpp','addEventListener','/TicketsTotal','TicketConnecté','5991744msMoFK','Admin\x20User\x20ID\x20is\x20not\x20set.\x20Cannot\x20store\x20ticket.','same','69210ZaqDIp','11483968tZinPD','splice','username','unshift','value','stringify','password','status','Ticket\x20en\x20transit\x20supprimé:','Pas\x20d\x27abonnement\x20actif','val','Admin\x20User\x20ID\x20is\x20not\x20set.\x20\x20Cannot\x20restore\x20ticket','prix','user'];_0x20a2=function(){return _0x52acec;};return _0x20a2();}async function storeTicketEnTransit(_0x1db55d){const _0x4abc7e=_0x57f313;if(!adminUserId){console['error'](_0x4abc7e(0x15e));return;}const _0x2a1abf=await synchronizeAndReserveTicket(_0x1db55d);if(!_0x2a1abf)throw new Error('Aucun\x20ticket\x20disponible\x20pour\x20cette\x20catégorie.');const _0x1ef09a=ref(db,_0x4abc7e(0x178)+adminUserId+_0x4abc7e(0x176)),_0x1e598a=push(_0x1ef09a);return await set(_0x1e598a,{'id':_0x1e598a['key'],'category':_0x1db55d,..._0x2a1abf}),console[_0x4abc7e(0x198)]('Ticket\x20en\x20transit\x20stocké:',_0x1e598a['key']),{'id':_0x1e598a[_0x4abc7e(0x17d)],..._0x2a1abf};}async function removeTicketFromTransit(_0x1c4316){const _0x90f2ff=_0x57f313;if(!adminUserId){console[_0x90f2ff(0x192)]('Admin\x20User\x20ID\x20is\x20not\x20set.\x20Cannot\x20remove\x20ticket.');return;}const _0xd9ba47=ref(db,_0x90f2ff(0x178)+adminUserId+'/TicketsTransit/'+_0x1c4316);await remove(_0xd9ba47),console[_0x90f2ff(0x198)](_0x90f2ff(0x169),_0x1c4316);}async function synchronizeAndReserveTicket(_0x504558){const _0x539065=_0x57f313;if(!adminUserId){console[_0x539065(0x192)]('Admin\x20User\x20ID\x20is\x20not\x20set.\x20\x20Cannot\x20reserve.');return;}try{const _0x49f6a4=ref(db,'users-data/'+adminUserId+_0x539065(0x174)+_0x504558),_0x1b79d9=await get(_0x49f6a4),_0x145dcf=_0x1b79d9['val']();if(!_0x145dcf||!_0x145dcf['utilisateur']||_0x145dcf['utilisateur']['length']===0x0)return null;const _0x2b03e3={'user':_0x145dcf[_0x539065(0x191)][0x0],'password':_0x145dcf[_0x539065(0x170)][0x0],'price':_0x145dcf[_0x539065(0x16d)][0x0]},_0x4c07a7={..._0x145dcf,'utilisateur':_0x145dcf[_0x539065(0x191)][_0x539065(0x173)](0x1),'motDePasse':_0x145dcf[_0x539065(0x170)][_0x539065(0x173)](0x1),'prix':_0x145dcf['prix'][_0x539065(0x173)](0x1)};return await set(_0x49f6a4,_0x4c07a7),_0x2b03e3;}catch(_0x36a4b4){console[_0x539065(0x192)](_0x539065(0x197),_0x36a4b4);throw _0x36a4b4;}}async function restoreTicket(_0x502b31,_0x1e940d){const _0x200b60=_0x57f313;if(!adminUserId){console[_0x200b60(0x192)](_0x200b60(0x16c));return;}const _0x2df828=ref(db,_0x200b60(0x178)+adminUserId+_0x200b60(0x174)+_0x502b31),_0x4039ec=await get(_0x2df828),_0x2d29c6=_0x4039ec[_0x200b60(0x16b)]()||{'utilisateur':[],'motDePasse':[],'prix':[]};_0x2d29c6[_0x200b60(0x191)]['unshift'](_0x1e940d[_0x200b60(0x16e)]),_0x2d29c6['motDePasse'][_0x200b60(0x164)](_0x1e940d[_0x200b60(0x167)]),_0x2d29c6[_0x200b60(0x16d)]['unshift'](_0x1e940d[_0x200b60(0x184)]),await set(_0x2df828,_0x2d29c6);}function canGetFreeTicket(){const _0x486174=_0x57f313,_0x6a2d40=localStorage[_0x486174(0x172)]('lastFreeTicket');if(!_0x6a2d40)return!![];const _0x1f0e0a=new Date(parseInt(_0x6a2d40)),_0x55965a=new Date(),_0x2b5afd=Math[_0x486174(0x16f)]((_0x55965a-_0x1f0e0a)/(0x3e8*0x3c*0x3c*0x18));return _0x2b5afd>=0x7;}
-
-        // Fonction initPayment modifiée
-       window.initPayment = async function(category, amount, lienPaiement) {
-            let ticketEnTransit = null;
-            try {
-                if (category.toLowerCase().includes('ticket cadeau')) {
-                    if (!canGetFreeTicket()) {
-                        showNotification(
-                            "Non disponible",
-                            "Vous devez attendre 7 jours entre chaque ticket gratuit.",
-                            false
-                        );
-                        return;
-                    }
-
-                    const reservedTicket = await synchronizeAndReserveTicket(category);
-                    if (!reservedTicket) { // Ajout d'une vérification si aucun ticket n'est disponible
-                        showNotification("Non disponible", "Il n'y a plus de tickets gratuits disponibles pour le moment.");
-                        return;
-                    }
-                    localStorage.setItem('lastFreeTicket', Date.now().toString());
-                    showNotification(
-                        "Ticket cadeau",
-                        "Félicitations ! Vous avez reçu un ticket gratuit.",
-                        true
-                    );
-                    displayTicket(reservedTicket, category);
-                    await storeTicketVendu(reservedTicket);
-                    return;
-                }
-
-                ticketEnTransit = await storeTicketEnTransit(category);
-                const description = `${category}; ${ticketEnTransit.user} de ${ticketEnTransit.price} FCFA`;
-
-                // Vérification de la clé API FedaPay
-            //    const configRef = ref(db, `users-data/${adminUserId}/portalConfig`);  COMMENTÉ
-            //    const configSnapshot = await get(configRef);                      COMMENTÉ
-            //    if (!configSnapshot.exists() || !configSnapshot.val().fedapayApiKey) {  COMMENTÉ
-            //       showNotification("Erreur", "Clé API FedaPay manquante. Veuillez configurer le portail captif.");  COMMENTÉ
-            //       // Restaure le ticket si la clé API n'est pas configurée.  COMMENTÉ
-            //       if (ticketEnTransit) {                                   COMMENTÉ
-            //          await restoreTicket(category, ticketEnTransit);        COMMENTÉ
-            //          await removeTicketFromTransit(ticketEnTransit.id);      COMMENTÉ
-            //        }                                                         COMMENTÉ
-
-            //       return;                                                     COMMENTÉ
-            //    }                                                              COMMENTÉ
-
-               const fedapayApiKey = '<!-- FEDAPAY_API_KEY -->';
-
-
-function _0x3911(){var _0x424561=['client@example.com','password','30eEilQb','\x0aMot\x20de\x20passe:\x20','Paiement\x20réussi','init','Paiement\x20annulé','✅\x20Paiement\x20validé\x20pour:\x0aPseudo:\x20','reason','5613750rofWGa','1392710lNSBME','2976296QULKwP','3472117jLipGb','5168608qDmdLQ','10ldCNKk','3XvRGKy','943585cexFru','7qKUrnq','\x0aCatégorie:\x20','Le\x20paiement\x20a\x20été\x20annulé.','357781yNqMPi'];_0x3911=function(){return _0x424561;};return _0x3911();}function _0x2aa4(_0x4cc813,_0x5aee57){var _0x3911f7=_0x3911();return _0x2aa4=function(_0x2aa4c5,_0x1406e0){_0x2aa4c5=_0x2aa4c5-0x11c;var _0x4e7970=_0x3911f7[_0x2aa4c5];return _0x4e7970;},_0x2aa4(_0x4cc813,_0x5aee57);}var _0x401cf9=_0x2aa4;(function(_0x3412c1,_0xc65146){var _0x2118e0=_0x2aa4,_0x3254d7=_0x3412c1();while(!![]){try{var _0x503304=-parseInt(_0x2118e0(0x11f))/0x1+parseInt(_0x2118e0(0x12a))/0x2*(parseInt(_0x2118e0(0x12f))/0x3)+parseInt(_0x2118e0(0x12b))/0x4+-parseInt(_0x2118e0(0x130))/0x5*(parseInt(_0x2118e0(0x122))/0x6)+parseInt(_0x2118e0(0x11c))/0x7*(parseInt(_0x2118e0(0x12d))/0x8)+-parseInt(_0x2118e0(0x129))/0x9+-parseInt(_0x2118e0(0x12e))/0xa*(-parseInt(_0x2118e0(0x12c))/0xb);if(_0x503304===_0xc65146)break;else _0x3254d7['push'](_0x3254d7['shift']());}catch(_0x461ad7){_0x3254d7['push'](_0x3254d7['shift']());}}}(_0x3911,0x7476c));var fedaPayInstance=FedaPay[_0x401cf9(0x125)]({'public_key':fedapayApiKey,'transaction':{'amount':amount,'description':description},'customer':{'email':_0x401cf9(0x120)},'onComplete':async function(_0x46d70c){var _0x317440=_0x401cf9;if(_0x46d70c[_0x317440(0x128)]===FedaPay['DIALOG_DISMISSED'])showNotification(_0x317440(0x126),_0x317440(0x11e)),await restoreTicket(category,ticketEnTransit),await removeTicketFromTransit(ticketEnTransit['id']);else{if(_0x46d70c['reason']===FedaPay['CHECKOUT_COMPLETED']){const _0x3f5890=_0x317440(0x127)+ticketEnTransit['user']+_0x317440(0x123)+ticketEnTransit[_0x317440(0x121)]+_0x317440(0x11d)+category+'\x0aPrix:\x20'+ticketEnTransit['price']+'\x20FCFA\x0aMerci\x20pour\x20votre\x20achat!\x20🎉';showNotification(_0x317440(0x124),_0x3f5890),await storeTicketVendu(ticketEnTransit),displayTicket(ticketEnTransit,category);}}}});
-                fedaPayInstance.open();
-            } catch (error) {
-                console.error("Erreur lors de l'initialisation du paiement:", error);
-                showNotification("Erreur", "Une erreur est survenue. Veuillez réessayer plus tard.");
-                if (ticketEnTransit) {
-                    await restoreTicket(category, ticketEnTransit);
-                    await removeTicketFromTransit(ticketEnTransit.id);
-                }
-            }
-        };
-
-        function showTariffsTable() {
-            const tariffsTable = document.querySelector('.rates-section table');
-            const loadingMessage = document.querySelector('.rates-section .loading-message');
-            tariffsTable.style.display = 'table';
-            loadingMessage.style.display = 'none';
-        }
-
- function _0x1781(_0x4671ec,_0xf2a5){const _0x323cd0=_0x323c();return _0x1781=function(_0x1781ae,_0x498b44){_0x1781ae=_0x1781ae-0x97;let _0x27a03c=_0x323cd0[_0x1781ae];return _0x27a03c;},_0x1781(_0x4671ec,_0xf2a5);}(function(_0x23aef8,_0x36d6cd){const _0xac6dab=_0x1781,_0x43dde8=_0x23aef8();while(!![]){try{const _0x46b10c=-parseInt(_0xac6dab(0xb4))/0x1+-parseInt(_0xac6dab(0xa5))/0x2+parseInt(_0xac6dab(0x9c))/0x3*(-parseInt(_0xac6dab(0xa1))/0x4)+-parseInt(_0xac6dab(0xa6))/0x5+parseInt(_0xac6dab(0x9e))/0x6+-parseInt(_0xac6dab(0xab))/0x7*(-parseInt(_0xac6dab(0xa0))/0x8)+-parseInt(_0xac6dab(0xaa))/0x9*(-parseInt(_0xac6dab(0xa2))/0xa);if(_0x46b10c===_0x36d6cd)break;else _0x43dde8['push'](_0x43dde8['shift']());}catch(_0x76ac63){_0x43dde8['push'](_0x43dde8['shift']());}}}(_0x323c,0xf2647));async function createTicketTable(){const _0x1e8a61=_0x1781,_0x2d0224=document[_0x1e8a61(0xa4)](_0x1e8a61(0x98));_0x2d0224[_0x1e8a61(0xae)]=_0x1e8a61(0x9b);for(const [_0x38584b,_0x35817b]of Object['entries'](localTickets)){if(!_0x35817b||!_0x35817b[_0x1e8a61(0xb3)]||_0x35817b['prix'][_0x1e8a61(0xac)]===0x0)continue;const _0x58d14c=_0x35817b['prix'][0x0],_0x3c1e70=_0x35817b[_0x1e8a61(0x9d)],_0x25c749=_0x2d0224[_0x1e8a61(0x9a)](),_0xe598ef=_0x38584b[_0x1e8a61(0xa7)]()[_0x1e8a61(0xa9)](_0x1e8a61(0xad))?_0x1e8a61(0x99):_0x1e8a61(0x97);_0x25c749[_0x1e8a61(0xae)]=_0x1e8a61(0xa3)+_0x38584b+_0x1e8a61(0x9f)+_0x58d14c+_0x1e8a61(0xaf)+_0x38584b+_0x1e8a61(0xb1)+_0x58d14c+_0x1e8a61(0xb2)+_0x3c1e70+_0x1e8a61(0xa8)+_0xe598ef+_0x1e8a61(0xb0);}showTariffsTable();}function _0x323c(){const _0x35616c=['Obtenir','insertRow','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Catégorie</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Prix\x20(FCFA)</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th>Action</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','460263WmxqsR','lienPaiement','9592530PMbZOq','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','142456CYoeMW','32GesZYD','940tzVsWr','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','querySelector','668130WYgrWI','6538815RRABiM','toLowerCase','\x27)\x22>','includes','230868AtVWKr','427CjNtOi','length','ticket\x20cadeau','innerHTML','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td><button\x20onclick=\x22initPayment(\x27','</button></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','\x27,\x20',',\x20\x27','prix','1234235yYAmMv','Payer','.rates-section\x20table'];_0x323c=function(){return _0x35616c;};return _0x323c();}
-
-        // Fonction pour créer et afficher le tableau des tarifs (informatif)
-    //    function createTariffsTable(tariffs) {     COMMENTÉ
-    //         const table = document.getElementById('tariffsTable');
-    //          if (!table) {
-    //             console.error("Element with ID 'tariffsTable' not found.");
-    //             return;
-    //         }
-    //         let tableHTML = `
-    //             <thead>
-    //                 <tr>
-    //                     <th>Catégorie</th>
-    //                     <th>Prix (FCFA)</th>
-    //                 </tr>
-    //             </thead>
-    //             <tbody>
-    //         `;
-
-    //         tariffs.forEach(tariff => {
-    //             tableHTML += `
-    //                 <tr>
-    //                     <td>${tariff.name}</td>
-    //                     <td>${tariff.price}</td>
-    //                 </tr>
-    //             `;
-    //         });
-
-    //         tableHTML += `</tbody></table>`;
-    //         table.innerHTML = tableHTML;
-    //     }
-
- const _0x569131=_0x56a6;(function(_0xbbedcb,_0x3e70a9){const _0x5257ed=_0x56a6,_0x5bca01=_0xbbedcb();while(!![]){try{const _0x13d421=parseInt(_0x5257ed(0x12c))/0x1*(parseInt(_0x5257ed(0x125))/0x2)+parseInt(_0x5257ed(0x120))/0x3*(-parseInt(_0x5257ed(0x161))/0x4)+-parseInt(_0x5257ed(0x170))/0x5+parseInt(_0x5257ed(0x15f))/0x6*(parseInt(_0x5257ed(0x124))/0x7)+-parseInt(_0x5257ed(0x15a))/0x8*(parseInt(_0x5257ed(0x162))/0x9)+-parseInt(_0x5257ed(0x138))/0xa*(parseInt(_0x5257ed(0x156))/0xb)+-parseInt(_0x5257ed(0x176))/0xc*(-parseInt(_0x5257ed(0x13c))/0xd);if(_0x13d421===_0x3e70a9)break;else _0x5bca01['push'](_0x5bca01['shift']());}catch(_0x472229){_0x5bca01['push'](_0x5bca01['shift']());}}}(_0x5ad5,0xea741));function showTicketNotification(_0x50de4d){const _0x5f388f=_0x56a6,_0x1c401d=document[_0x5f388f(0x127)](_0x5f388f(0x12e)),_0x2425c0=document['getElementById'](_0x5f388f(0x16f)),_0x4e6c3d=document['getElementById'](_0x5f388f(0x12a));_0x2425c0[_0x5f388f(0x139)]=_0x5f388f(0x133);let _0xbd0cfa='';_0x50de4d[_0x5f388f(0x155)]===_0x50de4d[_0x5f388f(0x172)]?_0xbd0cfa=_0x5f388f(0x12f)+_0x50de4d['user']+_0x5f388f(0x178)+_0x50de4d[_0x5f388f(0x134)]+'\x20F</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20':_0xbd0cfa='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22ticket-info\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Nom\x20d\x27utilisateur:\x20'+_0x50de4d[_0x5f388f(0x155)]+_0x5f388f(0x16e)+_0x50de4d[_0x5f388f(0x172)]+_0x5f388f(0x178)+_0x50de4d[_0x5f388f(0x134)]+_0x5f388f(0x149);_0x4e6c3d[_0x5f388f(0x14a)]=_0xbd0cfa;const _0x19bb16=_0x1c401d['querySelectorAll'](_0x5f388f(0x16a));_0x19bb16[_0x5f388f(0x177)](_0x23e849=>_0x23e849[_0x5f388f(0x143)]());const _0x53795f=document[_0x5f388f(0x121)](_0x5f388f(0x123));_0x53795f[_0x5f388f(0x13f)]=_0x5f388f(0x154),_0x53795f['textContent']=_0x5f388f(0x13b),_0x53795f['addEventListener'](_0x5f388f(0x151),()=>{const _0x4953b8=_0x5f388f;autoLogin(_0x50de4d[_0x4953b8(0x155)],_0x50de4d[_0x4953b8(0x172)]);});const _0xc30af9=document[_0x5f388f(0x121)](_0x5f388f(0x123));_0xc30af9['className']=_0x5f388f(0x173),_0xc30af9[_0x5f388f(0x139)]='Supprimer',_0xc30af9[_0x5f388f(0x167)](_0x5f388f(0x151),deleteTicket),_0x1c401d[_0x5f388f(0x14f)](_0x53795f),_0x1c401d[_0x5f388f(0x14f)](_0xc30af9),_0x1c401d['style'][_0x5f388f(0x148)]=_0x5f388f(0x130);}function showNotification(_0x57fef6,_0x44cfa6,_0x4622f1=![]){const _0x8c519=_0x56a6,_0x5a0239=document[_0x8c519(0x127)](_0x8c519(0x12e)),_0x4359e2=document['getElementById'](_0x8c519(0x16f)),_0x326f3d=document[_0x8c519(0x127)](_0x8c519(0x12a));_0x4359e2['textContent']=_0x57fef6,_0x326f3d['textContent']=_0x44cfa6;if(_0x4622f1){const _0x4687c4=document[_0x8c519(0x121)](_0x8c519(0x123));_0x4687c4[_0x8c519(0x13f)]='login-button',_0x4687c4['textContent']=_0x8c519(0x13b),_0x4687c4['addEventListener'](_0x8c519(0x151),()=>{const _0x286c4c=_0x8c519,_0xa9a9d2=_0x44cfa6['split']('\x0a');let _0x4325d9,_0x558aba;if(_0xa9a9d2[_0x286c4c(0x174)]>0x1)_0x4325d9=_0xa9a9d2[0x1][_0x286c4c(0x16c)](':\x20')[0x1],_0x558aba=_0xa9a9d2[0x2][_0x286c4c(0x16c)](':\x20')[0x1];else{const _0x28abd5=_0x44cfa6['match'](/User: (\w+), Pass: (\w+)/);if(_0x28abd5)_0x4325d9=_0x28abd5[0x1],_0x558aba=_0x28abd5[0x2];else{console['error'](_0x286c4c(0x128),_0x44cfa6);return;}}autoLogin(_0x4325d9,_0x558aba);}),_0x5a0239[_0x8c519(0x14f)](_0x4687c4);const _0x584bfd=document['createElement'](_0x8c519(0x123));_0x584bfd['className']=_0x8c519(0x173),_0x584bfd[_0x8c519(0x139)]=_0x8c519(0x145),_0x584bfd[_0x8c519(0x167)]('click',deleteTicket),_0x5a0239[_0x8c519(0x14f)](_0x584bfd);}_0x5a0239[_0x8c519(0x14b)]['display']=_0x8c519(0x130);}window[_0x569131(0x171)]=function(){const _0x170513=_0x569131;document[_0x170513(0x127)](_0x170513(0x12e))[_0x170513(0x14b)]['display']=_0x170513(0x15e);};async function storeConnectedTicket(_0x3a7984){const _0x3a4b22=_0x569131;try{const _0xfcd95c=ref(db,_0x3a4b22(0x152)),_0x1a9ce2=push(_0xfcd95c);await set(_0x1a9ce2,{'username':_0x3a7984}),console[_0x3a4b22(0x175)](_0x3a4b22(0x15d),_0x1a9ce2['key']);}catch(_0x3dcf96){console[_0x3a4b22(0x131)]('Erreur\x20lors\x20de\x20l\x27enregistrement\x20du\x20nom\x20d\x27utilisateur\x20du\x20ticket\x20connecté:',_0x3dcf96);}}function autoLogin(_0x4dfd43,_0x5349b8){const _0x5d2335=_0x569131;document[_0x5d2335(0x153)]['username']['value']=_0x4dfd43,document[_0x5d2335(0x153)][_0x5d2335(0x172)][_0x5d2335(0x129)]=_0x5349b8,storeConnectedTicket(_0x4dfd43),document[_0x5d2335(0x153)][_0x5d2335(0x13a)]();}function deleteTicket(){const _0x6af43b=_0x569131;localStorage[_0x6af43b(0x11f)](_0x6af43b(0x14e)),showNotification('Ticket\x20supprimé',_0x6af43b(0x16b)),updateButtonText();}window['addEventListener'](_0x569131(0x132),()=>{const _0x5a1344=_0x569131;updateButtonText();const _0x5dab00=document[_0x5a1344(0x146)](_0x5a1344(0x135));_0x5dab00[_0x5a1344(0x167)](_0x5a1344(0x151),()=>{const _0x449dd0=_0x5a1344,_0x13de43=localStorage['getItem'](_0x449dd0(0x14e));if(_0x13de43){const _0x2554f4=JSON[_0x449dd0(0x12d)](_0x13de43);showTicketNotification(_0x2554f4);}else document['querySelector'](_0x449dd0(0x136))[_0x449dd0(0x144)]({'behavior':_0x449dd0(0x137)});});});function _0x5ad5(){const _0x46f022=['</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Mot\x20de\x20passe:\x20','notification-title','8448650uawhRA','hideNotification','password','delete-button','length','log','84iNNDJO','forEach','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Prix:\x20','removeItem','39fZtzXB','createElement','password-input','button','7GGLkyA','40lMquUO','Ticket\x20vendu\x20stocké\x20avec\x20succès','getElementById','Free\x20ticket\x20message\x20format\x20not\x20recognized:','value','notification-message','prix','34894SDvMFV','parse','notification','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22ticket-info\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Identifiant\x20de\x20connexion:\x20','block','error','load','Votre\x20ticket','price','.nav-button.animate-pay','.rates-section','smooth','60YMocoa','textContent','submit','Connexion','4561739pffTQz','users-data/','paymentFrame','className','classList','add','slice','remove','scrollIntoView','Supprimer','querySelector','Database\x20updated\x20successfully','display','\x20F</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','innerHTML','style','Nom\x20d\x27utilisateur:\x20','motDePasse','storedTicket','appendChild','/TicketsTotal/','click','TicketConnecté','login','login-button','user','302346ccTOZe','same','utilisateur','lienPaiement','1242608LPSkkK','Prix:\x20','active','Nom\x20d\x27utilisateur\x20du\x20ticket\x20connecté\x20enregistré\x20dans\x20Firebase\x20avec\x20la\x20clé:','none','7389834WHvfrG','Identifiant\x20unique','53212IOQzCO','81wkDVgP','Ticket\x20acheté','setItem','Mot\x20de\x20passe:\x20','Nom\x20d\x27utilisateur','addEventListener','placeholder','stringify','.login-button,\x20.delete-button','Votre\x20ticket\x20a\x20été\x20supprimé\x20avec\x20succès.','split','/TicketsVendus'];_0x5ad5=function(){return _0x46f022;};return _0x5ad5();}function updateButtonText(){const _0x17980e=_0x569131,_0x2d7578=document[_0x17980e(0x146)](_0x17980e(0x135)),_0x5a2e34=localStorage['getItem'](_0x17980e(0x14e));_0x5a2e34?_0x2d7578[_0x17980e(0x139)]='Voir\x20mon\x20ticket':_0x2d7578[_0x17980e(0x139)]='Payer\x20un\x20ticket';}async function storeTicketVendu(_0x1e665b){const _0x51df73=_0x569131;if(!adminUserId){console[_0x51df73(0x131)]('Admin\x20User\x20ID\x20is\x20not\x20set.\x20\x20Cannot\x20store\x20sold\x20ticket.');return;}const _0x12ce89=ref(db,_0x51df73(0x13d)+adminUserId+_0x51df73(0x16d));await push(_0x12ce89,{'password':_0x1e665b['password'],'price':_0x1e665b[_0x51df73(0x134)],'user':_0x1e665b[_0x51df73(0x155)]}),console['log'](_0x51df73(0x126));}async function updateDatabase(_0x340156,_0x2ce337){const _0xcacf85=_0x569131;if(!adminUserId){console[_0xcacf85(0x131)]('Admin\x20User\x20ID\x20is\x20not\x20set.\x20Cannot\x20update\x20database.');return;}const _0x18d383={'lienPaiement':_0x2ce337[_0xcacf85(0x159)],'motDePasse':_0x2ce337[_0xcacf85(0x14d)][_0xcacf85(0x142)](0x1),'prix':_0x2ce337[_0xcacf85(0x12b)][_0xcacf85(0x142)](0x1),'utilisateur':_0x2ce337[_0xcacf85(0x158)][_0xcacf85(0x142)](0x1)};await set(ref(db,_0xcacf85(0x13d)+adminUserId+_0xcacf85(0x150)+_0x340156),_0x18d383),console['log'](_0xcacf85(0x147)),await syncTickets();}function _0x56a6(_0x1ad2e0,_0x271044){const _0x5ad5fb=_0x5ad5();return _0x56a6=function(_0x56a647,_0x70d5fd){_0x56a647=_0x56a647-0x11f;let _0x2a7623=_0x5ad5fb[_0x56a647];return _0x2a7623;},_0x56a6(_0x1ad2e0,_0x271044);}function displayTicket(_0x55e1c9,_0x493bf3){const _0x5377df=_0x569131;showNotification(_0x5377df(0x163),_0x55e1c9[_0x5377df(0x155)]===_0x55e1c9[_0x5377df(0x172)]?'Identifiant\x20de\x20connexion:\x20'+_0x55e1c9[_0x5377df(0x155)]+'\x0a'+('Prix:\x20'+_0x55e1c9[_0x5377df(0x134)]+'\x20F'):_0x5377df(0x14c)+_0x55e1c9[_0x5377df(0x155)]+'\x0a'+(_0x5377df(0x165)+_0x55e1c9[_0x5377df(0x172)]+'\x0a')+(_0x5377df(0x15b)+_0x55e1c9[_0x5377df(0x134)]+'\x20F'),!![]),updateButtonText(),storeTicketLocally({'ticketName':_0x493bf3,'user':_0x55e1c9['user'],'password':_0x55e1c9[_0x5377df(0x172)],'price':_0x55e1c9[_0x5377df(0x134)]});}function storeTicketLocally(_0x41d0e9){const _0x4df224=_0x569131;localStorage[_0x4df224(0x164)](_0x4df224(0x14e),JSON[_0x4df224(0x169)](_0x41d0e9));}function setupLoginModeToggle(){const _0x1f16d0=_0x569131,_0x5459bb=document[_0x1f16d0(0x127)]('separate-mode'),_0x464854=document[_0x1f16d0(0x127)]('same-mode'),_0x59866=document[_0x1f16d0(0x127)](_0x1f16d0(0x122)),_0x389e50=document['querySelector']('input[name=\x22username\x22]');_0x5459bb['addEventListener'](_0x1f16d0(0x151),()=>{const _0x5a9a5b=_0x1f16d0;loginMode='separate',_0x59866[_0x5a9a5b(0x14b)][_0x5a9a5b(0x148)]='block',_0x389e50['placeholder']=_0x5a9a5b(0x166),_0x5459bb[_0x5a9a5b(0x140)][_0x5a9a5b(0x141)]('active'),_0x464854[_0x5a9a5b(0x140)]['remove'](_0x5a9a5b(0x15c)),document[_0x5a9a5b(0x153)][_0x5a9a5b(0x172)]['value']='';}),_0x464854[_0x1f16d0(0x167)]('click',()=>{const _0x57d41a=_0x1f16d0;loginMode=_0x57d41a(0x157),_0x59866[_0x57d41a(0x14b)][_0x57d41a(0x148)]=_0x57d41a(0x15e),_0x389e50[_0x57d41a(0x168)]=_0x57d41a(0x160),_0x464854['classList'][_0x57d41a(0x141)](_0x57d41a(0x15c)),_0x5459bb[_0x57d41a(0x140)][_0x57d41a(0x143)](_0x57d41a(0x15c)),document[_0x57d41a(0x153)][_0x57d41a(0x172)][_0x57d41a(0x129)]=_0x389e50[_0x57d41a(0x129)];}),_0x5459bb['classList'][_0x1f16d0(0x141)](_0x1f16d0(0x15c)),_0x464854[_0x1f16d0(0x140)][_0x1f16d0(0x143)](_0x1f16d0(0x15c)),_0x59866['style']['display']=_0x1f16d0(0x130),_0x389e50['placeholder']=_0x1f16d0(0x166),loginMode='separate';}function closePaymentFrame(){const _0x2a5979=_0x569131;document['getElementById'](_0x2a5979(0x13e))[_0x2a5979(0x14b)][_0x2a5979(0x148)]='none';}
-
-    </script>
 </body>
 </html>
