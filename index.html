@@ -647,7 +647,58 @@
                 background-color: #128c7e;
             }
 
+        /* Data Management Section */
+        .data-management {
+            text-align: center;
+            margin-top: 20px; /* Add space above */
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: var(--section-bg);
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+        }
 
+        .data-management-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .data-management-buttons button {
+            background-color: var(--button-primary-bg);
+            color: var(--button-primary-text);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+            /* Animation removed for less visual noise, can be re-added if desired */
+            /* animation: pulse-color 1.5s infinite alternate; */
+        }
+        /* Optional pulse animation */
+        /* @keyframes pulse-color {
+            0% { background-color: #fdbb2d; }
+            100% { background-color: #ffa800; }
+        } */
+
+        .data-management-buttons button:hover {
+            background-color: #e6a727;
+            /* animation: none; */
+        }
+
+        #importDataInput {
+            display: none;
+        }
+
+        .help-button {
+            background-color: #2ecc71 !important; /* Distinct color for help */
+            color: white !important;
+        }
+         .help-button:hover {
+            background-color: #27ae60 !important;
+        }
     </style>
 </head>
 <body>
