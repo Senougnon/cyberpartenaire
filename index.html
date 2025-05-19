@@ -777,7 +777,10 @@
                     <button onclick="exportData()">
                         <i class="fas fa-file-export"></i> Exporter Données
                     </button>
-
+                    <input type="file" id="importDataInput" accept=".json">
+                    <button onclick="document.getElementById('importDataInput').click()">
+                        <i class="fas fa-file-import"></i> Importer Données
+                    </button>
                     <button onclick="showHelpModal()" class="help-button">
                         <i class="fas fa-question-circle"></i> Besoin d'aide ?
                     </button>
