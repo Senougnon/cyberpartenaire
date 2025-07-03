@@ -1569,10 +1569,8 @@
 
         // --- App Entry Point ---
         document.addEventListener('DOMContentLoaded', async () => {
-            const isLoggedIn = sessionStorage.getItem('isSuperAdminLoggedIn') === 'true';
-            if (!isLoggedIn) {
-                window.location.href = 'loginAdmin.html';
-                return;
+            // Si connecté, on continue l'initialisation de la page
+            await initializeApp();
             }
             // Si connecté, on continue l'initialisation de la page
             await initializeApp();
