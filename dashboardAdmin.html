@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord Administration</title>
+    <link rel="icon" href="logo.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1a2a6c;
+            --secondary-color: #fdbb2d;
+            --background-gradient: linear-gradient(135deg, #424242, #073018, #553a01);
+            --text-color: #ffffff;
+            --button-danger-bg: #e74c3c;
+            --button-danger-hover: #c0392b;
+            --section-bg: rgba(255, 255, 255, 0.1);
+            
+            /* Couleurs pour les badges et stats */
+            --badge-bg-default: #dc3545; /* Rouge pour les notifications standard (finance, users) */
+            --badge-bg-normal: #3498db;  /* Bleu pour charge normale BD */
+            --badge-bg-warning: #f39c12; /* Orange pour charge élevée BD */
+            --badge-bg-critical: #e74c3c;/* Rouge pour charge critique BD */
+
+            --stats-text-active: #2ecc71;
+            --stats-text-expired: #f39c12;
+            --stats-text-inactive: #e74c3c;
+            --db-active-color: var(--stats-text-active);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        html, body { min-height: 100vh; }
+        body {
+            background: var(--background-gradient);
+            color: var(--text-color);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: none;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.2em;
+            color: var(--secondary-color);
+        }
+        .logout-button {
+            background-color: var(--button-danger-bg);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .logout-button:hover { background-color: var(--button-danger-hover); }
+        .menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+        .menu-item {
+            position: relative;
+            background-color: var(--section-bg);
+            padding: 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-color);
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+        }
+        .menu-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        .menu-item i {
+            font-size: 3rem;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+        }
+        .menu-item h2 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+        .menu-item p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 15px;
+            min-height: 35px;
+        }
+        
+        .item-stats {
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .item-stats span { white-space: nowrap; }
+        .item-stats .active { color: var(--stats-text-active); }
+        .item-stats .expired { color: var(--stats-text-expired); }
+        .item-stats .inactive { color: var(--stats-text-inactive); }
+        .item-stats .db-active { color: var(--db-active-color); font-weight: 600; }
+        .item-stats .db-load-critical { color: var(--badge-bg-critical); font-weight: 600; }
+        
+        .notification-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: var(--badge-bg-default); /* Par défaut, rouge standard */
+            color: white;
+            border-radius: 14px; /* Un peu plus rectangulaire pour les nombres */
+            min-width: 28px;
+            height: 28px;
+            padding: 0 8px; /* Padding horizontal pour le texte */
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            border: 2px solid white;
+            transform: scale(0);
+            transition: transform 0.3s ease-out, background-color 0.3s ease;
+        }
+        .notification-badge.visible {
+            transform: scale(1);
+        }
+        
+        footer {
+            padding: 20px; text-align: center; margin-top: auto;
+            background-color: rgba(0, 0, 0, 0.6); color: rgba(255, 255, 255, 0.7);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.8em; }
+            .menu { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="adminDashboardContainer">
+        <header class="header">
+            <h1>Administration Générale</h1>
+            <button onclick="logout()" class="logout-button">
+                <i class="fas fa-sign-out-alt"></i> Déconnexion
+            </button>
+        </header>
+
+        <main>
+            <div class="menu" id="adminMenu">
+                <a href="Admin Financier.html" class="menu-item" id="menu-finance">
+                    <span class="notification-badge"></span>
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <h2>Gestion Financière</h2>
+                    <p>Valider ou rejeter les demandes de retrait.</p>
+                    <div class="item-stats" id="finance-stats-container"></div>
+                </a>
+                <a href="Admin utilisateur.html" class="menu-item" id="menu-users">
+                    <span class="notification-badge"></span>
+                    <i class="fas fa-users-cog"></i>
+                    <h2>Gestion Utilisateurs</h2>
+                    <p>Gérer les abonnements et les accès.</p>
+                    <div id="user-stats-container" class="item-stats">
+                        Chargement...
+                    </div>
+                </a>
+                <a href="adminvpn.html" class="menu-item" id="menu-vpn">
+                    <span class="notification-badge"></span>
+                    <i class="fas fa-server"></i>
+                    <h2>Gestion VPN</h2>
+                    <p>Gérer le stock de pairs WireGuard.</p>
+                    <div class="item-stats" id="vpn-stats-container"></div>
+                </a>
+                <a href="Base de données Synch.html" class="menu-item" id="menu-db">
+                    <span id="db-conn-badge" class="notification-badge"></span>
+                    <i class="fas fa-sync-alt"></i>
+                    <h2>Rotation des BD</h2>
+                    <p>Surveiller et forcer la rotation des BD.</p>
+                    <div id="db-stats-container" class="item-stats">
+                        Chargement...
+                    </div>
+                </a>
+                <a href="adminSystem.html" class="menu-item" id="menu-system">
+                    <i class="fas fa-tools"></i>
+                    <h2>Paramètres Système</h2>
+                    <p>Gérer les clés API et le compte Super Admin.</p>
+                </a>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        PANNEAU D'ADMINISTRATION GÉNÉRALE - PROPULSÉ PAR EVISIONS
+    </footer>
+
+    <script type="module">
+        import { getActiveDatabase } from './firebase-config-manager.js';
+        import { initializeApp, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        let db;
+
+        // --- Configuration ---
+        const DB_CONNECTION_LIMIT = 150000;
+        const DB_WARNING_THRESHOLD_PERCENT = 0.60;  // 60% -> Orange
+        const DB_CRITICAL_THRESHOLD_PERCENT = 0.85; // 85% -> Rouge
+        
+        const firebaseConfigs = [
+            { databaseURL: "https://cyber1-51916-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://cyber2-8ca5c-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://cyber3-95820-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://cyber4-1b446-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://cyber5-60f70-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://cyber6-eff66-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://cyber7-2296f-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://cyber8-88ca0-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://cyber9-54c58-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://cyber10-52907-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://cyber11-6eae0-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://cyber12-85de8-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://cyber13-79b7b-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://cyber14-69b05-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://cyber15-8e74f-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://cyber16-b8d33-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://fnmcwifi-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://will-dccf0-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://sic-wifi-zone-default-rtdb.firebaseio.com" },
+            { databaseURL: "https://evisions-84300-default-rtdb.firebaseio.com" }
+        ];
+        const META_DB_INDEX = 0;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const isLoggedIn = sessionStorage.getItem('isSuperAdminLoggedIn') === 'true';
+            if (!isLoggedIn) {
+                window.location.href = 'loginAdmin.html';
+            } else {
+                document.getElementById('adminDashboardContainer').style.display = 'block';
+                initializeDashboard();
+            }
+        });
+
+        async function initializeDashboard() {
+            try {
+                // `db` est ici l'instance de l'App active de firebase-config-manager
+                // Elle est utilisée par les fonctions de badge "finance", "users", "vpn".
+                db = await getActiveDatabase(); 
+                updateAllBadges();
+                setInterval(updateAllBadges, 300000); // Mettre à jour toutes les 30 secondes
+            } catch (error) {
+                console.error("Failed to initialize dashboard:", error);
+                document.getElementById('user-stats-container').textContent = "Erreur de chargement.";
+                document.getElementById('db-stats-container').textContent = "Erreur de chargement.";
+                document.getElementById('finance-stats-container').textContent = "Erreur de chargement."; // Assurez l'affichage des erreurs
+                document.getElementById('vpn-stats-container').textContent = "Erreur de chargement.";
+            }
+        }
+
+        window.logout = function() {
+            sessionStorage.removeItem('isSuperAdminLoggedIn');
+            sessionStorage.removeItem('superAdminUsername');
+            window.location.href = 'loginAdmin.html';
+        }
+
+        /**
+         * Met à jour l'affichage d'un badge générique (finance, users, vpn).
+         * @param {string} menuItemId L'ID de l'élément de menu parent (ex: 'menu-finance').
+         * @param {number} totalCount Le nombre à afficher.
+         */
+        function updateSimpleBadgeUI(menuItemId, totalCount) {
+            const menuItem = document.getElementById(menuItemId);
+            if (!menuItem) return;
+            // Utilise querySelector sur menuItem pour trouver son badge spécifique
+            const badgeElement = menuItem.querySelector('.notification-badge'); 
+            
+            // Réinitialise la couleur du badge à la couleur par défaut pour les badges "simples"
+            badgeElement.style.backgroundColor = 'var(--badge-bg-default)'; 
+
+            if (totalCount > 0) {
+                badgeElement.textContent = totalCount > 99 ? '99+' : totalCount;
+                badgeElement.classList.add('visible');
+            } else {
+                badgeElement.textContent = ''; // Assure que le texte est vide si le compte est 0
+                badgeElement.classList.remove('visible');
+            }
+        }
+        
+        /**
+         * Formate un nombre pour l'affichage concis (ex: 5420 -> 5.4k, 12345 -> 12k).
+         * @param {number} num Le nombre à formater.
+         * @returns {string} Le nombre formaté.
+         */
+        function formatNumber(num) {
+            if (num < 1000) {
+                return num.toString();
+            }
+            if (num < 10000) {
+                return (num / 1000).toFixed(1) + 'k';
+            }
+            return Math.floor(num / 1000) + 'k';
+        }
+
+        async function updateAllBadges() {
+            // Utilisation de Promise.all pour exécuter toutes les fetches en parallèle
+            Promise.all([
+                fetchFinancialBadgeCount(),
+                fetchUsersStats(),
+                fetchVpnBadgeCount(),
+                fetchDbStats()
+            ]).catch(error => {
+                console.error("Error updating all badges:", error);
+            });
+        }
+
+        async function fetchFinancialBadgeCount() {
+            let pendingCount = 0;
+            try {
+                // `db` ici est l'instance de la BD active, utilisée pour lire les données.
+                const usersDataSnapshot = await get(ref(db, 'users-data'));
+                const allUsersData = usersDataSnapshot.val() || {};
+                for (const userId in allUsersData) {
+                    const requests = allUsersData[userId]?.withdrawalRequests || {};
+                    for (const reqId in requests) {
+                        if (requests[reqId]?.status === 'pending') {
+                            pendingCount++;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching financial count:", error);
+                pendingCount = 0;
+            }
+            updateSimpleBadgeUI('menu-finance', pendingCount); // Appel pour le badge
+            document.getElementById('finance-stats-container').innerHTML = `<span class="expired">En attente: ${pendingCount}</span>`;
+        }
+
+        async function fetchUsersStats() {
+            let activeCount = 0, expiredCount = 0, inactiveCount = 0;
+            const now = new Date();
+            try {
+                const usersDataSnapshot = await get(ref(db, 'users-data'));
+                const allUsersData = usersDataSnapshot.val() || {};
+                for (const userId in allUsersData) {
+                    const sub = allUsersData[userId]?.admin?.subscription || {};
+                    if (sub.status === 'active') {
+                        const endDate = new Date(sub.endDate);
+                        if (endDate >= now) {
+                            activeCount++;
+                        } else {
+                            expiredCount++;
+                        }
+                    } else if (sub.status === 'expired') {
+                        expiredCount++;
+                    } else {
+                        inactiveCount++;
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching user stats:", error);
+            }
+            const statsContainer = document.getElementById('user-stats-container');
+            statsContainer.innerHTML = `<span class="active">Actifs: ${activeCount}</span> | <span class="expired">Expirés: ${expiredCount}</span> | <span class="inactive">Inactifs: ${inactiveCount}</span>`;
+            const issuesCount = expiredCount + inactiveCount; // Nombre d'utilisateurs avec un problème (expiré ou inactif)
+            updateSimpleBadgeUI('menu-users', issuesCount); // Appel pour le badge
+        }
+
+        async function fetchVpnBadgeCount() {
+            let availableCount = 0;
+            try {
+                const stockSnapshot = await get(ref(db, 'users/stockPeer/availablePeers'));
+                const stock = stockSnapshot.val() || {};
+                availableCount = stock ? Object.keys(stock).filter(key => stock[key]?.isUsed === false).length : 0;
+            } catch (error) {
+                console.error("Error fetching VPN count:", error);
+                availableCount = 0;
+            }
+            document.getElementById('vpn-stats-container').innerHTML = `<span class="active">Disponibles: ${availableCount}</span>`;
+            updateSimpleBadgeUI('menu-vpn', availableCount); // CORRECTION: Passe availableCount directement
+        }
+
+        /**
+         * Gère l'affichage du badge de connexion et des stats de la BD.
+         */
+        async function fetchDbStats() {
+            const dbStatsContainer = document.getElementById('db-stats-container');
+            const dbBadge = document.getElementById('db-conn-badge');
+            
+            try {
+                // 1. Obtenir l'index de la BD active depuis la méta-base
+                // Crée une nouvelle instance d'App avec un nom unique pour éviter 'duplicate-app' sur des rechargements rapides
+                const metaDbConfig = firebaseConfigs[META_DB_INDEX];
+                let metaDbApp;
+                try { metaDbApp = getApp(`app-meta-admin-${META_DB_INDEX}`); } // Tente de récupérer
+                catch (e) { metaDbApp = initializeApp(metaDbConfig, `app-meta-admin-${META_DB_INDEX}`); } // Sinon, initialise
+                
+                const metaDb = getDatabase(metaDbApp);
+                const indexRef = ref(metaDb, 'currentDatabaseIndex');
+                const indexSnapshot = await get(indexRef);
+                const activeDbIndex = indexSnapshot.exists() ? indexSnapshot.val() : 0;
+
+                // 2. Obtenir le compteur de la BD active
+                const activeDbConfig = firebaseConfigs[activeDbIndex];
+                let activeDbApp;
+                try { activeDbApp = getApp(`app-active-admin-${activeDbIndex}`); }
+                catch (e) { activeDbApp = initializeApp(activeDbConfig, `app-active-admin-${activeDbIndex}`); }
+
+                const activeDb = getDatabase(activeDbApp);
+                const counterRef = ref(activeDb, 'connectionCounter');
+                const counterSnapshot = await get(counterRef);
+                const connectionCount = counterSnapshot.exists() ? counterSnapshot.val() : 0;
+
+                // 3. Mettre à jour le badge de connexion (spécifique aux BD)
+                if (connectionCount > 0) {
+                    dbBadge.textContent = formatNumber(connectionCount);
+                    const loadPercentage = connectionCount / DB_CONNECTION_LIMIT;
+
+                    if (loadPercentage >= DB_CRITICAL_THRESHOLD_PERCENT) {
+                        dbBadge.style.backgroundColor = 'var(--badge-bg-critical)';
+                    } else if (loadPercentage >= DB_WARNING_THRESHOLD_PERCENT) {
+                        dbBadge.style.backgroundColor = 'var(--badge-bg-warning)';
+                    } else {
+                        dbBadge.style.backgroundColor = 'var(--badge-bg-normal)';
+                    }
+                    dbBadge.classList.add('visible');
+                } else {
+                    dbBadge.textContent = ''; // Vider le texte si 0
+                    dbBadge.classList.remove('visible');
+                }
+                
+                // 4. Mettre à jour le texte de statistiques sous le bouton
+                const loadClass = (connectionCount / DB_CONNECTION_LIMIT >= DB_CRITICAL_THRESHOLD_PERCENT) ? 'db-load-critical' : '';
+                dbStatsContainer.innerHTML = `
+                    <span class="db-active">Active: BD ${activeDbIndex + 1}/${firebaseConfigs.length}</span>
+                    <span class="${loadClass}">| Charge: ${connectionCount.toLocaleString('fr-FR')}</span>
+                `;
+
+            } catch (error) {
+                // Gestion des erreurs spécifiques à Firebase App initialisation
+                if (error.code && error.code.startsWith('app/')) {
+                    // C'est souvent dû à des instances d'App déjà existantes, qui sont gérées par le try/catch avec getApp
+                    // Ici, nous ne faisons rien de spécial si l'erreur est "duplicate-app", car le rechargement va s'en occuper
+                    // Mais nous logons les autres erreurs liées à l'application.
+                    if (error.code !== 'app/duplicate-app') {
+                        console.error(`Firebase App Error in fetchDbStats (${error.code}):`, error.message);
+                    }
+                } else {
+                    console.error("Error fetching DB stats:", error);
+                }
+                dbStatsContainer.textContent = "Stats indisponibles.";
+                dbBadge.classList.remove('visible');
+            }
+        }
+    </script>
+</body>
+</html>

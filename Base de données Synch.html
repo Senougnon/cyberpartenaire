@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord de Rotation Firebase</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8; /* New info color for clarity */
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --bg-color: #eef2f5;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --text-muted: #6c757d;
+            --font-family-sans-serif: 'Lato', sans-serif;
+            --font-family-monospace: 'Roboto Mono', monospace;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --box-shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        body {
+            font-family: var(--font-family-sans-serif);
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--dark-color);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: var(--dark-color);
+            font-weight: 400;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: 400;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            color: white;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow-hover);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-test {
+            background-color: var(--success-color);
+        }
+        .btn-test:hover {
+            background-color: #218838;
+        }
+
+        .btn-sync {
+            background-color: var(--primary-color);
+        }
+        .btn-sync:hover {
+             background-color: #0056b3;
+        }
+
+        .btn-sync-target {
+             background-color: var(--warning-color);
+             color: var(--dark-color); /* Better contrast for yellow */
+        }
+        .btn-sync-target:hover {
+             background-color: #e0a800;
+        }
+
+        .btn-no-sync-rotate {
+            background-color: var(--info-color); /* Using info color */
+            color: white;
+        }
+        .btn-no-sync-rotate:hover {
+            background-color: #138496;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+            overflow: hidden;
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow-hover);
+        }
+
+        .card-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .card-content {
+            font-size: 0.95em;
+            color: var(--text-muted);
+            flex-grow: 1; /* Allows content to fill space */
+        }
+
+        .card-content p {
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between; /* Align label and value */
+            align-items: center;
+        }
+
+        .card-content .label {
+            font-weight: 400;
+            color: var(--dark-color);
+            margin-right: 10px;
+        }
+
+        .card-content .value {
+            text-align: right;
+            word-break: break-all; /* Prevent long URLs from breaking layout */
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: white;
+            display: inline-block;
+        }
+
+        .status-active {
+            background-color: var(--success-color);
+        }
+
+        .status-inactive {
+            background-color: var(--secondary-color);
+        }
+
+        .sync-status {
+             font-weight: bold;
+        }
+        .sync-status.synced {
+            color: var(--success-color);
+        }
+        .sync-status.not-synced {
+            color: var(--danger-color);
+        }
+
+        .db-url {
+            font-family: var(--font-family-monospace);
+            font-size: 0.9em;
+            color: var(--primary-color);
+        }
+
+
+        #log-container {
+            margin-top: 40px;
+        }
+
+        #log {
+            background-color: var(--dark-color);
+            color: var(--light-color);
+            border: 1px solid #444;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            height: 250px;
+            overflow-y: scroll;
+            font-family: var(--font-family-monospace);
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+
+        .error-message {
+            color: var(--danger-color);
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* Basic Responsive Adjustments */
+        @media (max-width: 768px) {
+            .container {
+                margin: 20px auto;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            .controls {
+                flex-direction: column;
+                align-items: stretch; /* Make buttons full width on small screens */
+            }
+            .dashboard {
+                 grid-template-columns: 1fr; /* Stack cards on smaller screens */
+            }
+        }
+
+        /* DANS admin1.html, AJOUTEZ CE CSS DANS LA BALISE <style> */
+.progress-container {
+    background-color: var(--card-bg);
+    padding: 15px 25px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.progress-text {
+    font-size: 1.1em;
+    font-weight: 400;
+    color: var(--dark-color);
+    margin-bottom: 10px;
+}
+
+.progress-bar {
+    width: 100%;
+    background-color: #e9ecef;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    height: 20px;
+}
+
+.progress-bar-inner {
+    height: 100%;
+    width: 0%; /* Commence à 0% */
+    background-color: var(--primary-color);
+    transition: width 0.3s ease-in-out;
+    border-radius: var(--border-radius);
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Tableau de bord de Rotation des Bases de Données Firebase</h1>
+        </header>
+
+        <div class="controls">
+            <button id="testButton" class="btn btn-test">Simuler des Connexions Utilisateur</button>
+            <button id="syncButton" class="btn btn-sync">Forcer la Rotation avec Synchronisation</button>
+            <button id="noSyncRotateButton" class="btn btn-no-sync-rotate">Passer à la BD Suivante (sans Sync)</button>
+            <button id="syncToTargetButton" class="btn btn-sync-target">Synchroniser l'Active vers la BD Cible</button>
+        </div>
+
+        <!-- DANS admin1.html, AJOUTEZ CECI APRÈS LA DIV .controls -->
+<div id="progress-container" class="progress-container" style="display: none;">
+    <div id="progress-text" class="progress-text">Synchronisation en cours...</div>
+    <div class="progress-bar">
+        <div id="progress-bar-inner" class="progress-bar-inner"></div>
+    </div>
+</div>
+
+        <h2>Statut des Bases de Données</h2>
+        <div class="dashboard" id="dashboard">
+            <!-- Les cartes des bases de données seront insérées dynamiquement ici -->
+        </div>
+
+        <div id="log-container">
+            <h2>Journaux</h2>
+            <div id="log"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getActiveDatabase } from "./firebase-config-manager.js";
+        import { initializeApp, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, get, set, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        const firebaseConfigs = [
+    { databaseURL: "https://cyber1-51916-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://cyber2-8ca5c-default-rtdb.firebaseio.com" }, // REMPLACER avec vos URLs réelles
+    { databaseURL: "https://cyber3-95820-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://cyber4-1b446-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://cyber5-60f70-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://cyber6-eff66-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://cyber7-2296f-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://cyber8-88ca0-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://cyber9-54c58-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://cyber10-52907-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://cyber11-6eae0-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://cyber12-85de8-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://cyber13-79b7b-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://cyber14-69b05-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://cyber15-8e74f-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://cyber16-b8d33-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://fnmcwifi-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://will-dccf0-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://sic-wifi-zone-default-rtdb.firebaseio.com" }, // REMPLACER
+    { databaseURL: "https://evisions-84300-default-rtdb.firebaseio.com" } // REMPLACER
+
+    // Ajouter plus de configurations si nécessaire
+];
+        const META_DB_INDEX = 0;
+        const MAX_CONNECTIONS = 15000; // Ajuster si nécessaire
+        const targetDatabaseURL = "https://cybertest-be416-default-rtdb.firebaseio.com"; // BD Cible
+        const SYNC_NODE_PATH = "syncStatus";
+        const SYNC_DONE_VALUE = "synced";
+        // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        // INSEREZ CES LIGNES AU DÉBUT DE VOTRE SCRIPT
+        const progressContainer = document.getElementById('progress-container');
+        const progressText = document.getElementById('progress-text');
+        const progressBarInner = document.getElementById('progress-bar-inner');
+        const controlButtons = document.querySelectorAll('.controls .btn');
+        // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        const logElement = document.getElementById('log');
+        const dashboardElement = document.getElementById('dashboard');
+
+        function logMessage(message) {
+            const timestamp = new Date().toLocaleTimeString('fr-FR');
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight; // Défilement automatique
+        }
+
+        // --- Initialisation Firebase et Fonctions d'aide ---
+        function initializeAppWithIndex(index) {
+            const config = firebaseConfigs[index];
+            if (!config) {
+                logMessage(`ERREUR : Index de base de données invalide demandé : ${index}`);
+                throw new Error(`Index de base de données invalide : ${index}`);
+            }
+            const appName = `app${index}`;
+            try {
+                return initializeApp(config, appName);
+            } catch (error) {
+                if (error.code === 'app/duplicate-app') {
+                    try {
+                        return getApp(appName); // Utiliser getApp pour récupérer l'instance existante
+                    } catch (e) {
+                        logMessage(`Avertissement : Impossible de récupérer l'instance d'application existante pour ${appName}. Une nouvelle initialisation pourrait causer des problèmes. Détails : ${e.message}`);
+                        // En cas d'échec de getApp, propager l'erreur pour éviter des comportements imprévus
+                        throw new Error(`Échec de récupération ou de réinitialisation de l'application ${appName}: ${e.message}`);
+                    }
+                } else {
+                    logMessage(`ERREUR lors de l'initialisation de l'application ${appName} : ${error.message}`);
+                    throw error; // Relancer les erreurs inattendues
+                }
+            }
+        }
+
+        function initializeTargetApp() {
+            const appName = "targetApp";
+            try {
+                return initializeApp({ databaseURL: targetDatabaseURL }, appName);
+            } catch (error) {
+                if (error.code === 'app/duplicate-app') {
+                     try {
+                        return getApp(appName); // Utiliser getApp
+                    } catch (e) {
+                        logMessage(`Avertissement : Impossible de récupérer l'instance d'application cible existante. Une nouvelle initialisation pourrait causer des problèmes. Détails : ${e.message}`);
+                        throw new Error(`Échec de récupération ou de réinitialisation de l'application cible: ${e.message}`);
+                    }
+                } else {
+                    logMessage(`ERREUR lors de l'initialisation de l'application cible : ${error.message}`);
+                    throw error;
+                }
+            }
+        }
+
+         function getDbInstance(app) {
+            try {
+                return getDatabase(app);
+            } catch (error) {
+                logMessage(`ERREUR lors de l'obtention de l'instance de base de données : ${error.message}`);
+                console.error("Échec de l'obtention de l'instance de la BD :", error);
+                return null;
+            }
+        }
+
+        async function hasSyncOccurred(db) {
+            if (!db) return false;
+            const syncRef = ref(db, SYNC_NODE_PATH);
+            try {
+                const snapshot = await get(syncRef);
+                return snapshot.exists() && snapshot.val() === SYNC_DONE_VALUE;
+            } catch (error) {
+                logMessage(`ERREUR lors de la vérification du statut de synchronisation : ${error.message}`);
+                return false;
+            }
+        }
+
+        async function markSyncAsDone(db) {
+             if (!db) return;
+            const syncRef = ref(db, SYNC_NODE_PATH);
+             try {
+                 await set(syncRef, SYNC_DONE_VALUE);
+             } catch(error) {
+                 logMessage(`ERREUR lors du marquage de la synchronisation comme terminée : ${error.message}`);
+             }
+        }
+
+        async function getOrCreateConnectionCounter(db, index) {
+            if (!db) return 0;
+            const counterRef = ref(db, 'connectionCounter');
+            try {
+                const snapshot = await get(counterRef);
+                if (!snapshot.exists()) {
+                    await set(counterRef, 0);
+                    logMessage(`Compteur de connexions initialisé pour la BD ${index + 1}`);
+                    return 0;
+                }
+                return snapshot.val();
+            } catch (error) {
+                logMessage(`ERREUR lors de l'accès au compteur de connexions pour la BD ${index + 1} : ${error.message}`);
+                return 0;
+            }
+        }
+
+        async function getCurrentDatabaseIndex() {
+            let metaDbApp;
+            let metaDbInstance;
+            try {
+                metaDbApp = initializeAppWithIndex(META_DB_INDEX);
+                metaDbInstance = getDbInstance(metaDbApp);
+                if (!metaDbInstance) throw new Error("L'instance de la méta-BD est nulle.");
+
+                const indexRef = ref(metaDbInstance, 'currentDatabaseIndex');
+                const snapshot = await get(indexRef);
+                if (snapshot.exists()) {
+                    const index = snapshot.val();
+                    return index;
+                } else {
+                    logMessage(`Index actuel non trouvé dans la méta-base de données, initialisation à 0.`);
+                    await set(indexRef, 0);
+                    return 0;
+                }
+             } catch (error) {
+                 logMessage(`ERREUR CRITIQUE lors de l'obtention de l'index actuel de la BD : ${error.message}. Par défaut, 0.`);
+                 if (metaDbInstance) {
+                     try {
+                         await set(ref(metaDbInstance, 'currentDatabaseIndex'), 0);
+                     } catch (setError) {
+                          logMessage(`ERREUR CRITIQUE : Échec de la définition de l'index par défaut : ${setError.message}`);
+                     }
+                 }
+                 return 0;
+             }
+        }
+
+        async function clearOthersyncStatuses(currentDatabaseIndex) {
+            logMessage(`Effacement des statuts de synchronisation périmés (en gardant l'index ${currentDatabaseIndex})...`);
+            for (let i = 0; i < firebaseConfigs.length; i++) {
+                if (i !== currentDatabaseIndex) {
+                    let app;
+                    let dbInstance;
+                    try {
+                        app = initializeAppWithIndex(i);
+                        dbInstance = getDbInstance(app);
+                        if (!dbInstance) continue;
+
+                        const syncRef = ref(dbInstance, SYNC_NODE_PATH);
+                        const snapshot = await get(syncRef);
+
+                        if (snapshot.exists() && snapshot.val() === SYNC_DONE_VALUE) {
+                            await set(syncRef, null); // Effacer la valeur
+                            logMessage(`Statut de synchronisation effacé pour la base de données ${i + 1}`);
+                        }
+                    } catch (error) {
+                        logMessage(`Erreur lors de l'effacement du statut de synchronisation pour la BD ${i + 1} : ${error.message}`);
+                    }
+                }
+            }
+             logMessage(`Effacement des statuts de synchronisation périmés terminé.`);
+        }
+
+        // --- Logique de Mise à Jour du Tableau de Bord ---
+        async function updateDashboard() {
+            logMessage("Mise à jour du tableau de bord...");
+            let currentDatabaseIndex = -1;
+            try {
+                currentDatabaseIndex = await getCurrentDatabaseIndex();
+                await clearOthersyncStatuses(currentDatabaseIndex);
+            } catch (error) {
+                logMessage(`ERREUR lors de la préparation de la mise à jour du tableau de bord : ${error.message}`);
+            }
+
+            const fragment = document.createDocumentFragment();
+
+            for (let i = 0; i < firebaseConfigs.length; i++) {
+                let card = document.getElementById(`card-${i}`);
+                let contentDiv;
+
+                if (!card) {
+                    card = document.createElement('div');
+                    card.classList.add('card');
+                    card.id = `card-${i}`;
+
+                    const title = document.createElement('div');
+                    title.classList.add('card-title');
+                    card.appendChild(title);
+
+                    contentDiv = document.createElement('div');
+                    contentDiv.classList.add('card-content');
+                    card.appendChild(contentDiv);
+
+                    fragment.appendChild(card);
+                } else {
+                    contentDiv = card.querySelector('.card-content');
+                    if (!contentDiv) {
+                        contentDiv = document.createElement('div');
+                        contentDiv.classList.add('card-content');
+                        card.appendChild(contentDiv);
+                    }
+                    contentDiv.innerHTML = ''; // Effacer le contenu précédent
+                }
+
+                card.querySelector('.card-title').textContent = `Base de Données ${i + 1}`;
+
+                let app;
+                let db;
+                try {
+                    app = initializeAppWithIndex(i);
+                    db = getDbInstance(app);
+
+                    const connectionCount = await getOrCreateConnectionCounter(db, i);
+                    const syncStatus = await hasSyncOccurred(db);
+
+                    const isActive = i === currentDatabaseIndex;
+                    const statusClass = isActive ? 'status-active' : 'status-inactive';
+                    const statusText = isActive ? 'Active' : 'Inactive';
+                    const statusBadge = `<span class="status-badge ${statusClass}">${statusText}</span>`;
+
+                    const syncClass = syncStatus ? 'synced' : 'not-synced';
+                    const syncText = syncStatus ? 'Oui' : 'Non';
+
+                    contentDiv.innerHTML = `
+                        <p><span class="label">URL :</span> <span class="value db-url">${firebaseConfigs[i].databaseURL}</span></p>
+                        <p><span class="label">Connexions :</span> <span class="value">${connectionCount} / ${MAX_CONNECTIONS}</span></p>
+                        <p><span class="label">Statut :</span> <span class="value">${statusBadge}</span></p>
+                        <p><span class="label">Sync Cible :</span> <span class="value sync-status ${syncClass}">${syncText}</span></p>
+                    `;
+                } catch (error) {
+                    logMessage(`ERREUR lors de la mise à jour de la carte pour la BD ${i + 1} : ${error.message}`);
+                    contentDiv.innerHTML = `<p class="error-message">Échec du chargement des données pour cette base de données.</p><p><span class="label">URL :</span> <span class="value db-url">${firebaseConfigs[i].databaseURL}</span></p>`;
+                }
+            }
+
+            if (fragment.childElementCount > 0) {
+                 dashboardElement.appendChild(fragment);
+            }
+            logMessage("Mise à jour du tableau de bord terminée.");
+        }
+
+        // --- Fonctions d'Action (Simuler, Synchro, etc.) ---
+
+        async function simulateConnection() {
+             logMessage("Tentative de simulation de connexion...");
+             try {
+                 const activeDbApp = await getActiveDatabase(); // Cette fonction devrait retourner l'instance de l'App
+                 const db = getDbInstance(activeDbApp);
+                 if (!db) {
+                      logMessage("Simulation échouée : Impossible d'obtenir l'instance de la base de données active.");
+                     return;
+                 }
+                const counterRef = ref(db, 'connectionCounter');
+                await runTransaction(counterRef, (currentValue) => {
+                    return (currentValue || 0) + 1;
+                });
+                 logMessage("Simulation de connexion réussie (compteur incrémenté).");
+             } catch (error) {
+                 logMessage(`Erreur lors de la simulation de connexion : ${error.message}`);
+             } finally {
+                 // Pas besoin d'appeler updateDashboard ici si l'intervalle est en cours d'exécution
+             }
+        }
+
+        async function forceRotationAndSync() {
+            logMessage("Rotation manuelle avec synchronisation initiée...");
+            
+            // UI : Désactiver les boutons et afficher la barre de progression
+            controlButtons.forEach(btn => btn.disabled = true);
+            progressText.textContent = 'Préparation de la synchronisation...';
+            progressBarInner.style.width = '0%';
+            progressContainer.style.display = 'block';
+
+            // Callback pour mettre à jour la barre de progression depuis synchronizeData
+            const updateProgress = (percentage, message) => {
+                const p = Math.round(percentage);
+                progressBarInner.style.width = `${p}%`;
+                progressText.textContent = message || `Synchronisation en cours... ${p}%`;
+            };
+
+            let oldIndex = -1;
+            let newIndex = -1;
+            
+            try {
+                // Obtenir l'index actuel
+                const metaDbApp = initializeAppWithIndex(META_DB_INDEX);
+                const metaDbInstance = getDbInstance(metaDbApp);
+                if (!metaDbInstance) throw new Error("Impossible d'obtenir la méta-BD.");
+
+                const indexRef = ref(metaDbInstance, 'currentDatabaseIndex');
+                const snapshot = await get(indexRef);
+                oldIndex = snapshot.exists() ? snapshot.val() : 0;
+                newIndex = (oldIndex + 1) % firebaseConfigs.length;
+
+                logMessage(`Rotation manuelle : Passage de l'index ${oldIndex} à ${newIndex}`);
+                updateProgress(0, `Synchronisation de la BD ${oldIndex + 1} vers ${newIndex + 1}...`);
+
+                // Étape 1: Synchroniser les données. Cette fonction est maintenant beaucoup plus longue.
+                // Elle ne se terminera que lorsque toutes les données auront été transférées.
+                await synchronizeData(oldIndex, newIndex, updateProgress);
+
+                // Étape 2: Mettre à jour l'index. Ceci n'arrive QUE si synchronizeData a réussi.
+                updateProgress(100, "Finalisation de la rotation...");
+                await set(indexRef, newIndex);
+                logMessage(`Rotation manuelle : Index actuel dans la méta-BD mis à jour à : ${newIndex}`);
+
+                // Nettoyage
+                const newDbApp = initializeAppWithIndex(newIndex);
+                const newDb = getDbInstance(newDbApp);
+                if (newDb) {
+                    await set(ref(newDb, SYNC_NODE_PATH), null);
+                    logMessage(`Drapeau de statut de synchronisation effacé sur la nouvelle BD active ${newIndex + 1}.`);
+                }
+                logMessage("Rotation et synchronisation terminées avec succès !");
+                updateProgress(100, "Opération terminée !");
+
+            } catch (error) {
+                logMessage(`ERREUR CRITIQUE lors de la rotation : ${error.message}`);
+                progressText.textContent = `Erreur : ${error.message}`;
+                progressBarInner.style.backgroundColor = 'var(--danger-color)'; // Changer la couleur en cas d'erreur
+            } finally {
+                // UI : Réactiver les boutons après un court délai pour que l'utilisateur voie le message final.
+                setTimeout(() => {
+                    controlButtons.forEach(btn => btn.disabled = false);
+                    progressContainer.style.display = 'none';
+                    progressBarInner.style.backgroundColor = 'var(--primary-color)'; // Réinitialiser la couleur
+                }, 3000);
+                await updateDashboard(); // Mettre à jour l'interface
+            }
+        }
+
+
+        async function forceRotationWithoutSync() {
+            logMessage("Rotation manuelle SANS synchronisation initiée...");
+            let oldIndex = -1;
+            let newIndex = -1;
+            let metaDbApp;
+            let metaDbInstance;
+
+            try {
+                metaDbApp = initializeAppWithIndex(META_DB_INDEX);
+                metaDbInstance = getDbInstance(metaDbApp);
+                if (!metaDbInstance) throw new Error("Impossible d'obtenir la méta-BD pour la rotation sans synchronisation.");
+
+                const indexRef = ref(metaDbInstance, 'currentDatabaseIndex');
+                const snapshot = await get(indexRef);
+                oldIndex = snapshot.exists() ? snapshot.val() : 0;
+
+                newIndex = (oldIndex + 1) % firebaseConfigs.length;
+                logMessage(`Rotation SANS synchronisation : Passage de l'index ${oldIndex} à ${newIndex}.`);
+
+                // Mettre à jour l'index actuel dans la méta-base de données
+                await set(indexRef, newIndex);
+                logMessage(`Rotation SANS synchronisation : Index actuel dans la méta-BD mis à jour à : ${newIndex}.`);
+
+                // Réinitialiser le compteur de connexions sur l'ANCIENNE base de données
+                if (oldIndex !== newIndex) { // Ne réinitialiser que s'il y a eu une rotation effective
+                    const oldDbApp = initializeAppWithIndex(oldIndex);
+                    const oldDb = getDbInstance(oldDbApp);
+                    if (oldDb) {
+                        await set(ref(oldDb, 'connectionCounter'), 0);
+                        logMessage(`Compteur de connexions réinitialisé sur l'ancienne base de données ${oldIndex + 1}.`);
+                    }
+                }
+
+                // Effacer le statut de synchronisation sur la *nouvelle* base de données active
+                const newDbApp = initializeAppWithIndex(newIndex);
+                const newDb = getDbInstance(newDbApp);
+                if (newDb) {
+                    await set(ref(newDb, SYNC_NODE_PATH), null);
+                    logMessage(`Drapeau de statut de synchronisation effacé sur la nouvelle BD active ${newIndex + 1}.`);
+                }
+
+            } catch (error) {
+                logMessage(`Erreur lors de la rotation sans synchronisation : ${error.message}`);
+            } finally {
+                await updateDashboard(); // Mettre à jour l'interface utilisateur après la tentative
+            }
+        }
+
+        async function synchronizeData(oldIndex, newIndex, progressCallback) {
+            if (oldIndex === newIndex || oldIndex < 0) {
+                logMessage(`Saut de la synchronisation (indices identiques ou invalides).`);
+                if (progressCallback) progressCallback(100, "Aucune synchronisation requise.");
+                return;
+            }
+
+            logMessage(`Début de la synchronisation détaillée de la BD ${oldIndex + 1} vers la BD ${newIndex + 1}...`);
+            const oldDbApp = initializeAppWithIndex(oldIndex);
+            const newDbApp = initializeAppWithIndex(newIndex);
+            const oldDb = getDbInstance(oldDbApp);
+            const newDb = getDbInstance(newDbApp);
+
+            if (!oldDb || !newDb) throw new Error("Impossible d'initialiser les BDs pour la synchronisation.");
+
+            const dataPathsToSync = ['users', 'users-data'];
+            let allItemsToSync = {};
+            let totalItems = 0;
+
+            // --- Étape 1: Calculer le nombre total d'éléments à synchroniser ---
+            if (progressCallback) progressCallback(0, "Calcul du nombre d'éléments à transférer...");
+            logMessage("Calcul du total des éléments...");
+            
+            for (const path of dataPathsToSync) {
+                const oldDataRef = ref(oldDb, path);
+                const snapshot = await get(oldDataRef);
+                const data = snapshot.val();
+                if (data) {
+                    const keys = Object.keys(data);
+                    allItemsToSync[path] = keys;
+                    totalItems += keys.length;
+                } else {
+                     // S'assurer que le chemin est effacé dans la cible s'il n'existe pas dans la source
+                    await set(ref(newDb, path), null);
+                }
+            }
+
+            if (totalItems === 0) {
+                logMessage("Aucun élément à synchroniser.");
+                if (progressCallback) progressCallback(100, "Aucune donnée à synchroniser.");
+                // Réinitialiser le compteur de l'ancienne BD même si elle est vide
+                await set(ref(oldDb, 'connectionCounter'), 0);
+                return;
+            }
+
+            logMessage(`Total d'éléments à synchroniser : ${totalItems}`);
+
+            // --- Étape 2: Synchroniser chaque élément un par un ---
+            let syncedItems = 0;
+            for (const path in allItemsToSync) {
+                for (const key of allItemsToSync[path]) {
+                    const itemRefOld = ref(oldDb, `${path}/${key}`);
+                    const itemRefNew = ref(newDb, `${path}/${key}`);
+
+                    const itemSnapshot = await get(itemRefOld);
+                    await set(itemRefNew, itemSnapshot.val()); // Copier l'élément individuel
+
+                    syncedItems++;
+                    const percentage = (syncedItems / totalItems) * 100;
+                    if (progressCallback) progressCallback(percentage);
+                }
+            }
+
+            // --- Étape 3: Finalisation ---
+            logMessage(`Synchronisation des données terminée.`);
+            await set(ref(oldDb, 'connectionCounter'), 0);
+            logMessage(`Compteur de connexions réinitialisé sur l'ancienne BD ${oldIndex + 1}.`);
+        }
+
+
+        async function syncToTarget() {
+             logMessage("Tentative de synchronisation de la base de données active vers la cible...");
+             let currentDb;
+             try {
+                 const activeDbApp = await getActiveDatabase();
+                 currentDb = getDbInstance(activeDbApp);
+
+                 if (!currentDb) {
+                     throw new Error("Impossible d'obtenir l'instance de la base de données active.");
+                 }
+
+                 if (!(await hasSyncOccurred(currentDb))) {
+                    logMessage("La base de données active n'est pas encore synchronisée avec la cible. Démarrage de la synchronisation...");
+                    await synchronizeToTargetDatabase(currentDb);
+                    await markSyncAsDone(currentDb); // Marquer la synchronisation *après* l'opération réussie
+                    logMessage("Synchronisation vers la base de données cible terminée et marquée.");
+                 } else {
+                    logMessage("La base de données active est déjà marquée comme synchronisée avec la cible.");
+                 }
+
+             } catch (error) {
+                 logMessage(`Erreur lors de la synchronisation de la BD active vers la cible : ${error.message}`);
+             } finally {
+                 await updateDashboard(); // Rafraîchir l'interface utilisateur
+             }
+        }
+
+        async function synchronizeToTargetDatabase(currentDb) {
+            logMessage("Démarrage de la synchronisation vers la base de données cible...");
+            let targetDbApp, targetDb;
+            try {
+                 targetDbApp = initializeTargetApp();
+                 targetDb = getDbInstance(targetDbApp);
+                  if (!targetDb) throw new Error("Impossible d'initialiser la base de données cible.");
+
+                const dataPathsToSync = ['users', 'users-data']; // Assurez-vous que ceux-ci correspondent à synchronizeData
+
+                for (const path of dataPathsToSync) {
+                     logMessage(`Synchronisation du chemin vers la cible : ${path}...`);
+                    const currentDataRef = ref(currentDb, path);
+                    const targetDataRef = ref(targetDb, path);
+                    const snapshot = await get(currentDataRef);
+                    const dataToSync = snapshot.val();
+
+                    if (dataToSync) {
+                        await set(targetDataRef, dataToSync);
+                        logMessage(`Données synchronisées pour le chemin : ${path} vers la BD cible`);
+                    } else {
+                         logMessage(`Aucune donnée au chemin ${path} dans la BD source. Effacement dans la BD cible.`);
+                         await set(targetDataRef, null); // Assurer la cohérence
+                    }
+                }
+                logMessage("Synchronisation vers la base de données cible terminée.");
+            } catch (error) {
+                 logMessage(`Erreur lors de la synchronisation vers la cible : ${error.message}`);
+                  throw new Error(`Synchronisation cible échouée : ${error.message}`);
+            }
+        }
+
+        // --- Initialisation et Écouteurs d'Événements ---
+        async function initializeDashboard() {
+            logMessage("Initialisation du tableau de bord...");
+            await updateDashboard(); // Chargement initial du tableau de bord
+            // Configurer l'intervalle pour les mises à jour périodiques
+            setInterval(updateDashboard, 15000); // Mettre à jour toutes les 15 secondes
+            logMessage("Tableau de bord initialisé. Actualisation automatique toutes les 15 secondes.");
+        }
+
+        document.getElementById('testButton').addEventListener('click', () => {
+            const numConnections = 10; // Simuler moins de connexions par clic pour plus de clarté
+            logMessage(`Simulation de ${numConnections} connexions...`);
+            for (let i = 0; i < numConnections; i++) {
+                 simulateConnection();
+            }
+             setTimeout(updateDashboard, 1500); // Forcer une mise à jour peu de temps après
+        });
+
+        document.getElementById('syncButton').addEventListener('click', forceRotationAndSync);
+        document.getElementById('noSyncRotateButton').addEventListener('click', forceRotationWithoutSync); // Nouveau bouton
+        document.getElementById('syncToTargetButton').addEventListener('click', syncToTarget);
+
+
+        // Démarrer le tableau de bord après vérification de l'authentification
+        document.addEventListener('DOMContentLoaded', async () => {
+            const isLoggedIn = sessionStorage.getItem('isSuperAdminLoggedIn') === 'true';
+            if (!isLoggedIn) {
+                window.location.href = 'loginAdmin.html';
+                return;
+            }
+            // Si connecté, on continue l'initialisation de la page
+            await initializeDashboard();
+        });
+
+    </script>
+</body>
+</html>

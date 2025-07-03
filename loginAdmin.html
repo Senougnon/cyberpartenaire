@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accès Administration Générale</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS copié de loginAccueil.html pour une cohérence visuelle parfaite */
+        :root {
+            --primary-color: #1a2a6c;
+            --secondary-color: #fdbb2d;
+            --text-light: #fff;
+            --text-dark: #333;
+            --background-gradient: linear-gradient(135deg, #1a2a6c, #fdbb2d);
+            --container-background: rgba(255, 255, 255, 0.95);
+            --input-background: rgba(230, 230, 230, 0.8);
+            --input-border: #ddd;
+            --focus-border: var(--primary-color);
+            --error-color: #e74c3c;
+            --link-color: var(--primary-color);
+            --button-text: var(--text-light);
+            --button-background: var(--primary-color);
+            --button-hover: #0e1639;
+            --loader-background: rgba(255, 255, 255, 0.85);
+            --loader-color: var(--primary-color);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; }
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--text-light);
+            background: var(--background-gradient);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column; /* Pour placer le loader et le container */
+        }
+        .login-container {
+            background-color: var(--container-background);
+            padding: 2.5rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            color: var(--text-dark);
+        }
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .input-group {
+            margin-bottom: 1.2rem;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.6rem;
+            font-weight: bold;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 0.9rem;
+            border: 1px solid var(--input-border);
+            border-radius: 5px;
+            font-size: 1rem;
+            background-color: var(--input-background);
+            color: var(--text-dark);
+            transition: border-color 0.3s ease;
+        }
+        input[type="text"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: var(--focus-border);
+            box-shadow: 0 0 0 2px rgba(26, 42, 108, 0.2);
+        }
+        button[type="submit"] {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--button-background);
+            color: var(--button-text);
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-top: 1rem;
+        }
+        button[type="submit"]:hover { background-color: var(--button-hover); }
+        button[type="submit"]:active { transform: scale(0.98); }
+        .error-message {
+            color: var(--error-color);
+            text-align: center;
+            margin-top: 1rem;
+            font-weight: bold;
+            min-height: 1.2em;
+            display: none;
+        }
+        .error-message.visible { display: block; }
+        .loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--loader-background);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.3s ease-out;
+            opacity: 1; /* Visible by default */
+        }
+        .loader-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .loader {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid var(--loader-color);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1.5s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 480px) {
+            .login-container { padding: 1.5rem; max-width: 95%; margin: 1rem; }
+            h1 { font-size: 1.6rem; margin-bottom: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loader -->
+    <div class="loader-container" id="loaderContainer">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Container de Connexion -->
+    <div class="login-container" id="loginContainer" style="display: none;">
+        <h1>Accès Super-Admin</h1>
+        <form id="adminLoginForm">
+            <div class="input-group">
+                <label for="adminUsername">Nom d'administrateur</label>
+                <input type="text" id="adminUsername" name="adminUsername" required autocomplete="username">
+            </div>
+            <div class="input-group">
+                <label for="adminPassword">Mot de passe</label>
+                <input type="password" id="adminPassword" name="adminPassword" required autocomplete="current-password">
+            </div>
+            <button type="submit">Se connecter</button>
+            <div id="errorMessage" class="error-message"></div>
+        </form>
+    </div>
+
+    <script type="module">
+        // --- Imports Firebase ---
+        import { getActiveDatabase } from './firebase-config-manager.js';
+        import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        // --- Références DOM ---
+        const adminLoginForm = document.getElementById('adminLoginForm');
+        const errorMessageElement = document.getElementById('errorMessage');
+        const loaderContainer = document.getElementById('loaderContainer');
+        const loginContainer = document.getElementById('loginContainer');
+
+        // --- Fonctions Utilitaires ---
+        function showLoader() { loaderContainer.classList.remove('hidden'); }
+        function hideLoader() { loaderContainer.classList.add('hidden'); }
+        function displayError(message) {
+            errorMessageElement.textContent = message;
+            errorMessageElement.classList.add('visible');
+        }
+        function clearError() {
+            errorMessageElement.textContent = '';
+            errorMessageElement.classList.remove('visible');
+        }
+
+        // --- Logique de la page ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Cacher le loader et afficher le formulaire une fois la page prête
+            hideLoader();
+            loginContainer.style.display = 'block';
+        });
+
+        adminLoginForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            clearError();
+            showLoader();
+
+            const usernameInput = document.getElementById('adminUsername').value;
+            const passwordInput = document.getElementById('adminPassword').value;
+
+            try {
+                // 1. Obtenir la base de données active
+                const db = await getActiveDatabase();
+
+                // 2. Définir la référence vers les identifiants du super admin
+                const adminRef = ref(db, 'users/Super Admin');
+
+                // 3. Récupérer les données
+                const snapshot = await get(adminRef);
+
+                if (snapshot.exists()) {
+                    const adminData = snapshot.val();
+                    const dbUsername = adminData["Nom d'utilisateur"];
+                    const dbPassword = adminData["Mot de passe"];
+
+                    // 4. Vérifier les identifiants
+                    if (usernameInput === dbUsername && passwordInput === dbPassword) {
+                        // Authentification réussie
+                        console.log("Super admin login successful.");
+                        sessionStorage.setItem('isSuperAdminLoggedIn', 'true');
+                        window.location.href = 'dashboardAdmin.html';
+                        // Le loader restera visible pendant la redirection
+                    } else {
+                        // Échec de l'authentification
+                        console.warn("Super admin login failed: incorrect credentials.");
+                        displayError("Nom d'administrateur ou mot de passe incorrect.");
+                        hideLoader();
+                    }
+                } else {
+                    // Les données du super admin n'existent pas dans la base
+                    console.error("Super admin login failed: 'users/Super Admin' node not found in the database.");
+                    displayError("Configuration d'administrateur introuvable.");
+                    hideLoader();
+                }
+
+            } catch (error) {
+                console.error("An error occurred during login:", error);
+                displayError("Une erreur de réseau ou de base de données est survenue.");
+                hideLoader();
+            }
+        });
+    </script>
+</body>
+</html>

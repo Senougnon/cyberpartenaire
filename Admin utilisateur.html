@@ -1,0 +1,1584 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration Utilisateurs</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1a2a6c; /* Dark Blue */
+            --secondary-color: #fdbb2d; /* Gold/Yellow */
+            --danger-color: #e74c3c; /* Red */
+            --success-color: #2ecc71; /* Green */
+            --info-color: #3498db; /* Blue */
+            --edit-color: #f39c12; /* Orange */
+            --warning-color: var(--edit-color); /* Alias for warning */
+            --background-color: #ecf0f1; /* Light Grey */
+            --text-color: #34495e; /* Dark Grey */
+            --container-bg: #ffffff; /* White */
+            --table-header-bg: var(--primary-color);
+            --table-border-color: #ddd;
+            --button-text: #fff;
+            --badge-active-bg: var(--success-color);
+            --badge-inactive-bg: #bdc3c7; /* Grey */
+            --badge-paid-bg: var(--info-color);
+            --badge-unpaid-bg: var(--danger-color);
+            --badge-text: #fff;
+
+            /* New badge colors for subscription status */
+            --badge-expires-soon-bg: #ffc107; /* Orange-Yellow */
+            --badge-over-1m-bg: #4CAF50; /* Green */
+            --badge-over-3m-bg: #28a745; /* Darker Green */
+            --badge-over-6m-bg: #1e7e34; /* Even Darker Green */
+            --badge-over-12m-bg: #0069d9; /* Blue for long terms */
+            --badge-over-1m-text: #fff;
+            --badge-over-3m-text: #fff;
+            --badge-over-6m-text: #fff;
+            --badge-over-12m-text: #fff;
+        }
+
+        /* Reset and Base Styles */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1300px; /* Slightly wider for more columns */
+            margin: auto;
+            background: var(--container-bg);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            flex-grow: 1;
+        }
+
+        /* Headings */
+        h1 { color: var(--primary-color); margin-bottom: 25px; text-align: center; }
+        h2 { color: var(--primary-color); margin-bottom: 20px; text-align: center; }
+
+        /* Security Warning */
+        .security-warning {
+            background-color: #fff3cd; /* Light yellow */
+            color: #856404; /* Dark yellow */
+            border: 1px solid #ffeeba;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .security-warning strong { font-weight: bold; }
+        .security-warning i { margin-right: 8px; }
+
+        /* Loading Overlay & Loader */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(255, 255, 255, 0.3); /* Plus discret */
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1050; visibility: hidden; opacity: 0;
+            transition: opacity 0.3s ease-in-out; /* Smoother transition */
+        }
+        .loading-overlay.visible { visibility: visible; opacity: 1; } /* No delay */
+        .loader {
+            border: 8px solid #f3f3f3; border-top: 8px solid var(--primary-color);
+            border-radius: 50%; width: 60px; height: 60px;
+            animation: spin 1.5s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Table Controls */
+        .table-controls {
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+            gap: 15px; /* Spacing between items */
+            align-items: center;
+            justify-content: space-between; /* Distribute items */
+        }
+        .search-input {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            width: 100%;
+            max-width: 300px; /* Limit width */
+        }
+
+        /* Category Filter */
+        .category-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+        .category-filter label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .category-filter input[type="radio"] {
+            margin-right: 5px;
+            accent-color: var(--primary-color);
+        }
+        .category-filter input[type="radio"]:checked + span {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        .category-filter input[type="radio"]:checked + span::before {
+             content: '';
+             display: inline-block;
+             width: 8px;
+             height: 8px;
+             border-radius: 50%;
+             background-color: var(--primary-color);
+             margin-right: 5px;
+             vertical-align: middle;
+        }
+        .category-filter label:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* Bulk Actions */
+        .bulk-actions {
+            margin-top: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .bulk-actions button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, opacity 0.2s ease;
+            color: var(--button-text);
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .bulk-actions button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .bulk-actions .btn-delete { background-color: var(--danger-color); }
+        .bulk-actions .btn-toggle-sub { background-color: var(--info-color); }
+        .bulk-actions .btn-toggle-fee { background-color: var(--secondary-color); color: #333; }
+
+        .bulk-actions .btn-delete:hover:not(:disabled) { background-color: #c0392b; }
+        .bulk-actions .btn-toggle-sub:hover:not(:disabled) { background-color: #2980b9; }
+        .bulk-actions .btn-toggle-fee:hover:not(:disabled) { background-color: #e0a800; }
+
+
+        /* Table Styles */
+        table {
+            width: 100%; border-collapse: collapse; margin-top: 10px;
+            border: 1px solid var(--table-border-color); border-radius: 8px;
+            overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--table-border-color); font-size: 0.95rem; vertical-align: middle; }
+        th {
+            background-color: var(--table-header-bg); color: var(--button-text);
+            font-weight: bold; text-transform: uppercase; cursor: pointer;
+            position: relative; white-space: nowrap;
+        }
+        th .sort-icon { margin-left: 8px; opacity: 0.5; }
+        th.sorted-asc .sort-icon, th.sorted-desc .sort-icon { opacity: 1; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: #f2f2f2; }
+        td:last-child { white-space: nowrap; text-align: right; } /* Align actions right */
+        
+        /* Checkbox column adjustments */
+        th:first-child, td:first-child {
+            width: 1%; /* Smallest possible width for checkbox */
+            padding-left: 10px;
+            padding-right: 5px;
+            text-align: center;
+        }
+        th:first-child input[type="checkbox"],
+        td:first-child input[type="checkbox"] {
+            margin: 0;
+            width: 1.1em;
+            height: 1.1em;
+            vertical-align: middle;
+            accent-color: var(--primary-color);
+        }
+
+
+        /* Status Badges */
+        .badge {
+            padding: 3px 8px; border-radius: 12px; font-size: 0.8rem;
+            color: var(--badge-text); display: inline-block; font-weight: bold;
+        }
+        .badge-active { background-color: var(--badge-active-bg); }
+        .badge-inactive { background-color: var(--badge-inactive-bg); color: #555; }
+        .badge-paid { background-color: var(--badge-paid-bg); }
+        .badge-unpaid { background-color: var(--danger-color); }
+        
+        /* New Subscription Status Badges */
+        .badge-expires-soon { background-color: var(--badge-expires-soon-bg); color: #333; }
+        .badge-over-1m { background-color: var(--badge-over-1m-bg); color: var(--badge-over-1m-text); }
+        .badge-over-3m { background-color: var(--badge-over-3m-bg); color: var(--badge-over-3m-text); }
+        .badge-over-6m { background-color: var(--badge-over-6m-bg); color: var(--badge-over-6m-text); }
+        .badge-over-12m { background-color: var(--badge-over-12m-bg); color: var(--badge-over-12m-text); }
+
+
+        /* Buttons (specifically icon-only buttons in table actions) */
+        td:last-child button {
+            padding: 6px 8px; /* Adjust padding for icon-only */
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center; /* Center icon */
+            gap: 0; /* No gap needed for single icon */
+            transition: background-color 0.2s ease, opacity 0.2s ease;
+            font-size: 1rem; /* Adjust icon size */
+            color: var(--button-text);
+            vertical-align: middle;
+            width: 30px; /* Fixed width/height for uniform icons */
+            height: 30px;
+        }
+        td:last-child button i {
+             line-height: 1; /* Ensure icon is vertically centered */
+        }
+
+        button:disabled { cursor: not-allowed; opacity: 0.7; }
+
+        /* Specific icon button colors */
+        .btn-edit { background-color: var(--edit-color); }
+        .btn-delete { background-color: var(--danger-color); }
+        .btn-toggle-sub { background-color: var(--info-color); }
+        .btn-toggle-fee { background-color: var(--secondary-color); color: #333; } /* Changed fee button color */
+        .btn-save { background-color: var(--success-color); }
+        .btn-cancel { background-color: #95a5a6; } /* Grey */
+
+        /* Hover effects */
+        .btn-edit:hover:not(:disabled) { background-color: #d35400; }
+        .btn-delete:hover:not(:disabled) { background-color: #c0392b; }
+        .btn-toggle-sub:hover:not(:disabled) { background-color: #2980b9; }
+        .btn-toggle-fee:hover:not(:disabled) { background-color: #e0a800; } /* Darker yellow */
+        .btn-save:hover:not(:disabled) { background-color: #27ae60; }
+        .btn-cancel:hover:not(:disabled) { background-color: #7f8c8d; }
+
+        /* Button Loading State */
+        button.loading { opacity: 0.8; position: relative; }
+        button.loading i { display: none; /* Hide icon when loading */ }
+        button.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: block;
+            width: 1em;
+            height: 1em;
+            border: 2px solid currentColor;
+            border-left-color: transparent;
+            border-radius: 50%;
+            animation: button-spin 0.6s linear infinite;
+            vertical-align: middle;
+        }
+        @keyframes button-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+
+        /* Modal Styles */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); /* Darker overlay */
+            z-index: 1000; justify-content: center; align-items: center;
+            padding: 20px; overflow-y: auto;
+        }
+        .modal.visible { display: flex; }
+        .modal-content {
+            background-color: var(--container-bg); padding: 30px; border-radius: 8px;
+            width: 90%; max-width: 550px; /* Slightly wider */
+            color: var(--text-color); box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative; margin: auto; /* Center vertically */
+        }
+        .modal label { display: block; margin-bottom: 8px; font-weight: bold; }
+        .modal input[type="text"],
+        .modal input[type="password"],
+        .modal input[type="number"], /* Added for number input */
+        .modal select { /* Style for select */
+            width: 100%; padding: 12px; margin-bottom: 18px;
+            border: 1px solid #ccc; border-radius: 4px; font-size: 1rem;
+            background-color: white; /* Ensure background is white */
+            appearance: none; /* Remove default select styling */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20fill%3D%22%2334495e%22%3E%3Cpath%20d%3D%22M5%208l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 12px;
+            padding-right: 30px; /* Make space for arrow */
+        }
+        .modal input:focus, .modal select:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 2px rgba(26, 42, 108, 0.2); }
+        .modal .checkbox-group { display: flex; align-items: center; margin-bottom: 18px; }
+        .modal input[type="checkbox"] {
+            width: auto; margin-right: 10px; vertical-align: middle;
+            height: 1.1em; width: 1.1em; accent-color: var(--primary-color);
+        }
+        .modal .checkbox-group label { margin-bottom: 0; font-weight: normal; }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
+        .modal p { margin-bottom: 20px; line-height: 1.5; }
+        .modal p strong { color: var(--primary-color); }
+
+        /* Container for Duration selection, hidden by default */
+        #durationContainer {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee; /* Visual separator */
+            display: none;
+        }
+
+
+        /* Notification Styles */
+        .notification {
+           position: fixed; top: 20px; right: 20px;
+           background-color: var(--success-color); color: white;
+           padding: 15px 25px; border-radius: 5px; z-index: 1001;
+           display: none; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+           min-width: 300px; max-width: 450px; opacity: 0;
+           transition: opacity 0.3s ease, transform 0.3s ease;
+           transform: translateX(100%); /* Start off-screen */
+        }
+        .notification.show { display: block; opacity: 1; transform: translateX(0); }
+        .notification.error { background-color: var(--danger-color); }
+        .notification.info { background-color: var(--info-color); }
+        .notification.warning { background-color: var(--warning-color); }
+        .close-btn {
+           position: absolute; top: 5px; right: 10px;
+           color: white; font-weight: bold; font-size: 22px;
+           cursor: pointer; background: none; border: none; padding: 5px;
+           line-height: 1; opacity: 0.8;
+        }
+        .close-btn:hover { opacity: 1; }
+
+        /* Responsive Adjustments */
+        @media (max-width: 992px) {
+             .container { max-width: 95%; }
+             th, td { font-size: 0.9rem; padding: 10px 12px;}
+             td:last-child button {
+                 width: 28px; height: 28px; /* Slightly smaller icons */
+                 font-size: 0.9rem;
+                 margin-left: 3px;
+             }
+             .table-controls { flex-direction: column; align-items: flex-start; }
+             .search-input { max-width: none; width: 100%; order: 1;} /* Search input first */
+             .category-filter { order: 2; width: 100%; justify-content: center;} /* Categories second */
+             .category-filter label { font-size: 0.9rem; padding: 3px 8px; }
+        }
+        @media (max-width: 768px) {
+            body { padding: 15px; }
+            .container { padding: 20px; }
+            h1 { font-size: 1.8rem; }
+            th, td { padding: 10px 8px; font-size: 0.85rem; }
+            /* Align actions left and stack if needed */
+            td:last-child { text-align: left; }
+            td:last-child button {
+                margin-bottom: 5px;
+                display: inline-flex; /* Keep them inline but wrap */
+                width: auto; /* Allow buttons to size based on content (icon only) */
+                height: 30px; /* Maintain height */
+                padding: 6px 8px; /* Restore padding */
+                margin-left: 0; /* Remove left margin */
+                margin-right: 5px; /* Add right margin for spacing */
+            }
+            .modal-content { padding: 20px; max-width: 90%; }
+            
+            .table-controls { gap: 10px; }
+            .bulk-actions { flex-direction: column; gap: 8px; }
+            .bulk-actions button { width: 100%; justify-content: center; }
+        }
+        @media (max-width: 480px) {
+             body { padding: 10px; }
+             h1 { font-size: 1.6rem; }
+             th, td { font-size: 0.8rem; padding: 8px 5px; }
+             td:last-child button { height: 25px; padding: 5px 6px; font-size: 0.8rem;}
+             .modal-content { padding: 15px; }
+             .category-filter { flex-direction: column; align-items: flex-start; }
+             .category-filter label { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Main Content Container -->
+    <div class="container">
+        <h1><i class="fas fa-users-cog"></i> Administration Utilisateurs</h1>
+
+
+
+        <!-- Table Controls -->
+        <div class="table-controls">
+            <input type="text" id="searchInput" class="search-input" placeholder="Rechercher (ID, Nom, Contact)...">
+            <div class="category-filter" role="radiogroup" aria-label="Filtre de catégorie d'utilisateurs">
+                <label>
+                    <input type="radio" name="userCategory" value="all">
+                    <span>Tous</span>
+                </label>
+                <label>
+                    <input type="radio" name="userCategory" value="active" checked> <!-- Default to active -->
+                    <span>Actifs</span>
+                </label>
+                <label>
+                    <input type="radio" name="userCategory" value="expired">
+                    <span>Expirés</span>
+                </label>
+                <label>
+                    <input type="radio" name="userCategory" value="inactive">
+                    <span>Inactifs</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="bulk-actions">
+            <button class="btn-delete" id="bulkDeleteBtn" disabled>
+                <i class="fas fa-trash"></i> Supprimer les sélectionnés
+            </button>
+            <button class="btn-toggle-sub" id="bulkActivateSubBtn" disabled>
+                <i class="fas fa-toggle-on"></i> Activer abonnement sélectionnés
+            </button>
+            <button class="btn-toggle-fee" id="bulkPayFeeBtn" disabled>
+                <i class="fas fa-check-circle"></i> Payer frais sélectionnés
+            </button>
+        </div>
+
+        <!-- Users Table -->
+        <div style="overflow-x: auto;"> <!-- Make table scrollable horizontally if needed -->
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAllUsers"></th>
+                        <th data-sort="id">ID Utilisateur <span class="sort-icon fas fa-sort"></span></th>
+                        <th data-sort="portalName">Nom Réseau <span class="sort-icon fas fa-sort"></span></th>
+                        <th data-sort="contact">Numéro Contact <span class="sort-icon fas fa-sort"></span></th>
+                        <th data-sort="subscriptionStatus">Statut Abonnement <span class="sort-icon fas fa-sort"></span></th>
+                        <th data-sort="subscriptionRemaining">Durée Restante <span class="sort-icon fas fa-sort"></span></th>
+                        <th data-sort="integrationFeePaid">Frais Intégration <span class="sort-icon fas fa-sort"></span></th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <!-- User data will be loaded here by JS -->
+                    <tr><td colspan="8" style="text-align: center;">Chargement des utilisateurs...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p id="tableMessage" style="text-align: center; margin-top: 15px; display: none;"></p> <!-- For "No users found" etc. -->
+
+    </div>
+
+    <!-- Modals -->
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h2><i class="fas fa-question-circle"></i> Confirmation Requise</h2>
+            <p id="confirmModalMessage">Êtes-vous sûr de vouloir effectuer cette action ?</p>
+            <div class="modal-buttons">
+                <button class="btn-cancel" data-action="close-modal"><i class="fas fa-times"></i> Annuler</button>
+                <button class="btn-save" id="confirmModalConfirmButton">
+                    <span class="button-icon fas fa-check"></span>
+                    <span class="button-text">Confirmer</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+     <!-- Edit User Modal -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <h2><i class="fas fa-user-edit"></i> Modifier Utilisateur (<span id="editUserIdDisplay"></span>)</h2>
+            <input type="hidden" id="editUserId">
+
+            <label for="editUserPortalName">Nom Réseau Portail:</label>
+            <input type="text" id="editUserPortalName" placeholder="Nom du réseau WiFi" required>
+
+            <label for="editUserContact">Numéro Contact:</label>
+            <input type="text" id="editUserContact" placeholder="Ex: +229XXXXXXXX" pattern="^\+?[0-9\s\-()]{8,}$">
+
+            <label for="editUserFedapayKey">Clé API FedaPay Portail (Publique):</label>
+            <input type="text" id="editUserFedapayKey" placeholder="pk_live_... ou pk_sandbox_...">
+
+            <!-- Manual Subscription Activation -->
+            <div class="checkbox-group">
+                <input type="checkbox" id="editUserSubscriptionStatus">
+                <label for="editUserSubscriptionStatus">Abonnement Actif (manuellement)</label>
+            </div>
+
+            <!-- Duration Selection (conditionally shown) -->
+            <div id="durationContainer">
+                 <label for="editUserSubscriptionDuration">Durée de l'abonnement manuel (ajoutée à la date de fin actuelle si active):</label>
+                 <select id="editUserSubscriptionDuration" required>
+                     <option value="">-- Choisir une durée --</option>
+                     <option value="30">1 mois (30 jours)</option>
+                     <option value="90">3 mois (90 jours)</option>
+                     <option value="180">6 mois (180 jours)</option>
+                     <option value="365">1 an (365 jours)</option>
+                 </select>
+            </div>
+
+            <!-- Integration Fee -->
+            <div class="checkbox-group">
+                <input type="checkbox" id="editUserIntegrationFee">
+                <label for="editUserIntegrationFee">Frais d'intégration payés</label>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn-cancel" data-action="close-modal"><i class="fas fa-times"></i> Annuler</button>
+                <button class="btn-save" id="editUserSaveButton">
+                     <span class="button-icon fas fa-save"></span>
+                     <span class="button-text">Enregistrer</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Activate Subscription Modal -->
+    <div id="bulkActivateSubModal" class="modal">
+        <div class="modal-content">
+            <h2><i class="fas fa-toggle-on"></i> Activer Abonnements en Masse</h2>
+            <p>Définir la durée de l'abonnement pour les <strong><span id="bulkActivateCount">0</span></strong> utilisateur(s) sélectionné(s) :</p>
+
+            <label for="bulkActivateDuration">Durée de l'abonnement (en jours):</label>
+            <input type="number" id="bulkActivateDuration" placeholder="Ex: 365 pour 1 an" min="1" required>
+
+            <div class="modal-buttons">
+                <button class="btn-cancel" data-action="close-modal"><i class="fas fa-times"></i> Annuler</button>
+                <button class="btn-save" id="bulkActivateConfirmButton">
+                    <span class="button-icon fas fa-check"></span>
+                    <span class="button-text">Activer</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <span id="notificationMessage"></span>
+        <button class="close-btn" data-action="close-notification">×</button>
+    </div>
+
+    <!-- Firebase and Main Logic -->
+    <script type="module">
+        // --- Firebase Imports ---
+        import { getActiveDatabase } from './firebase-config-manager.js'; // Use your manager
+        import { ref, get, set, remove, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        // --- Global Variables ---
+        let db; // Will hold the active database instance
+        let allUsersData = {}; // Cache for user data from users-data node
+        let currentSort = { column: 'id', direction: 'asc' }; // Default sort
+        let currentFilter = ''; // Text search filter
+        let currentCategoryFilter = 'active'; // 'all', 'active', 'expired', 'inactive' - DEFAULT TO ACTIVE
+        const selectedUsers = new Set(); // Store IDs of selected users for bulk actions
+
+
+        // --- DOM Element References ---
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const usersTableBody = document.getElementById('usersTableBody');
+        const searchInput = document.getElementById('searchInput');
+        const categoryFilterRadios = document.querySelectorAll('input[name="userCategory"]');
+        const selectAllUsersCheckbox = document.getElementById('selectAllUsers');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const bulkActivateSubBtn = document.getElementById('bulkActivateSubBtn');
+        const bulkPayFeeBtn = document.getElementById('bulkPayFeeBtn');
+        const tableMessage = document.getElementById('tableMessage');
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmModalMessage = document.getElementById('confirmModalMessage');
+        const confirmModalConfirmButton = document.getElementById('confirmModalConfirmButton');
+        const editUserModal = document.getElementById('editUserModal');
+        const editUserIdInput = document.getElementById('editUserId');
+        const editUserIdDisplay = document.getElementById('editUserIdDisplay');
+        const editUserPortalNameInput = document.getElementById('editUserPortalName');
+        const editUserContactInput = document.getElementById('editUserContact');
+        const editUserFedapayKeyInput = document.getElementById('editUserFedapayKey');
+        const editUserSubscriptionStatusCheckbox = document.getElementById('editUserSubscriptionStatus');
+        const durationContainer = document.getElementById('durationContainer');
+        const editUserSubscriptionDurationSelect = document.getElementById('editUserSubscriptionDuration');
+        const editUserIntegrationFeeCheckbox = document.getElementById('editUserIntegrationFee');
+        const editUserSaveButton = document.getElementById('editUserSaveButton');
+        const notificationEl = document.getElementById('notification');
+        const notificationMessageEl = document.getElementById('notificationMessage');
+
+        // New elements for Bulk Activate Subscription Modal
+        const bulkActivateSubModal = document.getElementById('bulkActivateSubModal');
+        const bulkActivateCountSpan = document.getElementById('bulkActivateCount');
+        const bulkActivateDurationInput = document.getElementById('bulkActivateDuration');
+        const bulkActivateConfirmButton = document.getElementById('bulkActivateConfirmButton');
+
+
+        // --- Utility Functions ---
+
+        function showLoading() { loadingOverlay.classList.add('visible'); }
+        function hideLoading() { loadingOverlay.classList.remove('visible'); }
+
+        function showModal(modalEl) { modalEl.classList.add('visible'); }
+        function hideModal(modalElId) {
+            const modal = document.getElementById(modalElId);
+            if (modal) modal.classList.remove('visible');
+        }
+
+        // Button loading state helpers
+        function showButtonLoading(button) {
+            if (!button) return;
+            button.disabled = true;
+            button.classList.add('loading');
+        }
+        function hideButtonLoading(button) {
+             if (!button) return;
+            button.disabled = false;
+            button.classList.remove('loading');
+        }
+
+        function showNotification(type, message, duration = 5000) {
+            notificationMessageEl.textContent = message;
+            notificationEl.className = `notification ${type} show`; // 'success', 'error', 'info', 'warning'
+
+            if (notificationEl._timeout) clearTimeout(notificationEl._timeout);
+            notificationEl._timeout = setTimeout(closeNotification, duration);
+        }
+
+        function closeNotification() {
+            if (notificationEl) {
+                notificationEl.classList.remove('show');
+                 if (notificationEl._timeout) {
+                     clearTimeout(notificationEl._timeout);
+                     notificationEl._timeout = null;
+                 }
+            }
+        }
+
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return str;
+            const map = {
+                '&': '&',
+                '<': '<',
+                '>': '>',
+                '"': '"',
+                '`': '`' // Escape backticks if ever used
+            };
+            return str.replace(/[&<>"'`]/g, function(m) { return map[m]; });
+        }
+
+        // --- Core Data Loading and Display ---
+
+        async function initializeApp() {
+            showLoading();
+            console.log("Initializing Admin Users Page...");
+            try {
+                db = await getActiveDatabase();
+                console.log("Database initialized.");
+                setupEventListeners(); // Setup listeners early so search/sort/filter work
+
+                // Ensure the correct radio button is checked visually on load
+                document.querySelector(`input[name="userCategory"][value="${currentCategoryFilter}"]`).checked = true;
+
+                await loadUsersData(); // This will render the table
+
+                hideLoading();
+                console.log("Admin Users Page fully loaded and ready.");
+
+            } catch (error) {
+                console.error("Initialization failed:", error);
+                hideLoading();
+                showNotification("error", `Erreur d'initialisation critique: ${error.message}`);
+                renderTableMessage("error", "Échec du chargement initial des données.");
+            }
+        }
+
+        async function loadUsersData() {
+             if (!db) {
+                 console.error("Database not initialized.");
+                 renderTableMessage("error", "Base de données non disponible.");
+                 return;
+             }
+
+            usersTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Chargement des utilisateurs...</td></tr>';
+            tableMessage.style.display = 'none';
+            selectedUsers.clear(); // Clear selections on data reload
+            selectAllUsersCheckbox.checked = false;
+            updateBulkActionButtonStates();
+
+
+            console.log("Fetching users-data...");
+            try {
+                const usersDataSnapshot = await get(ref(db, 'users-data'));
+                const usersDataRaw = usersDataSnapshot.val() || {};
+
+                allUsersData = {};
+                Object.keys(usersDataRaw).forEach(userId => {
+                     allUsersData[userId] = {
+                         id: userId,
+                         data: usersDataRaw[userId] || {}
+                     };
+                });
+
+                console.log(`Loaded data for ${Object.keys(allUsersData).length} users.`);
+                renderUsersTable();
+
+            } catch (error) {
+                console.error("Error fetching users data:", error);
+                 showNotification("error", `Erreur de chargement des utilisateurs: ${error.message}`);
+                 renderTableMessage("error", "Échec du chargement des données utilisateur.");
+            }
+        }
+
+        function filterAndSortData() {
+            let filteredData = Object.values(allUsersData);
+
+            // Apply Category Filter first
+            if (currentCategoryFilter !== 'all') {
+                const now = new Date();
+                filteredData = filteredData.filter(user => {
+                    const subscription = user.data?.admin?.subscription || {};
+                    const isActive = subscription.status === 'active';
+                    const endDate = subscription.endDate ? new Date(subscription.endDate) : null;
+
+                    if (currentCategoryFilter === 'active') {
+                        // User is active and has an end date in the future
+                        return isActive && endDate && endDate > now;
+                    } else if (currentCategoryFilter === 'expired') {
+                        // User was active, but end date is in the past or today
+                        // This assumes "expired" refers to subscriptions that were active but are now past their endDate
+                        return isActive && endDate && endDate <= now;
+                    } else if (currentCategoryFilter === 'inactive') {
+                        // User is explicitly inactive
+                        return !isActive;
+                    }
+                    return true; // Should not happen with 'all' handled separately
+                });
+            }
+
+            // Apply Text Search Filter
+            if (currentFilter) {
+                const filterLower = currentFilter.toLowerCase();
+                filteredData = filteredData.filter(user => {
+                    const portalConfig = user.data?.portalConfig || {};
+                    const subscription = user.data?.admin?.subscription || {};
+
+                    const idMatch = user.id.toLowerCase().includes(filterLower);
+                    const nameMatch = (portalConfig.networkName || '').toLowerCase().includes(filterLower);
+                    const contactMatch = (portalConfig.contactNumber || '').toLowerCase().includes(filterLower);
+                    
+                    const subscriptionStatusText = (subscription.status === 'active' ? 'actif' : 'inactif').toLowerCase();
+                    const feeStatusText = (subscription.integrationFeePaid === true ? 'oui' : 'non').toLowerCase();
+
+                    // Check if filter matches subscription status or fee status
+                    if (subscriptionStatusText.includes(filterLower) || feeStatusText.includes(filterLower)) return true;
+
+                    // Add filtering by subscription remaining time if it's displayed
+                    const remainingDays = getRemainingSubscriptionDays(subscription);
+                    let remainingTimeMatch = false;
+                    if (remainingDays !== null) {
+                        if (filterLower.includes("finit bientôt") && remainingDays < 30) remainingTimeMatch = true;
+                        else if (filterLower.includes("plus 1 mois") && remainingDays >= 30 && remainingDays < 90) remainingTimeMatch = true;
+                        else if (filterLower.includes("plus 3 mois") && remainingDays >= 90 && remainingDays < 180) remainingTimeMatch = true;
+                        else if (filterLower.includes("plus 6 mois") && remainingDays >= 180 && remainingDays < 365) remainingTimeMatch = true;
+                        else if (filterLower.includes("plus 12 mois") && remainingDays >= 365) remainingTimeMatch = true;
+                        else if (filterLower.includes(`${remainingDays}j`)) remainingTimeMatch = true;
+                    }
+
+                    return idMatch || nameMatch || contactMatch || remainingTimeMatch;
+                });
+            }
+
+            // Apply Sort
+            filteredData.sort((a, b) => {
+                let valA, valB;
+                const dataA = a.data || {};
+                const dataB = b.data || {};
+                const portalConfigA = dataA.portalConfig || {};
+                const portalConfigB = dataB.portalConfig || {};
+                const subscriptionA = dataA.admin?.subscription || {};
+                const subscriptionB = dataB.admin?.subscription || {};
+
+                switch (currentSort.column) {
+                    case 'portalName':
+                        valA = portalConfigA.networkName || '';
+                        valB = portalConfigB.networkName || '';
+                        break;
+                    case 'contact':
+                        valA = portalConfigA.contactNumber || '';
+                        valB = portalConfigB.contactNumber || '';
+                        break;
+                    case 'subscriptionStatus':
+                        valA = subscriptionA.status === 'active';
+                        valB = subscriptionB.status === 'active';
+                        break;
+                    case 'integrationFeePaid':
+                         valA = subscriptionA.integrationFeePaid === true;
+                         valB = subscriptionB.integrationFeePaid === true;
+                         break;
+                    case 'subscriptionRemaining':
+                        valA = getRemainingSubscriptionDays(subscriptionA) || -1;
+                        valB = getRemainingSubscriptionDays(subscriptionB) || -1;
+                        break;
+                    case 'id':
+                    default:
+                        valA = a.id;
+                        valB = b.id;
+                        break;
+                }
+
+                let comparison = 0;
+                if (typeof valA === 'string' && typeof valB === 'string') {
+                    comparison = valA.toLowerCase().localeCompare(valB.toLowerCase());
+                } else if (valA < valB) {
+                    comparison = -1;
+                } else if (valA > valB) {
+                    comparison = 1;
+                }
+
+                return currentSort.direction === 'asc' ? comparison : comparison * -1;
+            });
+
+            return filteredData;
+        }
+
+
+        function getRemainingSubscriptionDays(subscription) {
+            if (subscription && subscription.status === 'active' && subscription.endDate) {
+                const endDate = new Date(subscription.endDate);
+                const now = new Date();
+                const diffTime = endDate.getTime() - now.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays;
+            }
+            return null; // Not active or no end date
+        }
+
+        function getSubscriptionRemainingBadge(subscription) {
+            const remainingDays = getRemainingSubscriptionDays(subscription);
+
+            if (remainingDays === null) {
+                // If status is active but no end date, treat as inactive for badge
+                if (subscription && subscription.status === 'active') {
+                    return '<span class="badge badge-inactive">N/A (Active sans fin)</span>'; // Indicate active but missing end date
+                }
+                return '<span class="badge badge-inactive">N/A</span>';
+            } else if (remainingDays < 0) {
+                 return `<span class="badge badge-inactive">Expiré (${Math.abs(remainingDays)}j passé)</span>`;
+            } else if (remainingDays < 30) {
+                return `<span class="badge badge-expires-soon">Finit bientôt (${remainingDays}j)</span>`;
+            } else if (remainingDays >= 365) {
+                const years = Math.floor(remainingDays / 365);
+                return `<span class="badge badge-over-12m">Actif >${years} an${years > 1 ? 's' : ''}</span>`;
+            } else if (remainingDays >= 180) {
+                return `<span class="badge badge-over-6m">Actif >6 mois</span>`;
+            } else if (remainingDays >= 90) {
+                return `<span class="badge badge-over-3m">Actif >3 mois</span>`;
+            } else if (remainingDays >= 30) {
+                return `<span class="badge badge-over-1m">Actif >1 mois</span>`;
+            }
+            return `<span class="badge badge-inactive">Moins d'1 mois (${remainingDays}j)</span>`;
+        }
+
+
+        function renderUsersTable() {
+            const tbody = usersTableBody;
+            tbody.innerHTML = ''; // Clear existing rows
+            tableMessage.style.display = 'none'; // Hide message initially
+
+            const displayData = filterAndSortData(); // Get filtered and sorted data
+
+            if (displayData.length === 0) {
+                const message = currentFilter || currentCategoryFilter !== 'all' ? "Aucun utilisateur ne correspond à votre recherche ou catégorie." : "Aucun utilisateur trouvé.";
+                renderTableMessage("info", message);
+                return;
+            }
+
+            displayData.forEach(user => {
+                const userId = user.id;
+                const userData = user.data;
+                const portalConfig = userData.portalConfig || {};
+                const subscription = userData.admin?.subscription || {};
+
+                const portalName = escapeHtml(portalConfig.networkName) || 'N/A';
+                const contactNumber = escapeHtml(portalConfig.contactNumber) || 'N/A';
+                const isActive = subscription.status === 'active';
+                const isPaid = subscription.integrationFeePaid === true;
+
+                const subscriptionStatusText = isActive ? 'Actif' : 'Inactif';
+                const subscriptionStatusClass = isActive ? 'badge-active' : 'badge-inactive';
+                const feeStatusText = isPaid ? 'Oui' : 'Non';
+                const feeStatusClass = isPaid ? 'badge-paid' : 'badge-unpaid';
+
+                const remainingBadgeHtml = getSubscriptionRemainingBadge(subscription);
+
+
+                const row = tbody.insertRow();
+                row.dataset.userId = userId;
+
+                const checkboxCell = row.insertCell(0);
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'user-select-checkbox';
+                checkbox.dataset.userId = userId;
+                checkbox.checked = selectedUsers.has(userId); // Maintain selection state
+                checkboxCell.appendChild(checkbox);
+
+                row.insertCell(1).textContent = userId;
+                row.insertCell(2).textContent = portalName;
+                row.insertCell(3).textContent = contactNumber;
+                row.insertCell(4).innerHTML = `<span class="badge ${subscriptionStatusClass}">${subscriptionStatusText}</span>`;
+                row.insertCell(5).innerHTML = remainingBadgeHtml;
+                row.insertCell(6).innerHTML = `<span class="badge ${feeStatusClass}">${feeStatusText}</span>`;
+
+                const actionsCell = row.insertCell(7); // Updated index due to new checkbox column
+                actionsCell.innerHTML = `
+                    <button class="btn-edit" data-action="edit" data-user-id="${userId}" title="Modifier l'utilisateur">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-toggle-sub" data-action="toggle-sub" data-user-id="${userId}" data-current-status="${subscription.status}" title="${isActive ? 'Désactiver' : 'Activer'} l'abonnement">
+                        <i class="fas fa-toggle-${isActive ? 'on' : 'off'}"></i>
+                    </button>
+                     <button class="btn-toggle-fee" data-action="toggle-fee" data-user-id="${userId}" data-current-paid="${isPaid}" title="Marquer frais comme ${isPaid ? 'Non Payés' : 'Payés'}">
+                         <i class="fas fa-${isPaid ? 'times-circle' : 'check-circle'}"></i>
+                    </button>
+                    <button class="btn-delete" data-action="delete" data-user-id="${userId}" title="Supprimer l'utilisateur">
+                         <i class="fas fa-trash"></i>
+                    </button>
+                `;
+            });
+
+             updateSortIndicators();
+             updateSelectAllCheckboxState();
+             updateBulkActionButtonStates();
+        }
+
+        function renderTableMessage(type, message) {
+             usersTableBody.innerHTML = '';
+             tableMessage.textContent = message;
+             tableMessage.className = `message-${type}`;
+             tableMessage.style.display = 'block';
+        }
+
+         function updateSortIndicators() {
+             document.querySelectorAll('th[data-sort]').forEach(th => {
+                 th.classList.remove('sorted-asc', 'sorted-desc');
+                 const icon = th.querySelector('.sort-icon');
+                 if (icon) icon.className = 'sort-icon fas fa-sort'; // Reset icon
+
+                 if (th.dataset.sort === currentSort.column) {
+                     th.classList.add(currentSort.direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
+                     if (icon) icon.className = `sort-icon fas fa-sort-${currentSort.direction === 'asc' ? 'up' : 'down'}`;
+                 }
+             });
+         }
+
+        // --- Selection Logic ---
+
+        function toggleUserSelection(userId, isChecked) {
+            if (isChecked) {
+                selectedUsers.add(userId);
+            } else {
+                selectedUsers.delete(userId);
+            }
+            updateSelectAllCheckboxState();
+            updateBulkActionButtonStates();
+        }
+
+        function toggleAllUsersSelection(isChecked) {
+            const displayedUsers = filterAndSortData(); // Get currently displayed users
+            const checkboxes = usersTableBody.querySelectorAll('.user-select-checkbox');
+
+            selectedUsers.clear(); // Clear all current selections first
+
+            if (isChecked) {
+                displayedUsers.forEach(user => selectedUsers.add(user.id));
+                checkboxes.forEach(cb => cb.checked = true);
+            } else {
+                checkboxes.forEach(cb => cb.checked = false);
+            }
+            updateBulkActionButtonStates();
+        }
+
+        function updateSelectAllCheckboxState() {
+            const displayedUsersCount = filterAndSortData().length;
+            const selectedDisplayedUsersCount = filterAndSortData().filter(user => selectedUsers.has(user.id)).length;
+
+            if (displayedUsersCount > 0 && selectedDisplayedUsersCount === displayedUsersCount) {
+                selectAllUsersCheckbox.checked = true;
+                selectAllUsersCheckbox.indeterminate = false;
+            } else if (selectedDisplayedUsersCount > 0) {
+                selectAllUsersCheckbox.checked = false;
+                selectAllUsersCheckbox.indeterminate = true;
+            } else {
+                selectAllUsersCheckbox.checked = false;
+                selectAllUsersCheckbox.indeterminate = false;
+            }
+        }
+
+        function updateBulkActionButtonStates() {
+            const hasSelection = selectedUsers.size > 0;
+            bulkDeleteBtn.disabled = !hasSelection;
+            bulkActivateSubBtn.disabled = !hasSelection;
+            bulkPayFeeBtn.disabled = !hasSelection;
+        }
+
+
+        // --- Modal Specific Logic ---
+
+        function toggleDurationSelectVisibility() {
+            if (editUserSubscriptionStatusCheckbox.checked) {
+                durationContainer.style.display = 'block';
+                 editUserSubscriptionDurationSelect.setAttribute('required', 'required');
+            } else {
+                durationContainer.style.display = 'none';
+                editUserSubscriptionDurationSelect.value = '';
+                 editUserSubscriptionDurationSelect.removeAttribute('required');
+            }
+        }
+
+
+        // --- CRUD and Action Handlers (Individual & Bulk) ---
+
+        // Edit User: Show Modal
+        function handleEditUser(userId) {
+             const user = allUsersData[userId];
+             if (!user) {
+                 showNotification("error", "Données utilisateur introuvables pour modification.");
+                 console.error(`User data not found in cache for ID: ${userId}`);
+                 return;
+             }
+            const userData = user.data;
+            const portalConfig = userData.portalConfig || {};
+            const subscription = userData.admin?.subscription || {};
+
+            editUserIdInput.value = userId;
+            editUserIdDisplay.textContent = userId;
+            editUserPortalNameInput.value = portalConfig.networkName || '';
+            editUserContactInput.value = portalConfig.contactNumber || '';
+            editUserFedapayKeyInput.value = portalConfig.fedapayApiKey || '';
+
+            editUserSubscriptionStatusCheckbox.checked = subscription.status === 'active';
+            toggleDurationSelectVisibility();
+            editUserSubscriptionDurationSelect.value = '';
+
+            editUserIntegrationFeeCheckbox.checked = subscription.integrationFeePaid === true;
+
+            hideButtonLoading(editUserSaveButton);
+            showModal(editUserModal);
+        }
+
+        // Edit User: Save Changes
+        async function saveUserEdit(event) {
+            const button = event.target.closest('button');
+            showButtonLoading(button);
+            if (!db) {
+                 console.error("DB not ready."); hideButtonLoading(button);
+                 showNotification("error", "Erreur interne (DB)."); return;
+            }
+
+            const userId = editUserIdInput.value;
+            if (!userId) {
+                 console.error("User ID missing."); hideButtonLoading(button);
+                 showNotification("error", "ID utilisateur manquant."); return;
+            }
+
+             if (!editUserPortalNameInput.value.trim()) {
+                 showNotification("warning", "Le nom du réseau ne peut pas être vide.");
+                 hideButtonLoading(button);
+                 editUserPortalNameInput.focus();
+                 return;
+             }
+             if (editUserSubscriptionStatusCheckbox.checked && !editUserSubscriptionDurationSelect.value) {
+                  showNotification("warning", "Veuillez sélectionner une durée d'abonnement.");
+                  hideButtonLoading(button);
+                  editUserSubscriptionDurationSelect.focus();
+                  return;
+             }
+
+
+            const newPortalName = editUserPortalNameInput.value.trim();
+            const newContact = editUserContactInput.value.trim();
+            const newFedapayKey = editUserFedapayKeyInput.value.trim();
+            const isSubscriptionActive = editUserSubscriptionStatusCheckbox.checked;
+            const selectedDurationDays = parseInt(editUserSubscriptionDurationSelect.value, 10);
+            const isIntegrationFeePaid = editUserIntegrationFeeCheckbox.checked;
+
+            console.log(`Saving edits for user: ${userId}`);
+            try {
+                 const userDataRef = ref(db, `users-data/${userId}`);
+                 const snapshot = await get(userDataRef);
+                 const currentUserData = snapshot.val() || {};
+
+                 const currentPortalConfig = currentUserData.portalConfig || {};
+                 const currentSubscription = currentUserData.admin?.subscription || {};
+
+                 let newEndDate = null;
+                 if (isSubscriptionActive) {
+                     let baseDateForNewPeriod = new Date();
+                     if (currentSubscription.status === 'active' && currentSubscription.endDate) {
+                         const existingEndDate = new Date(currentSubscription.endDate);
+                         const now = new Date();
+                         if (existingEndDate > now) {
+                             baseDateForNewPeriod = existingEndDate;
+                         }
+                     }
+                     const calculatedEndDate = new Date(baseDateForNewPeriod);
+                     calculatedEndDate.setDate(calculatedEndDate.getDate() + selectedDurationDays);
+                     newEndDate = calculatedEndDate.toISOString();
+                 }
+
+                 const updatedUserData = {
+                     ...currentUserData,
+                     portalConfig: {
+                         ...currentPortalConfig,
+                         networkName: newPortalName,
+                         contactNumber: newContact,
+                         fedapayApiKey: newFedapayKey
+                     },
+                     admin: {
+                         ...(currentUserData.admin || {}),
+                         subscription: {
+                             ...currentSubscription,
+                             status: isSubscriptionActive ? 'active' : 'inactive',
+                             integrationFeePaid: isIntegrationFeePaid,
+                             endDate: newEndDate,
+                             hasSubscribedBefore: (currentSubscription.hasSubscribedBefore || isSubscriptionActive), 
+                             lastManualUpdate: new Date().toISOString()
+                         }
+                     }
+                 };
+
+                 await set(userDataRef, updatedUserData);
+
+                 console.log(`Edits saved for user ${userId}.`);
+                 showNotification("success", `Modifications enregistrées pour ${userId}.`);
+                 hideModal('editUserModal');
+                 await loadUsersData(); // Refresh table
+
+            }
+            catch (error) {
+                 console.error(`Error saving user edits for ${userId}:`, error);
+                 hideButtonLoading(button);
+                 showNotification("error", `Erreur sauvegarde: ${error.message}`);
+            }
+        }
+
+        // Delete User: Show Confirmation (Individual)
+        function confirmDeleteUser(userId) {
+            showModal(confirmModal);
+            confirmModalMessage.innerHTML = `Êtes-vous sûr de vouloir supprimer l'utilisateur <strong>${escapeHtml(userId)}</strong> et TOUTES ses données ? Cette action est irréversible.`;
+            confirmModalConfirmButton.onclick = async () => {
+                await deleteUser(userId, confirmModalConfirmButton);
+                hideModal('confirmModal'); // Hide modal after action is complete
+                await loadUsersData(); // Refresh table
+                showNotification("success", `Utilisateur ${userId} supprimé.`);
+            };
+            hideButtonLoading(confirmModalConfirmButton); // Clear any previous loading state
+        }
+
+        // Delete User: Execute Deletion (Individual or Bulk)
+        async function deleteUser(userId, triggerButton = null) {
+            if (triggerButton) showButtonLoading(triggerButton);
+            
+            if (!db || !userId) {
+                 console.error("DB not ready or User ID missing.");
+                 if (triggerButton) hideButtonLoading(triggerButton);
+                 return { success: false, message: "Erreur interne (DB ou ID manquant)." };
+            }
+            console.log(`Attempting deletion for user: ${userId}`);
+            try {
+                const updates = {};
+                updates[`/users-data/${userId}`] = null;
+                // If you also store basic login info under /users/${userId}, add it here:
+                updates[`/users/${userId}`] = null; // Assuming /users exists and needs deletion
+                // NOTE: If `/users/${userId}` refers to Firebase Authentication users (i.e., accounts managed by auth()),
+                // deleting this Realtime Database node DOES NOT delete the Firebase Authentication user.
+                // To fully delete a Firebase Auth user, you need to use a server-side SDK (Node.js, Python, etc.)
+                // to call `admin.auth().deleteUser(uid)`. This client-side code cannot do that.
+
+                await update(ref(db, '/'), updates);
+
+                console.log(`User ${userId} deleted successfully.`);
+                delete allUsersData[userId]; // Remove from local cache immediately
+                selectedUsers.delete(userId); // Ensure it's removed from selection set
+                return { success: true, message: `Utilisateur ${userId} supprimé.` };
+
+            } catch (error) {
+                console.error(`Error deleting user ${userId}:`, error);
+                return { success: false, message: `Échec suppression ${userId}: ${error.message}` };
+            } finally {
+                if (triggerButton) hideButtonLoading(triggerButton);
+            }
+        }
+
+        // Toggle Subscription: Show Confirmation (Individual)
+        function confirmToggleSubscription(userId, currentStatus) {
+            const activate = currentStatus !== 'active';
+            showModal(confirmModal);
+            confirmModalMessage.innerHTML = `Êtes-vous sûr de vouloir <strong>${activate ? 'activer' : 'désactiver'}</strong> manuellement l'abonnement de <strong>${escapeHtml(userId)}</strong> ? (Activation par défaut: 1 an)`;
+            confirmModalConfirmButton.onclick = async () => {
+                await updateSubscriptionStatus(userId, activate, 365, confirmModalConfirmButton); // Pass 365 days default
+                hideModal('confirmModal'); // Hide modal after action is complete
+                await loadUsersData(); // Refresh data and table
+                showNotification("success", `Abonnement de ${userId} ${activate ? 'activé' : 'désactivé'} manuellement.`);
+            };
+            hideButtonLoading(confirmModalConfirmButton); // Clear any previous loading state
+        }
+
+        // Toggle Subscription: Execute Update (Individual or Bulk)
+        async function updateSubscriptionStatus(userId, activate, durationDays = 365, triggerButton = null) { // Added durationDays with default
+            if (triggerButton) showButtonLoading(triggerButton);
+            if (!db || !userId) {
+                 console.error("DB/User ID missing.");
+                 if (triggerButton) hideButtonLoading(triggerButton);
+                 return { success: false, message: "Erreur interne (Sub)." };
+            }
+            console.log(`${activate ? 'Activating' : 'Deactivating'} subscription for: ${userId}`);
+            try {
+                const subscriptionRef = ref(db, `users-data/${userId}/admin/subscription`);
+                const snapshot = await get(subscriptionRef);
+                const currentSubscription = snapshot.val() || {};
+
+                let newEndDate = null;
+                if (activate) {
+                    let baseDateForNewPeriod = new Date();
+
+                    if (currentSubscription.status === 'active' && currentSubscription.endDate) {
+                        const existingEndDate = new Date(currentSubscription.endDate);
+                        const now = new Date();
+                        if (existingEndDate > now) {
+                            baseDateForNewPeriod = existingEndDate;
+                        }
+                    }
+                    const calculatedEndDate = new Date(baseDateForNewPeriod);
+                    calculatedEndDate.setDate(calculatedEndDate.getDate() + durationDays); // Use durationDays here
+                    newEndDate = calculatedEndDate.toISOString();
+                }
+
+                const updateData = {
+                    ...currentSubscription,
+                    status: activate ? 'active' : 'inactive',
+                    endDate: newEndDate,
+                    hasSubscribedBefore: (currentSubscription.hasSubscribedBefore || activate), 
+                    lastManualUpdate: new Date().toISOString()
+                };
+
+                const userAdminRef = ref(db, `users-data/${userId}/admin`);
+                const adminSnapshot = await get(userAdminRef);
+                if (!adminSnapshot.exists()) {
+                    await update(ref(db, `users-data/${userId}`), { admin: { subscription: updateData } });
+                } else {
+                    await update(subscriptionRef, updateData);
+                }
+
+                console.log(`Subscription status updated for ${userId}.`);
+                return { success: true, message: `Abonnement de ${userId} ${activate ? 'activé' : 'désactivé'} manuellement.` };
+
+            } catch (error) {
+                console.error(`Error toggling subscription for ${userId}:`, error);
+                return { success: false, message: `Érreur MàJ abonnement ${userId}: ${error.message}` };
+            } finally {
+                if (triggerButton) hideButtonLoading(triggerButton);
+            }
+        }
+
+        // Toggle Integration Fee: Show Confirmation (Individual)
+        function confirmToggleIntegrationFee(userId, isCurrentlyPaid) {
+            const markAsPaid = !isCurrentlyPaid;
+            showModal(confirmModal);
+            confirmModalMessage.innerHTML = `Marquer les frais d'intégration de <strong>${escapeHtml(userId)}</strong> comme <strong>${markAsPaid ? 'payés' : 'non payés'}</strong> ?`;
+            confirmModalConfirmButton.onclick = async () => {
+                await updateIntegrationFee(userId, markAsPaid, confirmModalConfirmButton);
+                hideModal('confirmModal'); // Hide modal after action is complete
+                await loadUsersData(); // Refresh
+                showNotification("success", `Frais d'intégration de ${userId} marqués comme ${markAsPaid ? 'payés' : 'non payés'}.`);
+            };
+            hideButtonLoading(confirmModalConfirmButton); // Clear any previous loading state
+        }
+
+        // Toggle Integration Fee: Execute Update (Individual or Bulk)
+        async function updateIntegrationFee(userId, markAsPaid, triggerButton = null) {
+            if (triggerButton) showButtonLoading(triggerButton);
+            if (!db || !userId) {
+                 console.error("DB/User ID missing.");
+                 if (triggerButton) hideButtonLoading(triggerButton);
+                 return { success: false, message: "Erreur interne (Fee)." };
+            }
+            console.log(`Setting integration fee for user: ${userId} to ${markAsPaid}`);
+            try {
+                const subscriptionRef = ref(db, `users-data/${userId}/admin/subscription`);
+                const snapshot = await get(subscriptionRef);
+                const currentSubscription = snapshot.val() || {};
+
+                const updateData = {
+                    ...currentSubscription,
+                    integrationFeePaid: markAsPaid,
+                    lastManualUpdate: new Date().toISOString()
+                };
+
+                 const userAdminRef = ref(db, `users-data/${userId}/admin`);
+                 const adminSnapshot = await get(userAdminRef);
+                 if (!adminSnapshot.exists()) {
+                     await update(ref(db, `users-data/${userId}`), { admin: { subscription: updateData } });
+                 } else {
+                     await update(subscriptionRef, updateData);
+                 }
+
+                console.log(`Integration fee status updated for user ${userId}.`);
+                return { success: true, message: `Frais d'intégration de ${userId} marqués comme ${markAsPaid ? 'payés' : 'non payés'}.` };
+
+            } catch (error) {
+                console.error(`Error toggling integration fee for ${userId}:`, error);
+                return { success: false, message: `Érreur MàJ frais ${userId}: ${error.message}` };
+            } finally {
+                if (triggerButton) hideButtonLoading(triggerButton);
+            }
+        }
+
+        // --- Bulk Action Functions ---
+
+        async function executeBulkAction(actionFn, successMsgPart, failMsgPart) {
+            if (selectedUsers.size === 0) {
+                showNotification("warning", "Aucun utilisateur sélectionné.");
+                return;
+            }
+
+            let successfulActions = 0;
+            let failedActions = 0;
+            const userIdsToProcess = Array.from(selectedUsers); // Create a copy as set might change during async operations
+
+            for (const userId of userIdsToProcess) {
+                const result = await actionFn(userId); // Call the individual action function
+                if (result.success) {
+                    successfulActions++;
+                } else {
+                    failedActions++;
+                    console.error(`Bulk action failed for ${userId}: ${result.message}`);
+                }
+            }
+
+            await loadUsersData(); // Reload all data to ensure table is fully updated
+
+            if (successfulActions > 0) {
+                showNotification("success", `${successfulActions} utilisateur(s) ${successMsgPart}.`);
+            }
+            if (failedActions > 0) {
+                showNotification("error", `${failedActions} utilisateur(s) ${failMsgPart}. Veuillez vérifier la console pour plus de détails.`);
+            }
+             if (successfulActions === 0 && failedActions === 0) {
+                 showNotification("info", "Aucune action effectuée.");
+             }
+        }
+
+        function confirmBulkDelete() {
+            if (selectedUsers.size === 0) {
+                showNotification("warning", "Aucun utilisateur sélectionné à supprimer.");
+                return;
+            }
+            showModal(confirmModal);
+            confirmModalMessage.innerHTML = `Êtes-vous sûr de vouloir supprimer <strong>${selectedUsers.size}</strong> utilisateur(s) sélectionné(s) et TOUTES leurs données ? Cette action est irréversible.`;
+            confirmModalConfirmButton.onclick = async () => {
+                showButtonLoading(confirmModalConfirmButton);
+                hideModal('confirmModal');
+                showLoading(); // Show general loading overlay for bulk action
+                await executeBulkAction(deleteUser, "supprimé(s)", "n'a(ont) pas pu être supprimé(s)");
+                hideLoading(); // Hide general loading overlay after bulk action
+                hideButtonLoading(confirmModalConfirmButton);
+            };
+            hideButtonLoading(confirmModalConfirmButton);
+        }
+
+        function confirmBulkActivateSubscription() {
+            if (selectedUsers.size === 0) {
+                showNotification("warning", "Aucun utilisateur sélectionné pour l'activation.");
+                return;
+            }
+            bulkActivateCountSpan.textContent = selectedUsers.size;
+            bulkActivateDurationInput.value = '365'; // Default to 1 year
+            hideButtonLoading(bulkActivateConfirmButton); // Clear any previous loading state
+            showModal(bulkActivateSubModal);
+        }
+
+        // New event listener for the bulk activation modal's confirm button
+        bulkActivateConfirmButton.addEventListener('click', async () => {
+            const durationDays = parseInt(bulkActivateDurationInput.value, 10);
+
+            if (isNaN(durationDays) || durationDays <= 0) {
+                showNotification("warning", "Veuillez entrer une durée valide en jours (nombre entier positif).");
+                bulkActivateDurationInput.focus();
+                return;
+            }
+
+            showButtonLoading(bulkActivateConfirmButton);
+            hideModal('bulkActivateSubModal'); // Hide this modal
+            showLoading(); // Show general loading overlay for bulk action
+
+            // Re-use executeBulkAction, passing durationDays to the individual action function
+            await executeBulkAction(
+                (userId) => updateSubscriptionStatus(userId, true, durationDays),
+                "abonnement activé(s)",
+                "abonnement non activé(s)"
+            );
+            hideLoading(); // Hide general loading overlay after bulk action
+            hideButtonLoading(bulkActivateConfirmButton);
+        });
+
+
+        function confirmBulkPayFee() {
+            if (selectedUsers.size === 0) {
+                showNotification("warning", "Aucun utilisateur sélectionné pour le marquage des frais.");
+                return;
+            }
+            showModal(confirmModal);
+            confirmModalMessage.innerHTML = `Êtes-vous sûr de vouloir marquer les frais d'intégration comme payés pour <strong>${selectedUsers.size}</strong> utilisateur(s) sélectionné(s) ?`;
+            confirmModalConfirmButton.onclick = async () => {
+                showButtonLoading(confirmModalConfirmButton);
+                hideModal('confirmModal');
+                showLoading(); // Show general loading overlay for bulk action
+                await executeBulkAction((userId) => updateIntegrationFee(userId, true), "frais marqués comme payés", "frais non marqués comme payés");
+                hideLoading(); // Hide general loading overlay after bulk action
+                hideButtonLoading(confirmModalConfirmButton);
+            };
+            hideButtonLoading(confirmModalConfirmButton);
+        }
+
+
+        // --- Event Listeners Setup ---
+        function setupEventListeners() {
+            console.log("Setting up event listeners...");
+
+            // Table Body Event Delegation for Action Buttons and Checkboxes
+            usersTableBody.addEventListener('click', (event) => {
+                const button = event.target.closest('button[data-action]');
+                const checkbox = event.target.closest('.user-select-checkbox');
+
+                if (button) {
+                    const action = button.dataset.action;
+                    const userId = button.dataset.userId;
+
+                    if (!userId) {
+                        console.warn("Action button clicked without user ID");
+                        return;
+                    }
+
+                    switch (action) {
+                        case 'edit':
+                            handleEditUser(userId);
+                            break;
+                        case 'delete':
+                            confirmDeleteUser(userId); // Individual delete
+                            break;
+                        case 'toggle-sub':
+                            const currentStatus = button.dataset.currentStatus;
+                            confirmToggleSubscription(userId, currentStatus);
+                            break;
+                        case 'toggle-fee':
+                            const currentPaid = button.dataset.currentPaid === 'true';
+                            confirmToggleIntegrationFee(userId, currentPaid);
+                            break;
+                    }
+                } else if (checkbox) {
+                    const userId = checkbox.dataset.userId;
+                    toggleUserSelection(userId, checkbox.checked);
+                }
+            });
+
+            // Select All Checkbox
+            selectAllUsersCheckbox.addEventListener('change', (event) => {
+                toggleAllUsersSelection(event.target.checked);
+                renderUsersTable(); // Re-render to show checkboxes updated
+            });
+
+
+            // Table Header Sorting
+            document.querySelectorAll('th[data-sort]').forEach(th => {
+                 th.addEventListener('click', () => {
+                     const column = th.dataset.sort;
+                     if (currentSort.column === column) {
+                         currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                     } else {
+                         currentSort.column = column;
+                         currentSort.direction = 'asc';
+                     }
+                     renderUsersTable();
+                 });
+            });
+
+            // Search Input Filtering
+            searchInput.addEventListener('input', () => {
+                 currentFilter = searchInput.value;
+                 renderUsersTable();
+            });
+
+            // Category Filter Radios
+            categoryFilterRadios.forEach(radio => {
+                radio.addEventListener('change', (event) => {
+                    currentCategoryFilter = event.target.value;
+                    renderUsersTable();
+                });
+            });
+
+            // Bulk Action Buttons
+            bulkDeleteBtn.addEventListener('click', confirmBulkDelete);
+            bulkActivateSubBtn.addEventListener('click', confirmBulkActivateSubscription);
+            bulkPayFeeBtn.addEventListener('click', confirmBulkPayFee);
+
+
+            // Modal Close Buttons (using data-action)
+            document.addEventListener('click', (event) => {
+                if (event.target.closest('[data-action="close-modal"]')) {
+                    const modal = event.target.closest('.modal');
+                    if (modal) modal.classList.remove('visible');
+                     // Hide loading on confirm button if modal is cancelled/closed
+                    hideButtonLoading(confirmModalConfirmButton);
+                    hideButtonLoading(bulkActivateConfirmButton); // Also for the new modal's button
+                }
+                 if (event.target.closest('[data-action="close-notification"]')) {
+                    closeNotification();
+                }
+            });
+
+            // Edit User Modal: Toggle duration select visibility
+            editUserSubscriptionStatusCheckbox.addEventListener('change', toggleDurationSelectVisibility);
+
+            // Edit User Modal Save Button
+            editUserSaveButton.addEventListener('click', saveUserEdit);
+        }
+
+
+        // --- App Entry Point ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            const isLoggedIn = sessionStorage.getItem('isSuperAdminLoggedIn') === 'true';
+            if (!isLoggedIn) {
+                window.location.href = 'loginAdmin.html';
+                return;
+            }
+            // Si connecté, on continue l'initialisation de la page
+            await initializeApp();
+        });
+
+    </script>
+
+</body>
+</html>
